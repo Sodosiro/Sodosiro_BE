@@ -1,0 +1,74 @@
+# 실행: 프로젝트 루트에서
+#   docker compose -f docker/docker-compose.yml up --build
+# 상대 경로는 이 compose 파일(docker/) 기준으로 해석된다.
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: sodosiro-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-sodosiro}
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      # 데이터 영속화 (named volume)
+      - postgres-data:/var/lib/postgresql/data
+      # pgvector 확장 자동 생성 (최초 기동 시 1회)
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-postgres} -d ${DB_NAME:-sodosiro}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: sodosiro-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      # 데이터 영속화 (named volume)
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      # 컨텍스트는 프로젝트 루트, Dockerfile 은 docker/ 안
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: sodosiro-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    # 루트 .env 로부터 OPENAI_API_KEY 등 주입 (아래 environment 가 host 값은 덮어씀)
+    env_file:
+      - ../.env
+    environment:
+      # 컨테이너 네트워크에서는 서비스명으로 접속 (env_file 값보다 우선)
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-sodosiro}
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    ports:
+      - "8080:8080"
+    volumes:
+      # 애플리케이션 로그를 호스트(프로젝트 루트/logs)에 마운트
+      - ../logs:/app/logs
+
+volumes:
+  postgres-data:
+  redis-data:
