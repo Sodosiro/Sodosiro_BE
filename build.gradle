@@ -39,7 +39,7 @@ dependencyManagement {
 
 dependencies {
 	// Web
-	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-json'
 
 	// JPA & PostgreSQL
@@ -70,9 +70,12 @@ dependencies {
 	implementation "io.jsonwebtoken:jjwt-api:${jjwtVersion}"
 	runtimeOnly "io.jsonwebtoken:jjwt-impl:${jjwtVersion}"
 	runtimeOnly "io.jsonwebtoken:jjwt-jackson:${jjwtVersion}"
-    implementation 'com.auth0:java-jwt:4.4.0'
 
-	// Actuator & Prometheus
+    implementation 'com.auth0:java-jwt:4.4.0'
+	implementation 'com.auth0:jwks-rsa:0.23.0'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+
+    // Actuator & Prometheus
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
 

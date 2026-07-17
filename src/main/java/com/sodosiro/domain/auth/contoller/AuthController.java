@@ -21,7 +21,7 @@ public class AuthController implements AuthSpecification {
     @PostMapping("/social")
     public ResponseEntity<SocialLoginResponse> socialLogin(@RequestBody SocialLoginRequest request) {
 
-        SocialLoginResponse response = authService.loginWithSocial(request.getProvider(), request.getIdToken(), request.getAuthorizationCode());
+        SocialLoginResponse response = authService.loginWithSocial(request.provider(), request.idToken(), request.authorizationCode());
 
         return ResponseEntity.ok(response);
     }

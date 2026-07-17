@@ -1,10 +1,32 @@
 spring:
   application:
     name: sodosiro
+#  security:
+#    user:
+#      name: admin
+#      password: 1234
   security:
-    user:
-      name: admin
-      password: 1234
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-authentication-method: client_secret_post
+            client-id: ${KAKAO_CLIENT_ID}
+            client-secret: ${KAKAO_CLIENT_SECRET}
+            native-client-id: ${KAKAO_NATIVE_CLIENT_ID}
+            authorization-grant-type: authorization_code
+            scope: profile_nickname, account_email
+            client-name: Kakao
+            admin-key: ${KAKAO_ADMIN_KEY}
+            redirect-uri: http://localhost:8080/login/oauth2/code/kakao
+
+
+        provider:
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
 
   config:
     import: optional:file:.env[.properties]
@@ -41,3 +63,5 @@ spring:
       embedding:
         options:
           model: text-embedding-3-small
+
+
