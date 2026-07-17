@@ -1,4 +1,4 @@
-package com.sodosiro.domain.user.oauth;
+package com.sodosiro.domain.auth.oauth;
 
 
 import lombok.Getter;
