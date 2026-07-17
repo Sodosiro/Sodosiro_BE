@@ -1,6 +1,7 @@
 package com.sodosiro.domain.user.entity;
 
 
+import com.sodosiro.domain.auth.dto.response.SocialUserInfo;
 import com.sodosiro.domain.user.constants.Provider;
 import jakarta.persistence.*;
 import lombok.*;
@@ -58,20 +59,20 @@ public class SocialAccounts {
     @Comment("연결일시")
     private LocalDateTime createdAt;
 
-//    public static SocialAccounts create(User user, SocialUserInfo info, String refreshToken) {
-//        return SocialAccounts.builder()
-//                .user(user)
-//                .provider(info.getProvider())
-//                .providerId(info.getProviderId())
-//                .refreshToken(refreshToken)
-//                .build();
-//    }
-//
-//    public static SocialAccounts of(User user, SocialUserInfo info) {
-//        SocialAccounts social = new SocialAccounts();
-//        social.user = user;
-//        social.provider = info.getProvider();
-//        social.providerId = info.getProviderId();
-//        return social;
-//    }
+    public static SocialAccounts create(User user, SocialUserInfo info, String refreshToken) {
+        return SocialAccounts.builder()
+                .user(user)
+                .provider(info.getProvider())
+                .providerId(info.getProviderId())
+                .refreshToken(refreshToken)
+                .build();
+    }
+
+    public static SocialAccounts of(User user, SocialUserInfo info) {
+        SocialAccounts social = new SocialAccounts();
+        social.user = user;
+        social.provider = info.getProvider();
+        social.providerId = info.getProviderId();
+        return social;
+    }
 }

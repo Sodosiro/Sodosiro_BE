@@ -1,4 +1,11 @@
 package com.sodosiro.domain.auth.dto.request;
 
-public record SocialLoginRequest() {
+import lombok.Getter;
+
+@Getter
+public class SocialLoginRequest {
+    private String provider;
+    private String idToken;
+    private String authorizationCode;
 }
+

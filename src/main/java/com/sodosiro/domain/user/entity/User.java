@@ -1,5 +1,6 @@
 package com.sodosiro.domain.user.entity;
 
+import com.sodosiro.domain.auth.dto.response.SocialUserInfo;
 import com.sodosiro.domain.user.constants.Role;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -112,17 +113,17 @@ public class User {
         this.profileImageUrl = url;
     }
 
-//    public static User createUser(SocialUserInfo info) {
-//
-//        User user = User.builder()
-//                .email(info.getEmail())
-//                .name(info.getNickname())
-//                .role(Role.USER)
-//                .socialAccounts(new ArrayList<>())
-//                .build();
-//
-//        return user;
-//    }
+    public static User createUser(SocialUserInfo info) {
+
+        User user = User.builder()
+                .email(info.getEmail())
+                .name(info.getNickname())
+                .role(Role.USER)
+                .socialAccounts(new ArrayList<>())
+                .build();
+
+        return user;
+    }
 
     public void updateFcmToken(String fcmToken) {
         this.fcmToken = fcmToken;
