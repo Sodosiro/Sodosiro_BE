@@ -19,7 +19,7 @@ public class JwkProviderConfig {
         return new JwkProviderBuilder(URI.create(KAKAO_JWKS_URL).toURL())
                 .cached(10, 24, TimeUnit.HOURS)
                 .rateLimited(10, 1, TimeUnit.MINUTES)
-                .timeouts(10, 10) // 아까 말한 타임아웃
+                .timeouts(1000, 2000)
                 .build();
     }
 }
