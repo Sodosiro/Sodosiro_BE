@@ -1,5 +1,6 @@
 package com.sodosiro.domain.auth.service;
 
+import com.sodosiro.domain.auth.dto.response.ReissueResponse;
 import com.sodosiro.domain.auth.dto.response.SocialLoginResponse;
 import com.sodosiro.domain.auth.dto.response.SocialUserInfo;
 import com.sodosiro.domain.auth.oauth.vaildator.SocialVerifier;
@@ -13,6 +14,7 @@ import com.sodosiro.domain.user.repository.SocialRepository;
 import com.sodosiro.domain.user.repository.UserRepository;
 import com.sodosiro.domain.user.service.UserService;
 import com.sodosiro.global.payload.code.error.AuthErrorCode;
+import com.sodosiro.global.payload.code.error.UserErrorCode;
 import com.sodosiro.global.payload.exception.GeneralException;
 import com.sodosiro.global.service.RedisService;
 import com.sodosiro.global.utils.TokenKeys;
@@ -30,6 +32,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class AuthService {
 
+    private final JwtProvider jwtProvider;
     private final JwtGenerator jwtGenerator;
     private final UserRepository userRepository;
     private final List<SocialVerifier> socialVerifiers;
@@ -96,4 +99,32 @@ public class AuthService {
 
         return SocialLoginResponse.of(jwt.getAccessToken(), jwt.getRefreshToken());
     }
+
+    @Transactional
+    public ReissueResponse appReissueToken(String refreshToken) {
+
+        User user = getUserFromRefreshToken(refreshToken);
+        String newAccessToken = jwtGenerator.createAccessToken(user, user.getRole());
+
+        return ReissueResponse.of(newAccessToken,refreshToken);
+    }
+
+    private User getUserFromRefreshToken(String refreshToken) {
+
+        if (refreshToken == null || refreshToken.isEmpty()) {
+            throw new GeneralException(UserErrorCode._INVALID_REFRESH_TOKEN);
+        }
+
+        jwtProvider.validateRefreshToken(refreshToken);
+        String userId = redisService.getValue(TokenKeys.refreshKey(refreshToken));
+
+        if (userId == null) {
+            throw new GeneralException(UserErrorCode._INVALID_USER_REFRESH_TOKEN);
+        }
+
+        return userRepository.findById(Long.valueOf(userId))
+                .orElseThrow(() -> new GeneralException(UserErrorCode._USER_NOT_FOUND));
+    }
+
+
 }

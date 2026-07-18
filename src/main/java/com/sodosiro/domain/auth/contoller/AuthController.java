@@ -1,15 +1,15 @@
 package com.sodosiro.domain.auth.contoller;
 
+import com.sodosiro.domain.auth.dto.request.LogoutRequest;
+import com.sodosiro.domain.auth.dto.request.ReissueRequest;
 import com.sodosiro.domain.auth.dto.request.SocialLoginRequest;
+import com.sodosiro.domain.auth.dto.response.ReissueResponse;
 import com.sodosiro.domain.auth.dto.response.SocialLoginResponse;
 import com.sodosiro.domain.auth.service.AuthService;
 import com.sodosiro.domain.auth.specification.AuthSpecification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -25,4 +25,14 @@ public class AuthController implements AuthSpecification {
 
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/reissue")
+    public ResponseEntity<ReissueResponse> reissue(@RequestBody ReissueRequest refreshToken) {
+
+        ReissueResponse response = authService.appReissueToken(refreshToken.refreshToken());
+
+        return ResponseEntity.ok(response);
+    }
+
+
 }
