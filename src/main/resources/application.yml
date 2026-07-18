@@ -54,7 +54,7 @@ spring:
   jwt:
     secret: ${JWT_SECRET}
     issuer: ${JWT_ISSUER:sodosiro}
-    access-token-expiration-millis: ${JWT_ACCESS_EXPIRATION:1800000}
+    access-token-expiration-millis: ${JWT_ACCESS_EXPIRATION:900000}
     refresh-token-expiration-millis: ${JWT_REFRESH_EXPIRATION:1209600000}
 
   ai:
