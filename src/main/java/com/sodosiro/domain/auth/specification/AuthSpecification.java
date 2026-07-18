@@ -2,8 +2,6 @@ package com.sodosiro.domain.auth.specification;
 
 import com.sodosiro.domain.auth.dto.request.SocialLoginRequest;
 import com.sodosiro.domain.auth.dto.response.SocialLoginResponse;
-import com.sodosiro.global.payload.code.error.CommonErrorCode;
-import com.sodosiro.global.payload.code.error.UserErrorCode;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.annotation.security.PermitAll;
 import org.springframework.http.ResponseEntity;
