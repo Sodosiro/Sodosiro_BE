@@ -1,7 +1,7 @@
 package com.sodosiro.domain.auth.oauth.vaildator;
 
 import com.auth0.jwk.Jwk;
-import com.auth0.jwk.UrlJwkProvider;
+import com.auth0.jwk.JwkProvider;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.SignatureVerificationException;
@@ -16,13 +16,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.net.URL;
 import java.security.interfaces.RSAPublicKey;
 import java.util.List;
 
 @RequiredArgsConstructor
 @Component
 public class KakaoTokenVerifier implements SocialVerifier{
+
+    private final JwkProvider kakaoJwkProvider;
 
     @Value("${spring.security.oauth2.client.registration.kakao.client-id}")
     private String kakaoClientId;
@@ -33,7 +34,6 @@ public class KakaoTokenVerifier implements SocialVerifier{
     @Value("${spring.security.oauth2.client.registration.kakao.admin-key}")
     private String adminKey;
 
-    private static final String KAKAO_JWKS_URL = "https://kauth.kakao.com/.well-known/jwks.json";
     private static final String KAKAO_ISSUER = "https://kauth.kakao.com";
 
     @Override
@@ -44,8 +44,6 @@ public class KakaoTokenVerifier implements SocialVerifier{
     @Override
     public SocialUserInfo verify(String idToken) {
         try {
-            UrlJwkProvider provider = new UrlJwkProvider(new URL(KAKAO_JWKS_URL));
-
             DecodedJWT decodedJWT = JWT.decode(idToken);
             String kid = decodedJWT.getKeyId();
             List<String> audiences = decodedJWT.getAudience();
@@ -64,7 +62,7 @@ public class KakaoTokenVerifier implements SocialVerifier{
                 throw new GeneralException(UserErrorCode._SOCIAL_TOKEN_INVALID_AUDIENCE);
             }
 
-            Jwk jwk = provider.get(kid);
+            Jwk jwk = kakaoJwkProvider.get(kid);
             Algorithm algorithm = Algorithm.RSA256((RSAPublicKey) jwk.getPublicKey(), null);
 
             JWTVerifier verifier = JWT.require(algorithm)
