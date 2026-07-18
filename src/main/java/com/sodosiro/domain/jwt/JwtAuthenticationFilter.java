@@ -3,6 +3,7 @@ package com.sodosiro.domain.jwt;
 import com.sodosiro.domain.jwt.exception.JwtAuthenticationException;
 import com.sodosiro.global.payload.code.error.UserErrorCode;
 import com.sodosiro.global.service.RedisService;
+import com.sodosiro.global.utils.TokenKeys;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -32,7 +33,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (StringUtils.hasText(token)) {
             try {
-                if (redisService.hasKey("BLACKLIST:" + token)) {
+                if (redisService.hasKey(TokenKeys.blacklistKey(token))) {
                     throw new JwtAuthenticationException(UserErrorCode._JWT_BLACKLISTED_TOKEN);
                 }
                 Authentication authentication = jwtProvider.getAuthentication(token);
