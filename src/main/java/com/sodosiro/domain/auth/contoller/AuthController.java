@@ -40,6 +40,7 @@ public class AuthController implements AuthSpecification {
                                           @RequestBody LogoutRequest token,
                                           @RequestHeader("Authorization") String authorization) {
 
+        authService.logout(userId, authorization.substring(7), token.refreshToken());
 
         return ResponseEntity.noContent().build();
     }

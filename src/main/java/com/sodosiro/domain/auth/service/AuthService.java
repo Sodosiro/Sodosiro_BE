@@ -38,6 +38,7 @@ public class AuthService {
     private final List<SocialVerifier> socialVerifiers;
     private final RedisService redisService;
     private final SocialRepository socialRepository;
+    private final UserService userService;
 
 
     @Value("${spring.jwt.refresh-token-expiration-millis}")
@@ -126,5 +127,31 @@ public class AuthService {
                 .orElseThrow(() -> new GeneralException(UserErrorCode._USER_NOT_FOUND));
     }
 
+    @Transactional
+    public void logout(Long userId, String accessToken, String refreshToken) {
 
+        validateRefreshTokenOwner(userId, refreshToken);
+        userService.clearFcmToken(userId);
+        clearSession(accessToken, refreshToken);
+    }
+
+
+    private void validateRefreshTokenOwner(Long userId, String refreshToken) {
+        if (refreshToken == null || refreshToken.isEmpty()) {
+            throw new GeneralException(UserErrorCode._INVALID_REFRESH_TOKEN);
+        }
+        jwtProvider.validateRefreshToken(refreshToken);
+        String storedUserId = redisService.getValue(TokenKeys.refreshKey(refreshToken));
+        if (storedUserId == null || !storedUserId.equals(String.valueOf(userId))) {
+            throw new GeneralException(UserErrorCode._INVALID_USER_REFRESH_TOKEN);
+        }
+    }
+
+    private void clearSession(String accessToken, String refreshToken) {
+        long remainTime = jwtProvider.getExpiration(accessToken);
+        if (remainTime > 0) {
+            redisService.save(TokenKeys.blacklistKey(accessToken), "logout", remainTime);
+        }
+        redisService.deleteKey(TokenKeys.refreshKey(refreshToken));
+    }
 }
