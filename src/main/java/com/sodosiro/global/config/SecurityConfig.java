@@ -1,11 +1,19 @@
 package com.sodosiro.global.config;
 
+import com.sodosiro.domain.jwt.JwtAuthenticationFilter;
+import com.sodosiro.domain.jwt.JwtProvider;
+import com.sodosiro.global.payload.exception.handler.JwtAccessDeniedHandler;
+import com.sodosiro.global.payload.exception.handler.JwtAuthenticationEntryPoint;
+import com.sodosiro.global.service.RedisService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfigurationSource;
 
 /**
@@ -14,14 +22,17 @@ import org.springframework.web.cors.CorsConfigurationSource;
  * 현재는 모든 요청을 허용(permitAll)하고, 세션은 STATELESS 로 둔다.
  * 도메인/인증(JWT·Kakao OAuth2)이 붙으면서 인가 규칙·필터·핸들러를 아래 TODO 위치에 채운다.
  */
+@EnableWebSecurity
+@RequiredArgsConstructor
 @Configuration
 public class SecurityConfig {
 
     private final CorsConfigurationSource corsConfigurationSource;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
+    private final JwtProvider jwtProvider;
+    private final RedisService redisService;
 
-    public SecurityConfig(CorsConfigurationSource corsConfigurationSource) {
-        this.corsConfigurationSource = corsConfigurationSource;
-    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -34,7 +45,13 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .anyRequest().permitAll()
-                );
+                )
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(jwtAuthenticationEntryPoint)
+                        .accessDeniedHandler(jwtAccessDeniedHandler)
+                )
+                .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+
 
         // TODO: JWT 인증 필터 등록 (addFilterBefore(jwtAuthenticationFilter, ...))
         // TODO: OAuth2 로그인(Kakao) 설정 (oauth2Login)
@@ -42,4 +59,9 @@ public class SecurityConfig {
 
         return http.build();
     }
+    @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+        return new JwtAuthenticationFilter(jwtProvider, redisService);
+    }
+
 }
