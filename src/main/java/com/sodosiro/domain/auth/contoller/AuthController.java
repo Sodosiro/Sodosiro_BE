@@ -7,6 +7,7 @@ import com.sodosiro.domain.auth.dto.response.ReissueResponse;
 import com.sodosiro.domain.auth.dto.response.SocialLoginResponse;
 import com.sodosiro.domain.auth.service.AuthService;
 import com.sodosiro.domain.auth.specification.AuthSpecification;
+import com.sodosiro.global.resolver.LoginUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -34,5 +35,13 @@ public class AuthController implements AuthSpecification {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/app/logout")
+    public ResponseEntity<Void> appLogout(@LoginUser Long userId,
+                                          @RequestBody LogoutRequest token,
+                                          @RequestHeader("Authorization") String authorization) {
+
+
+        return ResponseEntity.noContent().build();
+    }
 
 }
