@@ -24,4 +24,18 @@ public class UserService {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new GeneralException(UserErrorCode._USER_NOT_FOUND));
     }
+
+    @Transactional
+    public void deleteUserData(Long userId) {
+        User user = findUserOrThrow(userId);
+
+        // 추가예정
+        // 알림
+        // 리뷰
+        // 여행지 목록
+        // 빙고 등등
+        userRepository.delete(user);
+    }
+
+
 }

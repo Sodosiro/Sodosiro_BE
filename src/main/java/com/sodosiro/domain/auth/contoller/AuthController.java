@@ -45,4 +45,12 @@ public class AuthController implements AuthSpecification {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/withdraw")
+    public ResponseEntity<Void> withdraw(@LoginUser Long userId,
+                                         @RequestBody LogoutRequest token,
+                                         @RequestHeader("Authorization") String authorization) {
+
+        authService.withdraw(userId, authorization.substring(7), token.refreshToken());
+        return ResponseEntity.noContent().build();
+    }
 }
