@@ -31,7 +31,7 @@ public class AuthController implements AuthSpecification {
     @PostMapping("/reissue")
     public ResponseEntity<ReissueResponse> reissue(@RequestBody ReissueRequest refreshToken) {
 
-        ReissueResponse response = authService.appReissueToken(refreshToken.refreshToken());
+        ReissueResponse response = authService.reissueToken(refreshToken.refreshToken());
 
         return ResponseEntity.ok(response);
     }

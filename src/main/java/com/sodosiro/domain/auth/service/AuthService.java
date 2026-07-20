@@ -104,7 +104,7 @@ public class AuthService {
     }
 
     @Transactional
-    public ReissueResponse appReissueToken(String refreshToken) {
+    public ReissueResponse reissueToken(String refreshToken) {
 
         User user = getUserFromRefreshToken(refreshToken);
         String newAccessToken = jwtGenerator.createAccessToken(user, user.getRole());
