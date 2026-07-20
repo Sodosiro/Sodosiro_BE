@@ -39,9 +39,7 @@ public class WithdrawEventListener {
                         try {
                             verifier.unlink(social.providerId(), social.refreshToken());
                         } catch (Exception e) {
-                            log.error("unlink 실패 provider={}, providerId={}",
-                                    social.provider(), social.providerId(), e);
-                        }
+                            log.error("unlink 실패 userId={}, provider={}", event.userId(), social.provider(), e);                        }
                     });
         }
     }
