@@ -8,6 +8,7 @@ import com.sodosiro.domain.auth.dto.response.SocialLoginResponse;
 import com.sodosiro.domain.auth.service.AuthService;
 import com.sodosiro.domain.auth.specification.AuthSpecification;
 import com.sodosiro.global.resolver.LoginUser;
+import com.sodosiro.global.utils.AuthorizationUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -40,7 +41,8 @@ public class AuthController implements AuthSpecification {
                                           @RequestBody LogoutRequest token,
                                           @RequestHeader("Authorization") String authorization) {
 
-        authService.logout(userId, authorization.substring(7), token.refreshToken());
+        String accessToken = AuthorizationUtils.extractBearerToken(authorization);
+        authService.logout(userId, accessToken, token.refreshToken());
 
         return ResponseEntity.noContent().build();
     }
@@ -50,7 +52,8 @@ public class AuthController implements AuthSpecification {
                                          @RequestBody LogoutRequest token,
                                          @RequestHeader("Authorization") String authorization) {
 
-        authService.withdraw(userId, authorization.substring(7), token.refreshToken());
+        String accessToken = AuthorizationUtils.extractBearerToken(authorization);
+        authService.withdraw(userId, accessToken, token.refreshToken());
         return ResponseEntity.noContent().build();
     }
 }
