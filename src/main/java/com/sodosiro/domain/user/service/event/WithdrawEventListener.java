@@ -1,6 +1,6 @@
 package com.sodosiro.domain.user.service.event;
 
-import com.sodosiro.domain.auth.oauth.vaildator.SocialVerifier;
+import com.sodosiro.domain.auth.oauth.validator.SocialVerifier;
 import com.sodosiro.domain.jwt.JwtProvider;
 import com.sodosiro.global.service.RedisService;
 import com.sodosiro.global.utils.TokenKeys;

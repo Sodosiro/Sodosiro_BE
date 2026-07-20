@@ -3,7 +3,7 @@ package com.sodosiro.domain.auth.service;
 import com.sodosiro.domain.auth.dto.response.ReissueResponse;
 import com.sodosiro.domain.auth.dto.response.SocialLoginResponse;
 import com.sodosiro.domain.auth.dto.response.SocialUserInfo;
-import com.sodosiro.domain.auth.oauth.vaildator.SocialVerifier;
+import com.sodosiro.domain.auth.oauth.validator.SocialVerifier;
 import com.sodosiro.domain.jwt.JwtGenerator;
 import com.sodosiro.domain.jwt.JwtProvider;
 import com.sodosiro.domain.jwt.JwtToken;

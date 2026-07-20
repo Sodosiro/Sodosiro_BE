@@ -1,4 +1,4 @@
-package com.sodosiro.domain.auth.oauth.vaildator;
+package com.sodosiro.domain.auth.oauth.validator;
 
 import com.auth0.jwk.Jwk;
 import com.auth0.jwk.JwkProvider;
