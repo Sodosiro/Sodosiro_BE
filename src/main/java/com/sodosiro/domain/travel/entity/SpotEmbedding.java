@@ -33,14 +33,30 @@ public class SpotEmbedding {
     @JdbcTypeCode(SqlTypes.VECTOR)
     @Array(length = 1536)
     @Column(name = "embedding")
-    @Comment("title + overview 임베딩 벡터 (pgvector, 1536차원)")
+    @Comment("AI가 추출한 여행지 키워드의 임베딩 벡터 (pgvector, 1536차원)")
     private float[] embedding;
 
     @Column(name = "input_text", columnDefinition = "text")
-    @Comment("임베딩 원문 (title || overview)")
+    @Comment("임베딩 원문 (장소명·대표분류·설명·키워드를 합친 검색 색인문)")
     private String inputText;
+
+    @Column(name = "keyword_text", columnDefinition = "text")
+    @Comment("정규화 키워드 목록 — 첫 토큰이 대표 분류 (카테고리 필터용)")
+    private String keywordText;
 
     @Column(name = "created_at")
     @Comment("생성시각")
     private LocalDateTime createdAt;
+
+    private SpotEmbedding(Long contentId, float[] embedding, String inputText, String keywordText) {
+        this.contentId = contentId;
+        this.embedding = embedding;
+        this.inputText = inputText;
+        this.keywordText = keywordText;
+        this.createdAt = LocalDateTime.now();
+    }
+
+    public static SpotEmbedding of(Long contentId, float[] embedding, String inputText, String keywordText) {
+        return new SpotEmbedding(contentId, embedding, inputText, keywordText);
+    }
 }

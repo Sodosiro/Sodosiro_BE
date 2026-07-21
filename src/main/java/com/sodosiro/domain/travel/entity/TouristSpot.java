@@ -9,12 +9,16 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Comment;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 
 /**
- * 관광지 기본정보 (areaBasedList2, contentTypeId=12)
+ * 여행 콘텐츠 기본정보 (areaBasedList2)
  * content_id 는 외부 API 의 contentid 를 그대로 사용 (자동 생성 아님)
  */
 @Entity
@@ -23,10 +27,11 @@ import java.time.LocalDateTime;
         name = "tourist_spot",
         indexes = {
                 @Index(name = "idx_spot_region", columnList = "area_code, sigungu_code"),
-                @Index(name = "idx_spot_cat", columnList = "cat1, cat2, cat3")
+                @Index(name = "idx_spot_ldong_region", columnList = "ldong_regn_code, ldong_signgu_code"),
+                @Index(name = "idx_spot_cat", columnList = "cat1, cat2, cat3"),
+                @Index(name = "idx_spot_lcls", columnList = "lcls_systm1, lcls_systm2, lcls_systm3")
         }
 )
-@Comment("관광지 기본정보 (areaBasedList2, contentTypeId=12)")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class TouristSpot {
 
@@ -34,6 +39,10 @@ public class TouristSpot {
     @Column(name = "content_id")
     @Comment("contentid (외부 API PK)")
     private Long contentId;
+
+    @Column(name = "content_type_id", length = 5)
+    @Comment("TourAPI 콘텐츠 유형 코드")
+    private String contentTypeId;
 
     @Column(name = "title", length = 200, nullable = false)
     @Comment("관광지명")
@@ -63,6 +72,14 @@ public class TouristSpot {
     @Comment("지도 확대 레벨")
     private Short mapLevel;
 
+    @Column(name = "ldong_regn_code", length = 5)
+    @Comment("법정동 시도 코드")
+    private String ldongRegnCode;
+
+    @Column(name = "ldong_signgu_code", length = 5)
+    @Comment("법정동 시군구 코드")
+    private String ldongSignguCode;
+
     @Column(name = "area_code", length = 5)
     @Comment("지역코드 (areacode)")
     private String areaCode;
@@ -72,16 +89,28 @@ public class TouristSpot {
     private String sigunguCode;
 
     @Column(name = "cat1", length = 12)
-    @Comment("대분류 (category.code)")
+    @Comment("구형 대분류 cat1 (삭제 예정)")
     private String cat1;
 
     @Column(name = "cat2", length = 12)
-    @Comment("중분류 (category.code)")
+    @Comment("구형 중분류 cat2 (삭제 예정)")
     private String cat2;
 
     @Column(name = "cat3", length = 12)
-    @Comment("소분류 (category.code)")
+    @Comment("구형 소분류 cat3 (삭제 예정)")
     private String cat3;
+
+    @Column(name = "lcls_systm1", length = 12)
+    @Comment("신규 대분류 lclsSystm1 (category.code)")
+    private String lclsSystm1;
+
+    @Column(name = "lcls_systm2", length = 12)
+    @Comment("신규 중분류 lclsSystm2 (category.code)")
+    private String lclsSystm2;
+
+    @Column(name = "lcls_systm3", length = 12)
+    @Comment("신규 소분류 lclsSystm3 (category.code)")
+    private String lclsSystm3;
 
     @Column(name = "first_image", columnDefinition = "text")
     @Comment("firstimage 대표(원본)")
@@ -90,6 +119,10 @@ public class TouristSpot {
     @Column(name = "homepage", columnDefinition = "text")
     @Comment("홈페이지")
     private String homepage;
+
+    @Column(name = "overview", columnDefinition = "text")
+    @Comment("detailCommon2 소개글")
+    private String overview;
 
     @Column(name = "infocenter", length = 200)
     @Comment("detailIntro2 문의·안내")
@@ -110,6 +143,11 @@ public class TouristSpot {
     @Column(name = "expguide", columnDefinition = "text")
     @Comment("체험안내 / AI 메타데이터용")
     private String expguide;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "detail_info", columnDefinition = "jsonb")
+    @Comment("detailInfo2 반복 항목 원본 배열")
+    private List<Map<String, Object>> detailInfo;
 
     @Column(name = "created_time")
     @Comment("원본 생성시각")
