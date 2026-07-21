@@ -1,0 +1,67 @@
+spring:
+  application:
+    name: sodosiro
+#  security:
+#    user:
+#      name: admin
+#      password: 1234
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-authentication-method: client_secret_post
+            client-id: ${KAKAO_CLIENT_ID}
+            client-secret: ${KAKAO_CLIENT_SECRET}
+            native-client-id: ${KAKAO_NATIVE_CLIENT_ID}
+            authorization-grant-type: authorization_code
+            scope: profile_nickname, account_email
+            client-name: Kakao
+            admin-key: ${KAKAO_ADMIN_KEY}
+            redirect-uri: http://localhost:8080/login/oauth2/code/kakao
+
+
+        provider:
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
+
+  config:
+    import: optional:file:.env[.properties]
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: true
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+
+  jwt:
+    secret: ${JWT_SECRET}
+    issuer: ${JWT_ISSUER:sodosiro}
+    access-token-expiration-millis: ${JWT_ACCESS_EXPIRATION:900000}
+    refresh-token-expiration-millis: ${JWT_REFRESH_EXPIRATION:1209600000}
+
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      embedding:
+        options:
+          model: text-embedding-3-small
+
+
