@@ -64,7 +64,8 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
     ports:
-      - "8080:8080"
+      # Spring 기동 포트와 호스트 공개 포트를 SERVER_PORT로 통일한다.
+      - "${SERVER_PORT:-8080}:${SERVER_PORT:-8080}"
     volumes:
       # 애플리케이션 로그를 호스트(프로젝트 루트/logs)에 마운트
       - ../logs:/app/logs

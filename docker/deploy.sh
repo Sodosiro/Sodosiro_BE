@@ -24,4 +24,5 @@ $COMPOSE logs --tail=40 app
 
 echo
 echo "완료. 실시간 로그: $COMPOSE logs -f app"
-echo "Swagger UI: http://localhost:8080/swagger-ui/index.html"
+APP_PORT="${SERVER_PORT:-8080}"
+echo "Swagger UI: http://localhost:${APP_PORT}/swagger-ui/index.html"

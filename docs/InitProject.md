@@ -53,11 +53,12 @@ docker compose -f docker/docker-compose.yml down -v
 
 | 서비스 | 이미지 | 포트 | 볼륨(마운트) |
 |--------|--------|------|--------------|
-| `app` | 로컬 빌드(`docker/Dockerfile`) | 8080 | `../logs → /app/logs` (로그) |
+| `app` | 로컬 빌드(`docker/Dockerfile`) | `${SERVER_PORT:-8080}` | `../logs → /app/logs` (로그) |
 | `postgres` | `pgvector/pgvector:pg16` | 5432 | `postgres-data`(데이터) + `./postgres/init.sql`(확장 자동설치) |
 | `redis` | `redis:7-alpine` | 6379 | `redis-data`(데이터) |
 
 - 컨테이너 안에서는 `.env` 대신 compose 의 `environment` 값이 주입된다 (`DB_HOST=postgres`, `REDIS_HOST=redis`).
+- `SERVER_PORT`는 Spring 기동 포트와 Docker의 호스트 공개 포트에 동일하게 적용된다. 기본값은 `8080`이며, 개발자별로 루트 `.env`에서 변경할 수 있다.
 - `postgres/init.sql` 이 최초 기동 시 `CREATE EXTENSION vector` 를 자동 실행하므로 수동 확장 설치가 필요 없다.
 - `.env` 는 `.dockerignore`(`docker/Dockerfile.dockerignore`)로 이미지에서 제외된다.
 - DB 이름·계정은 프로젝트 루트 `.env` 값으로 덮어쓸 수 있다 (compose 가 substitution).
@@ -211,7 +212,7 @@ springdoc-openapi 로 자동 생성된다. 앱 기동 후:
 
 | 항목 | URL |
 |------|-----|
-| Swagger UI | http://localhost:8080/swagger-ui/index.html |
-| OpenAPI 스펙(JSON) | http://localhost:8080/v3/api-docs |
+| Swagger UI | `http://localhost:${SERVER_PORT:-8080}/swagger-ui/index.html` |
+| OpenAPI 스펙(JSON) | `http://localhost:${SERVER_PORT:-8080}/v3/api-docs` |
 
 설정: `global/config/SwaggerConfig` (제목·설명·버전), 접근 허용은 `SecurityConfig` 에서 처리.

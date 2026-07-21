@@ -7,8 +7,8 @@ import org.springframework.context.annotation.Configuration;
 
 /**
  * Swagger(OpenAPI) 설정.
- * 문서 UI: http://localhost:8080/swagger-ui/index.html
- * 스펙(JSON): http://localhost:8080/v3/api-docs
+ * 문서 UI: http://localhost:${SERVER_PORT:8080}/swagger-ui/index.html
+ * 스펙(JSON): http://localhost:${SERVER_PORT:8080}/v3/api-docs
  */
 @Configuration
 public class SwaggerConfig {
