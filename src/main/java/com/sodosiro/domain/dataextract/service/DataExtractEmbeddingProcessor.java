@@ -60,7 +60,6 @@ public class DataExtractEmbeddingProcessor {
         String overview = embeddingStatePort.findOverview(contentId);
         TravelKeywordExtractor.Extraction extraction = travelKeywordExtractor.extract(title, overview);
         String embeddingText = extraction.embeddingText(title);
-        log.info("관광지 {} 임베딩 원문:\n{}", contentId, embeddingText);
         float[] embedding = embeddingModel.embed(embeddingText);
         if (embedding.length != EMBEDDING_DIMENSIONS) {
             throw new IllegalStateException("예상하지 못한 임베딩 차원입니다: "
