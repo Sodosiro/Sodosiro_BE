@@ -1,4 +1,4 @@
-package com.sodosiro.domain.auth.oauth.vaildator;
+package com.sodosiro.domain.auth.oauth.validator;
 
 import com.auth0.jwk.Jwk;
 import com.auth0.jwk.JwkProvider;
@@ -13,12 +13,20 @@ import com.sodosiro.domain.user.constants.Provider;
 import com.sodosiro.global.payload.code.error.UserErrorCode;
 import com.sodosiro.global.payload.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 
 import java.security.interfaces.RSAPublicKey;
 import java.util.List;
 
+@Slf4j
 @RequiredArgsConstructor
 @Component
 public class KakaoTokenVerifier implements SocialVerifier{
@@ -35,6 +43,8 @@ public class KakaoTokenVerifier implements SocialVerifier{
     private String adminKey;
 
     private static final String KAKAO_ISSUER = "https://kauth.kakao.com";
+    private final RestTemplate restTemplate;
+
 
     @Override
     public Provider getProvider() {
@@ -94,6 +104,28 @@ public class KakaoTokenVerifier implements SocialVerifier{
     @Override
     public void unlink(String providerId, String refreshToken) {
 
+        if (providerId == null || providerId.isBlank()) {
+            return;
+        }
+
+        String url = "https://kapi.kakao.com/v1/user/unlink";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "KakaoAK " + adminKey);
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("target_id_type", "user_id");
+        params.add("target_id", providerId);
+
+        HttpEntity<MultiValueMap<String, String>> request =
+                new HttpEntity<>(params, headers);
+
+        try {
+            restTemplate.postForEntity(url, request, String.class);
+        } catch (Exception e) {
+            log.error("Kakao unlink 실패", e);
+        }
     }
 
 }

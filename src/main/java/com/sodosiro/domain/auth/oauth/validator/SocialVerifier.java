@@ -1,4 +1,4 @@
-package com.sodosiro.domain.auth.oauth.vaildator;
+package com.sodosiro.domain.auth.oauth.validator;
 
 import com.sodosiro.domain.auth.dto.response.SocialUserInfo;
 import com.sodosiro.domain.user.constants.Provider;

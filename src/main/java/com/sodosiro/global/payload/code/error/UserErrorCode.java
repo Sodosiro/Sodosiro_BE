@@ -17,6 +17,8 @@ public enum UserErrorCode implements BaseCode {
     _PROFILE_IMAGE_NOT_EXIST(HttpStatus.NOT_FOUND,"USER404-PROFILE_NOT_FOUND","프로필 이미지가 존재하지 않습니다."),
     _NICKNAME_BAD_REQUEST(HttpStatus.BAD_REQUEST,"USER400-BAD_REQUEST","닉네임 형식이 올바르지 않습니다."),
 
+    _INVALID_AUTHORIZATION_HEADER(HttpStatus.BAD_REQUEST, "AUTH400-BAD_REQUEST", "유효하지 않은 인증 헤더 형식입니다."),
+
     // JWT Errors
     _JWT_EXPIRED_ACCESS_TOKEN(HttpStatus.UNAUTHORIZED, "JWT401-EXPIRED_ACCESS", "만료된 엑세스 토큰입니다."),
     _JWT_INVALID_ACCESS_TOKEN(HttpStatus.UNAUTHORIZED, "JWT401-INVALID_ACCESS", "엑세스 토큰이 잘못되었습니다."),
