@@ -36,6 +36,12 @@ public class DataExtractEmbeddingProcessor {
     private final EmbeddingModel embeddingModel;
     private final TransactionTemplate transactionTemplate;
 
+    /**
+     * Processes the specified tourism content IDs and updates their embedding state.
+     *
+     * @param runId      identifier of the ETL run
+     * @param contentIds IDs of the tourism content to process
+     */
     @Async
     public void process(String runId, List<Long> contentIds) {
         Semaphore permits = new Semaphore(MAX_CONCURRENCY);
@@ -59,6 +65,12 @@ public class DataExtractEmbeddingProcessor {
         }
     }
 
+    /**
+     * Processes a content item with retries for transient failures, using exponential backoff between attempts.
+     *
+     * @param runId     identifier of the ETL run
+     * @param contentId identifier of the tourism content to process
+     */
     private void processWithRetry(String runId, Long contentId) {
         for (int retryCount = 0; ; retryCount++) {
             try {
@@ -81,6 +93,14 @@ public class DataExtractEmbeddingProcessor {
         }
     }
 
+    /**
+     * Waits for the retry backoff interval before another embedding attempt.
+     *
+     * @param runId        the identifier of the ETL run
+     * @param contentId    the identifier of the tourism content
+     * @param backoffMillis the delay before retrying, in milliseconds
+     * @return             {@code true} if the wait completes, {@code false} if it is interrupted
+     */
     private static boolean sleepBeforeRetry(String runId, Long contentId, long backoffMillis) {
         try {
             Thread.sleep(backoffMillis);
@@ -92,7 +112,13 @@ public class DataExtractEmbeddingProcessor {
         }
     }
 
-    /** 연결 오류, rate limit(429), 서버 오류(5xx)만 일시 오류로 취급한다. */
+    /**
+     * Determines whether an exception represents a transient failure eligible for retry.
+     *
+     * @param exception the exception to classify, including its causes
+     * @return {@code true} if the exception or any cause is a connection error, HTTP 429 response,
+     *         or HTTP 5xx response; {@code false} otherwise
+     */
     static boolean isRetryable(Throwable exception) {
         for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
             if (cause instanceof ResourceAccessException) {
@@ -107,6 +133,11 @@ public class DataExtractEmbeddingProcessor {
         return false;
     }
 
+    /**
+     * Generates and stores an embedding for the specified content, then marks its embedding as complete.
+     *
+     * @param contentId the tourism content identifier
+     */
     private void processOne(Long contentId) {
         String title = travelEmbeddingPort.findSpotTitle(contentId);
         String overview = embeddingStatePort.findOverview(contentId);

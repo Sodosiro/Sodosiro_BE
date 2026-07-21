@@ -14,6 +14,13 @@ public class DataExtractRefreshService {
 
     private final DataExtractEmbeddingProcessor dataExtractEmbeddingProcessor;
 
+    /**
+     * Processes a batch of distinct content identifiers for a run.
+     *
+     * @param runId      the identifier of the run
+     * @param contentIds the content identifiers to process
+     * @return the number of distinct content identifiers processed
+     */
     public int accept(String runId, List<Long> contentIds) {
         validateRequest(runId, contentIds);
 
@@ -22,6 +29,14 @@ public class DataExtractRefreshService {
         return distinctIds.size();
     }
 
+    /**
+     * Validates the run identifier and content ID batch.
+     *
+     * @param runId      the identifier of the processing run
+     * @param contentIds the content IDs to validate
+     * @throws IllegalArgumentException if the run ID is blank, the content ID list is empty,
+     *                                  exceeds the maximum batch size, or contains a non-positive ID
+     */
     private static void validateRequest(String runId, List<Long> contentIds) {
         if (runId == null || runId.isBlank()) {
             throw new IllegalArgumentException("runId는 필수입니다.");

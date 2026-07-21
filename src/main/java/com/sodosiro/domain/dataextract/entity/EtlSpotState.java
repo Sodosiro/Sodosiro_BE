@@ -30,6 +30,9 @@ public class EtlSpotState {
     @Column(name = "last_etl_at", nullable = false)
     private LocalDateTime lastEtlAt;
 
+    /**
+     * Marks embedding as complete and records the completion time.
+     */
     public void completeEmbedding() {
         this.embedPending = false;
         this.lastEtlAt = LocalDateTime.now();

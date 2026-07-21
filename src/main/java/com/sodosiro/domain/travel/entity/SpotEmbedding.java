@@ -48,6 +48,14 @@ public class SpotEmbedding {
     @Comment("생성시각")
     private LocalDateTime createdAt;
 
+    /**
+     * Creates a spot embedding with its creation timestamp.
+     *
+     * @param contentId   the tourism spot content identifier
+     * @param embedding   the 1536-dimensional embedding vector
+     * @param inputText   the text used to generate the embedding
+     * @param keywordText the normalized keywords associated with the spot
+     */
     private SpotEmbedding(Long contentId, float[] embedding, String inputText, String keywordText) {
         this.contentId = contentId;
         this.embedding = embedding;
@@ -56,6 +64,15 @@ public class SpotEmbedding {
         this.createdAt = LocalDateTime.now();
     }
 
+    /**
+     * Creates a tourist spot embedding with its source text and normalized keywords.
+     *
+     * @param contentId   the tourist spot content identifier
+     * @param embedding   the 1536-dimensional embedding vector
+     * @param inputText   the text used to generate the embedding
+     * @param keywordText the normalized keyword list associated with the embedding
+     * @return a new tourist spot embedding
+     */
     public static SpotEmbedding of(Long contentId, float[] embedding, String inputText, String keywordText) {
         return new SpotEmbedding(contentId, embedding, inputText, keywordText);
     }

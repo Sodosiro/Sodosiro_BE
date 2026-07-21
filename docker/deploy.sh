@@ -6,6 +6,7 @@ set -euo pipefail
 # 스크립트 위치 기준으로 프로젝트 루트로 이동
 cd "$(dirname "$0")/.."
 
+# compose runs Docker Compose with the project's standard Compose file and forwards all provided arguments.
 compose() {
   docker compose -f docker/docker-compose.yml "$@"
 }

@@ -8,6 +8,11 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @EnableAsync
 public class SodosiroApplication {
 
+	/**
+	 * Starts the Sodosiro Spring Boot application.
+	 *
+	 * @param args command-line arguments passed to the application
+	 */
 	public static void main(String[] args) {
 		SpringApplication.run(SodosiroApplication.class, args);
 	}

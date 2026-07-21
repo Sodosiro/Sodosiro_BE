@@ -25,6 +25,12 @@ public class DataExtractEtlController {
 
     private final DataExtractRefreshService dataExtractRefreshService;
 
+    /**
+     * Accepts a travel data refresh request for processing.
+     *
+     * @param request the travel refresh request containing the run identifier and content identifiers
+     * @return an accepted response containing the number of refresh items accepted
+     */
     @PostMapping("/refresh")
     public ResponseEntity<TravelRefreshResponse> refresh(@RequestBody TravelRefreshRequest request) {
         int accepted = dataExtractRefreshService.accept(request.runId(), request.contentIds());

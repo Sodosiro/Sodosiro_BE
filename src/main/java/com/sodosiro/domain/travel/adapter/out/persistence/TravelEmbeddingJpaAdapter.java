@@ -16,6 +16,13 @@ public class TravelEmbeddingJpaAdapter implements TravelEmbeddingPort {
     private final TouristSpotRepository touristSpotRepository;
     private final SpotEmbeddingRepository spotEmbeddingRepository;
 
+    /**
+     * Retrieves the title of a tourist spot by its content ID.
+     *
+     * @param contentId the content ID of the tourist spot
+     * @return the tourist spot's title
+     * @throws IllegalArgumentException if no tourist spot exists with the specified content ID
+     */
     @Override
     public String findSpotTitle(Long contentId) {
         TouristSpot spot = touristSpotRepository.findById(contentId)
@@ -23,6 +30,14 @@ public class TravelEmbeddingJpaAdapter implements TravelEmbeddingPort {
         return spot.getTitle();
     }
 
+    /**
+     * Persists the embedding and associated text for a travel content item.
+     *
+     * @param contentId  the travel content identifier
+     * @param embedding  the embedding vector
+     * @param inputText  the source text used to generate the embedding
+     * @param keywordText the associated keyword text
+     */
     @Override
     public void saveEmbedding(Long contentId, float[] embedding, String inputText, String keywordText) {
         spotEmbeddingRepository.save(SpotEmbedding.of(contentId, embedding, inputText, keywordText));

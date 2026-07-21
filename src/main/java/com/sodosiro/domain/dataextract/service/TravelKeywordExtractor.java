@@ -28,10 +28,22 @@ public class TravelKeywordExtractor {
 
     private final ChatClient chatClient;
 
+    /**
+     * Creates an extractor backed by the specified chat model.
+     *
+     * @param chatModel the model used to generate travel keyword extractions
+     */
     public TravelKeywordExtractor(ChatModel chatModel) {
         this.chatClient = ChatClient.create(chatModel);
     }
 
+    /**
+     * Generates and parses a categorized keyword and description extraction for a travel destination.
+     *
+     * @param title    the travel destination name
+     * @param overview the destination introduction text, or {@code null} if unavailable
+     * @return         the validated extraction containing the category, keywords, and description
+     */
     public Extraction extract(String title, String overview) {
         String response = chatClient.prompt()
                 .system("""
@@ -78,12 +90,21 @@ public class TravelKeywordExtractor {
     /** 추출 결과 — category 는 카테고리 필터, 나머지는 임베딩 원문 구성에 쓴다. */
     public record Extraction(String category, List<String> keywords, String description) {
 
-        /** 하위 호환 키워드 문자열 — 첫 토큰이 대표 분류다 (카테고리 필터 파싱용). */
+        /**
+         * Builds a comma-separated keyword string with the primary category first.
+         *
+         * @return the category followed by the extracted keywords
+         */
         public String keywordText() {
             return category + ", " + String.join(", ", keywords);
         }
 
-        /** 임베딩 원문 — 장소명·분류·설명·키워드를 합친 검색 색인문. */
+        /**
+         * Builds the search indexing text from the place title, category, description, and keywords.
+         *
+         * @param title the place title
+         * @return the formatted embedding text
+         */
         public String embeddingText(String title) {
             return title + " (" + category + ")\n"
                     + description + "\n"
@@ -91,6 +112,14 @@ public class TravelKeywordExtractor {
         }
     }
 
+    /**
+     * Parses and validates a model response into a structured travel extraction.
+     *
+     * @param response the labeled response containing a category, keywords, and description
+     * @return the validated extraction result
+     * @throws IllegalStateException if the response is empty, the category is invalid,
+     *         no keywords are present, or the description is empty
+     */
     static Extraction parse(String response) {
         if (response == null || response.isBlank()) {
             throw new IllegalStateException("키워드 추출 결과가 비어 있습니다.");
@@ -136,6 +165,14 @@ public class TravelKeywordExtractor {
         return new Extraction(category, keywords, descriptionText);
     }
 
+    /**
+     * Normalizes extracted keywords by trimming markers and punctuation, removing blanks and the primary category,
+     * eliminating duplicates, and limiting the result to the maximum keyword count.
+     *
+     * @param line     the raw keyword line
+     * @param category the primary category to exclude from the keywords
+     * @return the normalized keyword list
+     */
     private static List<String> normalizeKeywords(String line, String category) {
         if (line == null) {
             return List.of();
