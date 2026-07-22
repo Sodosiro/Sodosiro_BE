@@ -12,7 +12,7 @@ public enum S3ErrorCode implements BaseCode {
 
     // s3 관련 응답
     _NOT_EXIST_FILE(HttpStatus.BAD_REQUEST, "FILE400-NOT_FOUND", "존재하지 않는 파일입니다."),
-    _NOT_EXIST_FILE_Name(HttpStatus.BAD_REQUEST, "FILE400-NOT_FOUND", "존재하지 않는 파일명입니다."),
+    _NOT_EXIST_FILE_NAME(HttpStatus.BAD_REQUEST, "FILE400-INVALID_FILE_NAME", "존재하지 않는 파일명입니다."),
     _NOT_EXIST_FILE_EXTENSION(HttpStatus.BAD_REQUEST, "FILE400-EXT_MISSING", "확장자가 존재하지 않습니다."),
     _INVALID_FILE_EXTENSION(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "FILE415-EXT_UNSUPPORTED", "허용되지 않는 확장자입니다."),
 

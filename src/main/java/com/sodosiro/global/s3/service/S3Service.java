@@ -18,6 +18,8 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import java.io.InputStream;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -25,7 +27,6 @@ import java.util.UUID;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class S3Service {
     private final S3Client s3Client;
 
@@ -65,7 +66,7 @@ public class S3Service {
 
         String filename = file.getOriginalFilename();
         if (filename == null || filename.isEmpty()) {
-            throw new GeneralException(S3ErrorCode._NOT_EXIST_FILE_Name);
+            throw new GeneralException(S3ErrorCode._NOT_EXIST_FILE_NAME);
         }
         String extension = extractExtension(filename);
 
@@ -111,9 +112,10 @@ public class S3Service {
     private String generateS3Key(MultipartFile file, String folder) {
         String filename = file.getOriginalFilename();
         String extension = extractExtension(filename);
-        String uuid = UUID.randomUUID().toString().substring(0, 10);
+        String uuid = UUID.randomUUID().toString();
+        String date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
 
-        return String.format("%s/%s.%s", folder, uuid, extension);
+        return String.format("%s/%s.%s", folder, date, uuid, extension);
     }
 
     public void delete(String imageUrl) {
@@ -148,10 +150,13 @@ public class S3Service {
 
     private String getKeyFromImageUrl(String imageUrl) {
         try {
-            if (!imageUrl.contains(cloudFrontDomain) && !imageUrl.contains(bucketName)) {
+            URI uri = new URI(imageUrl);
+            String host = uri.getHost();
+            boolean isAllowedHost = (cloudFrontDomain != null && !cloudFrontDomain.isBlank() && cloudFrontDomain.equals(host))
+                    || (host != null && host.equals(String.format("%s.s3.amazonaws.com", bucketName)));
+            if (!isAllowedHost) {
                 throw new GeneralException(S3ErrorCode._EXTERNAL_URL_NOT_ALLOWED);
             }
-            URI uri = new URI(imageUrl);
             String path = uri.getPath();
 
             if (path == null || path.isBlank() || path.equals("/")) {
@@ -257,7 +262,6 @@ public class S3Service {
             case "image/jpeg", "image/jpg" -> "jpg";
             case "image/png" -> "png";
             case "image/webp" -> "webp";
-            case "image/gif" -> "gif";
             default -> null;
         };
     }
