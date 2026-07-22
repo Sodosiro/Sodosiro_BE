@@ -115,7 +115,7 @@ public class S3Service {
         String uuid = UUID.randomUUID().toString();
         String date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
 
-        return String.format("%s/%s.%s", folder, date, uuid, extension);
+        return String.format("%s/%s/%s.%s", folder, date, uuid, extension);
     }
 
     public void delete(String imageUrl) {
