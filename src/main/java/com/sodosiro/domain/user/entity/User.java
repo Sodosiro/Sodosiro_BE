@@ -84,25 +84,35 @@ public class User {
     @Comment("푸시 알림 수신 여부")
     private Boolean pushEnabled = true;
 
+    @Column(name = "introduction", length = 100)
+    @Comment("한줄소개")
+    private String introduction;
+
+    @Builder.Default
+    @Column(name = "exp", nullable = false)
+    @Comment("경험치")
+    private Integer exp = 0;
+
+    @Builder.Default
+    @Column(name = "level", nullable = false)
+    @Comment("레벨")
+    private Integer level = 1;
+
     @Builder.Default
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Comment("연결된 소셜 계정 목록")
     private List<SocialAccounts> socialAccounts = new ArrayList<>();
 
-    public boolean updateUserInfo(String name, String email) {
-        boolean changed = false;
-
-        if (name != null && !name.equals(this.name)) {
-            this.name = name;
-            changed = true;
+    public void updateProfile(String nickName, String introduction, String profileImageUrl) {
+        if (nickName != null) {
+            this.nickName = nickName;
         }
-
-        if (email != null && !email.equals(this.email)) {
-            this.email = email;
-            changed = true;
+        if (introduction != null) {
+            this.introduction = introduction;
         }
-
-        return changed;
+        if (profileImageUrl != null) {
+            this.profileImageUrl = profileImageUrl;
+        }
     }
 
     public String getUserIdAsString() {
