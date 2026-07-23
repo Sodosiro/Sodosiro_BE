@@ -103,15 +103,12 @@ public class User {
     @Comment("연결된 소셜 계정 목록")
     private List<SocialAccounts> socialAccounts = new ArrayList<>();
 
-    public void updateProfile(String nickName, String introduction, String profileImageUrl) {
+    public void updateProfile(String nickName, String introduction) {
         if (nickName != null) {
             this.nickName = nickName;
         }
         if (introduction != null) {
             this.introduction = introduction;
-        }
-        if (profileImageUrl != null) {
-            this.profileImageUrl = profileImageUrl;
         }
     }
 
