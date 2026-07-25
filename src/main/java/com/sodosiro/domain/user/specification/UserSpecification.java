@@ -17,4 +17,6 @@ public interface UserSpecification {
             ProfileRequest request,
             MultipartFile image
     );
+
+
 }
