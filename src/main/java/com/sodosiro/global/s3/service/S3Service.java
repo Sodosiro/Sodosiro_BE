@@ -166,6 +166,8 @@ public class S3Service {
             String decodedPath = URLDecoder.decode(path, StandardCharsets.UTF_8);
 
             return decodedPath.startsWith("/") ? decodedPath.substring(1) : decodedPath;
+        } catch (GeneralException e) {
+            throw e;
         } catch (URISyntaxException e) {
             throw new GeneralException(S3ErrorCode._INVALID_URL_FORMAT,e);
         } catch (Exception e) {
