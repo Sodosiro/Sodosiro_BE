@@ -3,12 +3,14 @@ package com.sodosiro.domain.user.service;
 import com.sodosiro.domain.user.dto.request.ProfileRequest;
 import com.sodosiro.domain.user.dto.response.ProfileResponse;
 import com.sodosiro.domain.user.entity.User;
+import com.sodosiro.domain.user.event.ProfileImageChangedEvent;
 import com.sodosiro.domain.user.repository.UserRepository;
 import com.sodosiro.global.payload.code.error.UserErrorCode;
 import com.sodosiro.global.payload.exception.GeneralException;
 import com.sodosiro.global.s3.constants.FileFolder;
 import com.sodosiro.global.s3.service.S3Service;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -19,6 +21,8 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final S3Service s3Service;
+    private final ApplicationEventPublisher eventPublisher;
+
 
     @Transactional
     public void clearFcmToken(Long userId) {
@@ -63,20 +67,10 @@ public class UserService {
             String newUrl = s3Service.uploadFile(image, FileFolder.PROFILES);
             String oldUrl = user.getProfileImageUrl();
 
-            try {
-                user.updateProfileImage(newUrl);
-
-                if (oldUrl != null && !oldUrl.isBlank()) {
-                    s3Service.delete(oldUrl);
-                }
-            } catch (Exception e) {
-                s3Service.delete(newUrl);
-                throw e;
-            }
+            user.updateProfileImage(newUrl);
+            eventPublisher.publishEvent(new ProfileImageChangedEvent(newUrl, oldUrl));
         }
-
         return ProfileResponse.from(user);
-
     }
 
 

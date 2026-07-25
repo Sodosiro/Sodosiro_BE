@@ -22,14 +22,14 @@ public class Usercontroller implements UserSpecification {
      * 프로필 수정 API (닉네임, 한줄소개, 프로필 이미지 통합 수정)
      */
 
-    @GetMapping("/")
+    @GetMapping
     public ResponseEntity<ProfileResponse> getProfile(@LoginUser Long userId) {
         ProfileResponse response = userService.getProfile(userId);
 
         return ResponseEntity.ok(response);
     }
 
-    @PatchMapping(value = "/", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PatchMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ProfileResponse> updateProfile(
             @LoginUser Long userId,
             @RequestPart ProfileRequest request,
