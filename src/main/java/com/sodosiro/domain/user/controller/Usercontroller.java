@@ -5,6 +5,7 @@ import com.sodosiro.domain.user.dto.response.ProfileResponse;
 import com.sodosiro.domain.user.service.UserService;
 import com.sodosiro.domain.user.specification.UserSpecification;
 import com.sodosiro.global.resolver.LoginUser;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -32,7 +33,7 @@ public class Usercontroller implements UserSpecification {
     @PatchMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ProfileResponse> updateProfile(
             @LoginUser Long userId,
-            @RequestPart ProfileRequest request,
+            @RequestPart @Valid ProfileRequest request,
             @RequestPart(value = "image", required = false) MultipartFile image) {
 
         ProfileResponse response = userService.updateProfile(userId, request,image);
