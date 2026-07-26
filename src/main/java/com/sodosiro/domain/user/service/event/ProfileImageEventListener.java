@@ -1,4 +1,4 @@
-package com.sodosiro.domain.user.event;
+package com.sodosiro.domain.user.service.event;
 
 import com.sodosiro.global.s3.service.S3Service;
 import lombok.RequiredArgsConstructor;
@@ -15,24 +15,27 @@ public class ProfileImageEventListener {
 
     private final S3Service s3Service;
 
+    @Async("profileImageExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onCommit(ProfileImageChangedEvent event) {
         String oldUrl = event.oldUrl();
-        if (oldUrl != null && !oldUrl.isBlank()) {
-            asyncDeleteS3Image(oldUrl);
-        }
-    }
 
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_ROLLBACK)
-    public void onRollback(ProfileImageChangedEvent event) {
-        String newUrl = event.newUrl();
-        if (newUrl != null && !newUrl.isBlank()) {
-            asyncDeleteS3Image(newUrl);
+        if (oldUrl != null && !oldUrl.isBlank()) {
+            deleteS3Image(oldUrl);
         }
     }
 
     @Async("profileImageExecutor")
-    public void asyncDeleteS3Image(String imageUrl) {
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_ROLLBACK)
+    public void onRollback(ProfileImageChangedEvent event) {
+        String newUrl = event.newUrl();
+
+        if (newUrl != null && !newUrl.isBlank()) {
+            deleteS3Image(newUrl);
+        }
+    }
+
+    private void deleteS3Image(String imageUrl) {
         try {
             s3Service.delete(imageUrl);
         } catch (Exception e) {

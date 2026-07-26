@@ -3,7 +3,7 @@ package com.sodosiro.domain.user.service;
 import com.sodosiro.domain.user.dto.request.ProfileRequest;
 import com.sodosiro.domain.user.dto.response.ProfileResponse;
 import com.sodosiro.domain.user.entity.User;
-import com.sodosiro.domain.user.event.ProfileImageChangedEvent;
+import com.sodosiro.domain.user.service.event.ProfileImageChangedEvent;
 import com.sodosiro.domain.user.repository.UserRepository;
 import com.sodosiro.global.payload.code.error.UserErrorCode;
 import com.sodosiro.global.payload.exception.GeneralException;
