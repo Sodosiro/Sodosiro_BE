@@ -90,7 +90,7 @@ dependencies {
 	implementation 'software.amazon.awssdk:ses'
 	implementation 'software.amazon.awssdk:secretsmanager'
 	implementation 'software.amazon.awssdk:sts'
-	implementation 'io.awspring.cloud:spring-cloud-aws-starter-s3:3.4.1'
+	implementation 'io.awspring.cloud:spring-cloud-aws-starter-s3:4.1.0'
 
 
 	// Spring REST Docs
