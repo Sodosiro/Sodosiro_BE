@@ -54,6 +54,22 @@ compose exec -T postgres sh -ec '
 compose exec -T postgres sh -ec 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$APP_DB_NAME"' \
   < docker/postgres/000_initialize_travel_schema.sql
 
+# 버전 마이그레이션은 성공 후에만 기록해 이후 배포에서 재실행하지 않는다.
+compose exec -T postgres sh -ec 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$APP_DB_NAME" \
+  -c "CREATE TABLE IF NOT EXISTS schema_migration (version TEXT PRIMARY KEY, applied_at TIMESTAMPTZ NOT NULL DEFAULT now())"'
+for migration_path in docker/postgres/[0-9][0-9][0-9][0-9]*.sql; do
+  migration_version="$(basename "$migration_path")"
+  already_applied="$(compose exec -T postgres sh -ec \
+    "psql -U \"\$POSTGRES_USER\" -d \"\$APP_DB_NAME\" -tAc \"SELECT 1 FROM schema_migration WHERE version = '$migration_version'\"")"
+  if [[ "$already_applied" == "1" ]]; then
+    continue
+  fi
+  compose exec -T postgres sh -ec 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$APP_DB_NAME"' \
+    < "$migration_path"
+  compose exec -T postgres sh -ec \
+    "psql -v ON_ERROR_STOP=1 -U \"\$POSTGRES_USER\" -d \"\$APP_DB_NAME\" -c \"INSERT INTO schema_migration (version) VALUES ('$migration_version')\""
+done
+
 echo "==> [3/6] 기존 app 컨테이너 중지 및 삭제"
 # 컨테이너를 삭제하기 전에 현재 app 이미지 ID를 보관한다.
 APP_IMAGE_IDS="$(compose images -q app 2>/dev/null || true)"

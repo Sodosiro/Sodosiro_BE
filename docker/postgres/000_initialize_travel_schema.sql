@@ -25,10 +25,6 @@ CREATE TABLE IF NOT EXISTS tourist_spot (
     content_id BIGINT PRIMARY KEY,
     addr1 VARCHAR(300),
     addr2 VARCHAR(200),
-    area_code VARCHAR(5),
-    cat1 VARCHAR(12),
-    cat2 VARCHAR(12),
-    cat3 VARCHAR(12),
     collected_at TIMESTAMP(6),
     created_time TIMESTAMP(6),
     expguide TEXT,
@@ -47,9 +43,7 @@ CREATE TABLE IF NOT EXISTS tourist_spot (
     content_type_id VARCHAR(5),
     ldong_regn_code VARCHAR(5),
     ldong_signgu_code VARCHAR(5),
-    lcls_systm1 VARCHAR(12),
-    lcls_systm2 VARCHAR(12),
-    lcls_systm3 VARCHAR(12),
+    category INTEGER NOT NULL CHECK (category BETWEEN 1 AND 7),
     overview TEXT,
     detail_info JSONB NOT NULL DEFAULT jsonb_build_array()
 );
@@ -59,7 +53,6 @@ CREATE TABLE IF NOT EXISTS spot_image (
     content_id BIGINT NOT NULL,
     image_url TEXT,
     "order" INTEGER NOT NULL,
-    type VARCHAR(200),
     CONSTRAINT uk_spot_image_content_order UNIQUE (content_id, "order")
 );
 
@@ -100,9 +93,7 @@ ALTER TABLE tourist_spot
     ADD COLUMN IF NOT EXISTS content_type_id VARCHAR(5),
     ADD COLUMN IF NOT EXISTS ldong_regn_code VARCHAR(5),
     ADD COLUMN IF NOT EXISTS ldong_signgu_code VARCHAR(5),
-    ADD COLUMN IF NOT EXISTS lcls_systm1 VARCHAR(12),
-    ADD COLUMN IF NOT EXISTS lcls_systm2 VARCHAR(12),
-    ADD COLUMN IF NOT EXISTS lcls_systm3 VARCHAR(12),
+    ADD COLUMN IF NOT EXISTS category INTEGER,
     ADD COLUMN IF NOT EXISTS overview TEXT,
     ADD COLUMN IF NOT EXISTS detail_info JSONB NOT NULL DEFAULT jsonb_build_array();
 
@@ -110,10 +101,9 @@ ALTER TABLE spot_embedding
     ADD COLUMN IF NOT EXISTS keyword_text TEXT;
 
 CREATE INDEX IF NOT EXISTS idx_image_content ON spot_image (content_id);
-CREATE INDEX IF NOT EXISTS idx_spot_cat ON tourist_spot (cat1, cat2, cat3);
+CREATE INDEX IF NOT EXISTS idx_spot_category ON tourist_spot (category);
 CREATE INDEX IF NOT EXISTS idx_spot_content_type ON tourist_spot (content_type_id);
-CREATE INDEX IF NOT EXISTS idx_spot_lcls ON tourist_spot (lcls_systm1, lcls_systm2, lcls_systm3);
 CREATE INDEX IF NOT EXISTS idx_spot_ldong_region ON tourist_spot (ldong_regn_code, ldong_signgu_code);
-CREATE INDEX IF NOT EXISTS idx_spot_region ON tourist_spot (area_code, sigungu_code);
+CREATE INDEX IF NOT EXISTS idx_spot_sigungu ON tourist_spot (sigungu_code);
 CREATE INDEX IF NOT EXISTS idx_state_image_recovery
     ON etl_spot_state (content_id) WHERE image_absent = false;
