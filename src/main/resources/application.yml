@@ -76,4 +76,17 @@ spring:
         options:
           model: text-embedding-3-small
 
+  cloud:
+    aws:
+      region:
+        static: ${AWS_REGION}
+      credentials:
+        access-key: ${AWS_ACCESS_KEY_ID:}
+        secret-key: ${AWS_SECRET_ACCESS_KEY:}
+      s3:
+        bucket: ${AWS_S3_BUCKET}
+      cloudfront:
+        domain: ${AWS_CLOUDFRONT_DOMAIN:}
+server:
+  port: ${SERVER_PORT:8081}
 

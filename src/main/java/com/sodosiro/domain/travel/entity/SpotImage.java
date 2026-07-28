@@ -48,10 +48,6 @@ public class SpotImage {
     @Comment("이미지 순서")
     private Integer order;
 
-    @Column(name = "type", length = 200)
-    @Comment("이미지 타입")
-    private String type;
-
     @Column(name = "image_url", columnDefinition = "text")
     @Comment("이미지 URL")
     private String imageUrl;
