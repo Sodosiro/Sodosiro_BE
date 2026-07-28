@@ -26,10 +26,9 @@ import java.util.Map;
 @Table(
         name = "tourist_spot",
         indexes = {
-                @Index(name = "idx_spot_region", columnList = "area_code, sigungu_code"),
+                @Index(name = "idx_spot_sigungu", columnList = "sigungu_code"),
                 @Index(name = "idx_spot_ldong_region", columnList = "ldong_regn_code, ldong_signgu_code"),
-                @Index(name = "idx_spot_cat", columnList = "cat1, cat2, cat3"),
-                @Index(name = "idx_spot_lcls", columnList = "lcls_systm1, lcls_systm2, lcls_systm3")
+                @Index(name = "idx_spot_category", columnList = "category")
         }
 )
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -80,37 +79,13 @@ public class TouristSpot {
     @Comment("법정동 시군구 코드")
     private String ldongSignguCode;
 
-    @Column(name = "area_code", length = 5)
-    @Comment("지역코드 (areacode)")
-    private String areaCode;
-
     @Column(name = "sigungu_code", length = 5)
     @Comment("시군구코드 (sigungucode)")
     private String sigunguCode;
 
-    @Column(name = "cat1", length = 12)
-    @Comment("구형 대분류 cat1 (삭제 예정)")
-    private String cat1;
-
-    @Column(name = "cat2", length = 12)
-    @Comment("구형 중분류 cat2 (삭제 예정)")
-    private String cat2;
-
-    @Column(name = "cat3", length = 12)
-    @Comment("구형 소분류 cat3 (삭제 예정)")
-    private String cat3;
-
-    @Column(name = "lcls_systm1", length = 12)
-    @Comment("신규 대분류 lclsSystm1 (category.code)")
-    private String lclsSystm1;
-
-    @Column(name = "lcls_systm2", length = 12)
-    @Comment("신규 중분류 lclsSystm2 (category.code)")
-    private String lclsSystm2;
-
-    @Column(name = "lcls_systm3", length = 12)
-    @Comment("신규 소분류 lclsSystm3 (category.code)")
-    private String lclsSystm3;
+    @Column(name = "category", nullable = false)
+    @Comment("서비스 카테고리 (1=식당, 2=카페, 3=쇼핑, 4=관광지, 5=자연, 6=액티비티, 7=숙박)")
+    private Integer category;
 
     @Column(name = "first_image", columnDefinition = "text")
     @Comment("firstimage 대표(원본)")
