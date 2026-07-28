@@ -18,6 +18,8 @@ required_vars=(
   KAKAO_NATIVE_CLIENT_ID
   KAKAO_ADMIN_KEY
   OPENAI_API_KEY
+  AWS_REGION
+  AWS_S3_BUCKET
 )
 missing_vars=()
 for var_name in "${required_vars[@]}"; do

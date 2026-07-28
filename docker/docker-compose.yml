@@ -31,6 +31,8 @@ services:
     image: redis:7-alpine
     container_name: sodosiro-redis
     restart: unless-stopped
+    ports:
+      - "${REDIS_HOST_PORT:-6380}:6379"
     volumes:
       # 데이터 영속화 (named volume)
       - redis-data:/data
@@ -65,8 +67,8 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
     ports:
-      # Spring 기동 포트와 호스트 공개 포트를 SERVER_PORT로 통일한다.
-      - "${SERVER_PORT:-8080}:${SERVER_PORT:-8080}"
+      # 호스트 포트는 로컬에서 직접 실행한 서버와 충돌하지 않도록 분리한다.
+      - "${APP_HOST_PORT:-8082}:${SERVER_PORT:-8081}"
     volumes:
       # 애플리케이션 로그를 호스트(프로젝트 루트/logs)에 마운트
       - ../logs:/app/logs
