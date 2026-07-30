@@ -4,6 +4,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -131,4 +133,9 @@ public class TouristSpot {
     @Column(name = "collected_at")
     @Comment("수집시각")
     private LocalDateTime collectedAt;
+
+    /** 상세 화면에서만 fetch join으로 조회한다. */
+    @OneToMany
+    @JoinColumn(name = "content_id", referencedColumnName = "content_id")
+    private List<SpotImage> images;
 }
