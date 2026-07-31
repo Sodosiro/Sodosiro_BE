@@ -28,6 +28,11 @@ public class AsyncConfig {
         return executor;
     }
 
+    /**
+     * Configures the executor used for asynchronous profile image processing.
+     *
+     * @return the initialized profile image task executor
+     */
     @Bean(name = "profileImageExecutor")
     public Executor profileImageExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
@@ -43,6 +48,11 @@ public class AsyncConfig {
         return executor;
     }
 
+    /**
+     * Creates the executor used for asynchronous review image processing.
+     *
+     * @return the configured review image task executor
+     */
     @Bean(name = "reviewImageExecutor")
     public Executor reviewImageExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();

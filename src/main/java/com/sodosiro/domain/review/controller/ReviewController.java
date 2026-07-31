@@ -34,6 +34,14 @@ public class ReviewController implements ReviewSpecification {
 
     private final ReviewService reviewService;
 
+    /**
+     * Creates a review for the authenticated user.
+     *
+     * @param userId  the authenticated user's identifier
+     * @param request the validated review data
+     * @param images  optional images attached to the review
+     * @return the created review
+     */
     @PostMapping(value = "/reviews", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ReviewResponse> createReview(
             @LoginUser Long userId,
@@ -44,6 +52,15 @@ public class ReviewController implements ReviewSpecification {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    /**
+     * Retrieves reviews for a spot using the specified pagination and sort options.
+     *
+     * @param contentId   the spot identifier
+     * @param cursor      the pagination cursor
+     * @param size        the maximum number of reviews to retrieve
+     * @param sort        the review ordering
+     * @return the reviews matching the requested criteria
+     */
     @GetMapping("/spots/{contentId}/reviews")
     public ResponseEntity<ReviewListResponse> getReviews(
             @PathVariable Long contentId,
@@ -56,6 +73,14 @@ public class ReviewController implements ReviewSpecification {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Retrieves the authenticated user's reviews.
+     *
+     * @param userId the authenticated user's identifier
+     * @param cursor the cursor for continuing a previous page of results
+     * @param size the maximum number of reviews to return
+     * @return the user's review list
+     */
     @GetMapping("/reviews/me")
     public ResponseEntity<MyReviewListResponse> getMyReviews(
             @LoginUser Long userId,
@@ -66,6 +91,11 @@ public class ReviewController implements ReviewSpecification {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Updates an existing review.
+     *
+     * @return the updated review
+     */
     @PatchMapping(value = "/reviews/{reviewId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ReviewResponse> updateReview(
             @LoginUser Long userId,
@@ -77,6 +107,12 @@ public class ReviewController implements ReviewSpecification {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Deletes a review owned by the authenticated user.
+     *
+     * @param userId   the authenticated user's identifier
+     * @param reviewId the identifier of the review to delete
+     */
     @DeleteMapping("/reviews/{reviewId}")
     public ResponseEntity<Void> deleteReview(
             @LoginUser Long userId,

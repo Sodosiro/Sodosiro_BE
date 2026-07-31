@@ -14,6 +14,13 @@ public class TouristSpotQueryRepositoryImpl implements TouristSpotQueryRepositor
     private final JPAQueryFactory queryFactory;
     private static final QTouristSpot spot = QTouristSpot.touristSpot;
 
+    /**
+     * Updates the average rating and review count for the tourist spot with the specified content ID.
+     *
+     * @param contentId   the tourist spot's content ID
+     * @param avgRating   the updated average rating
+     * @param reviewCount the updated number of reviews
+     */
     @Override
     public void updateRatingStats(Long contentId, BigDecimal avgRating, Integer reviewCount) {
         queryFactory

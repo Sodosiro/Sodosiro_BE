@@ -15,18 +15,34 @@ public class ReviewImageChangedEventListener {
 
     private final S3Service s3Service;
 
+    /**
+     * Deletes the previous review image files after the transaction commits.
+     *
+     * @param event the review image change event containing the previous image URLs
+     */
     @Async("reviewImageExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onCommit(ReviewImageChangedEvent event) {
         deleteQuietly(event.oldUrls(), "커밋 후 구 이미지 삭제");
     }
 
+    /**
+     * Deletes newly created review images after the transaction rolls back.
+     *
+     * @param event the event containing the image URLs to delete
+     */
     @Async("reviewImageExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_ROLLBACK)
     public void onRollback(ReviewImageChangedEvent event) {
         deleteQuietly(event.newUrls(), "롤백 후 고아 이미지 삭제");
     }
 
+    /**
+     * Deletes the specified image files while allowing cleanup failures to be ignored.
+     *
+     * @param urls   the image URLs to delete
+     * @param reason the reason for the deletion attempt
+     */
     private void deleteQuietly(java.util.List<String> urls, String reason) {
         if (urls == null || urls.isEmpty()) return;
         try {

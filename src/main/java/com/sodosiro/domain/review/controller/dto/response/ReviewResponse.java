@@ -17,11 +17,26 @@ public record ReviewResponse(
         boolean isMyReview
 ) {
     public record AuthorInfo(Long userId, String displayName, String profileImageUrl) {
+        /**
+         * Creates author information from a user.
+         *
+         * @param user the user whose author information is created
+         * @return author information containing the user's ID, display name, and profile image URL
+         */
         public static AuthorInfo from(User user) {
             return new AuthorInfo(user.getUserId(), user.getDisplayName(), user.getProfileImageUrl());
         }
     }
 
+    /**
+     * Creates a review response containing review details, author information, images, and ownership status.
+     *
+     * @param review       the review to represent
+     * @param author       the review author
+     * @param images       the images associated with the review
+     * @param loginUserId  the ID of the logged-in user
+     * @return             the review response
+     */
     public static ReviewResponse of(Review review, User author, List<ReviewImage> images, Long loginUserId) {
         return new ReviewResponse(
                 review.getId(),

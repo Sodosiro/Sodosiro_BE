@@ -49,6 +49,14 @@ public class ReviewService {
     private final S3Service s3Service;
     private final ApplicationEventPublisher eventPublisher;
 
+    /**
+     * Creates a review for a tourist spot and updates its rating statistics.
+     *
+     * @param userId  the ID of the user submitting the review
+     * @param request the review content and rating
+     * @param images  images attached to the review
+     * @return the created review response
+     */
     @Transactional
     public ReviewResponse createReview(Long userId, ReviewCreateRequest request, List<MultipartFile> images) {
         validateImageCount(images);
@@ -76,6 +84,16 @@ public class ReviewService {
         return ReviewResponse.of(review, author, reviewImages, userId);
     }
 
+    /**
+     * Retrieves paginated reviews for a tourist spot.
+     *
+     * @param contentId    the tourist spot identifier
+     * @param cursor       the identifier used to continue pagination, or {@code null} to start from the latest reviews
+     * @param size         the maximum number of reviews to return
+     * @param sort         the review ordering
+     * @param loginUserId  the identifier of the logged-in user, if available
+     * @return             the reviews, rating statistics, and pagination information
+     */
     @Transactional(readOnly = true)
     public ReviewListResponse getReviews(Long contentId, Long cursor, int size, ReviewSort sort, Long loginUserId) {
         TouristSpot spot = touristSpotRepository.findById(contentId)
@@ -100,6 +118,14 @@ public class ReviewService {
         );
     }
 
+    /**
+     * Retrieves the authenticated user's reviews using cursor-based pagination.
+     *
+     * @param userId the user whose reviews are retrieved
+     * @param cursor the identifier from which to continue retrieval
+     * @param size the maximum number of reviews to include
+     * @return the user's reviews with pagination information
+     */
     @Transactional(readOnly = true)
     public MyReviewListResponse getMyReviews(Long userId, Long cursor, int size) {
         long effectiveCursor = (cursor == null) ? CURSOR_START : cursor;
@@ -124,6 +150,15 @@ public class ReviewService {
         return new MyReviewListResponse(responses, nextCursor, hasNext);
     }
 
+    /**
+     * Updates a review owned by the specified user, including its rating, content, and images.
+     *
+     * @param userId  the ID of the user updating the review
+     * @param reviewId the ID of the review to update
+     * @param request the updated rating and review content
+     * @param images the replacement images
+     * @return the updated review response
+     */
     @Transactional
     public ReviewResponse updateReview(Long userId, Long reviewId, ReviewUpdateRequest request, List<MultipartFile> images) {
         validateImageCount(images);
@@ -155,6 +190,12 @@ public class ReviewService {
         return ReviewResponse.of(review, author, reviewImages, userId);
     }
 
+    /**
+     * Deletes a user's review and refreshes the tourist spot's rating statistics.
+     *
+     * @param userId   the ID of the user requesting deletion
+     * @param reviewId the ID of the review to delete
+     */
     @Transactional
     public void deleteReview(Long userId, Long reviewId) {
         Review review = reviewRepository.findByIdAndIsDeletedFalse(reviewId)
@@ -176,6 +217,13 @@ public class ReviewService {
         refreshRatingStats(review.getContentId());
     }
 
+    /**
+     * Assembles review response objects with their authors, images, and viewer-specific data.
+     *
+     * @param reviews      the reviews to convert
+     * @param loginUserId  the ID of the logged-in user
+     * @return             the assembled review responses
+     */
     private List<ReviewResponse> assembleReviewResponses(List<Review> reviews, Long loginUserId) {
         if (reviews.isEmpty()) return List.of();
 
@@ -195,16 +243,35 @@ public class ReviewService {
                 .toList();
     }
 
+    /**
+     * Groups review images by their review ID in display order.
+     *
+     * @param reviewIds the review IDs whose images are retrieved
+     * @return a map from each review ID to its ordered images
+     */
     private Map<Long, List<ReviewImage>> groupImagesByReviewId(List<Long> reviewIds) {
         return reviewImageRepository.findAllByReviewIdInOrderByReviewIdAscDisplayOrderAsc(reviewIds).stream()
                 .collect(Collectors.groupingBy(ReviewImage::getReviewId));
     }
 
+    /**
+     * Uploads review images and returns their stored URLs.
+     *
+     * @param images the images to upload
+     * @return the stored image URLs, or an empty list when no images are provided
+     */
     private List<String> uploadImages(List<MultipartFile> images) {
         if (images == null || images.isEmpty()) return List.of();
         return s3Service.uploadFiles(images, FileFolder.REVIEWS);
     }
 
+    /**
+     * Persists review images with their display order.
+     *
+     * @param reviewId the identifier of the review associated with the images
+     * @param urls     the image URLs to persist
+     * @return the saved review image entities, or an empty list when no URLs are provided
+     */
     private List<ReviewImage> saveImages(Long reviewId, List<String> urls) {
         if (urls.isEmpty()) return List.of();
         List<ReviewImage> entities = IntStream.range(0, urls.size())
@@ -213,6 +280,11 @@ public class ReviewService {
         return reviewImageRepository.saveAll(entities);
     }
 
+    /**
+     * Recalculates and updates the tourist spot's average rating and active review count.
+     *
+     * @param contentId the tourist spot identifier
+     */
     private void refreshRatingStats(Long contentId) {
         Double avg   = reviewRepository.avgRatingByContentId(contentId);
         long count   = reviewRepository.countActiveByContentId(contentId);
@@ -222,6 +294,12 @@ public class ReviewService {
         touristSpotRepository.updateRatingStats(contentId, rounded, (int) count);
     }
 
+    /**
+     * Validates that the supplied image list does not exceed the maximum image count.
+     *
+     * @param images the images to validate
+     * @throws GeneralException if the image count exceeds the maximum
+     */
     private void validateImageCount(List<MultipartFile> images) {
         if (images != null && images.size() > MAX_IMAGE_COUNT) {
             throw new GeneralException(ReviewErrorCode._REVIEW_IMAGE_LIMIT_EXCEEDED);

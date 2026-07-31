@@ -12,6 +12,11 @@ public class QuerydslConfig {
     @PersistenceContext
     private EntityManager em;
 
+    /**
+     * Creates the Spring bean used to construct JPA queries.
+     *
+     * @return a query factory backed by the configured entity manager
+     */
     @Bean
     public JPAQueryFactory jpaQueryFactory() {
         return new JPAQueryFactory(em);

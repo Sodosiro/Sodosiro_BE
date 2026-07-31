@@ -67,12 +67,24 @@ public class Review {
     @Comment("수정 일시")
     private LocalDateTime updatedAt;
 
+    /**
+     * Initializes the creation timestamp and deletion status before persistence.
+     */
     @PrePersist
     private void prePersist() {
         this.createdAt = LocalDateTime.now();
         this.isDeleted = false;
     }
 
+    /**
+     * Creates a review with the specified content, user, rating, and body.
+     *
+     * @param contentId the identifier of the reviewed content
+     * @param userId    the identifier of the reviewing user
+     * @param rating    the review rating
+     * @param body      the review text
+     * @return the newly created review
+     */
     public static Review create(Long contentId, Long userId, Short rating, String body) {
         Review review = new Review();
         review.contentId = contentId;
@@ -82,12 +94,21 @@ public class Review {
         return review;
     }
 
+    /**
+     * Updates the review rating and body and records the modification time.
+     *
+     * @param rating the updated rating
+     * @param body   the updated review body
+     */
     public void update(Short rating, String body) {
         this.rating    = rating;
         this.body      = body;
         this.updatedAt = LocalDateTime.now();
     }
 
+    /**
+     * Marks the review as deleted and records the deletion time.
+     */
     public void delete() {
         this.isDeleted = true;
         this.updatedAt = LocalDateTime.now();

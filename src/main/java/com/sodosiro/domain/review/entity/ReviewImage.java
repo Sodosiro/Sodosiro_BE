@@ -50,11 +50,22 @@ public class ReviewImage {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    /**
+     * Sets the creation timestamp before the entity is persisted.
+     */
     @PrePersist
     private void prePersist() {
         this.createdAt = LocalDateTime.now();
     }
 
+    /**
+     * Creates a review image with the specified review, image URL, and display order.
+     *
+     * @param reviewId     the identifier of the review associated with the image
+     * @param imageUrl     the S3 URL of the image
+     * @param displayOrder the image's display order within the review
+     * @return a newly initialized review image
+     */
     public static ReviewImage of(Long reviewId, String imageUrl, int displayOrder) {
         ReviewImage image = new ReviewImage();
         image.reviewId     = reviewId;
