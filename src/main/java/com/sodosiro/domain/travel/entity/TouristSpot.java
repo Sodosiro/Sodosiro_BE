@@ -83,7 +83,7 @@ public class TouristSpot {
     @Comment("시군구코드 (sigungucode)")
     private String sigunguCode;
 
-    @Column(name = "category", nullable = false)
+    @Column(name = "category", nullable = true)
     @Comment("서비스 카테고리 (1=식당, 2=카페, 3=쇼핑, 4=관광지, 5=자연, 6=액티비티, 7=숙박)")
     private Integer category;
 

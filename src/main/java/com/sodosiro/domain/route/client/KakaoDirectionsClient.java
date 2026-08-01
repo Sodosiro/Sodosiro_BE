@@ -1,0 +1,57 @@
+package com.sodosiro.domain.route.client;
+
+import com.sodosiro.domain.route.dto.DirectionsLegResult;
+import com.sodosiro.domain.route.dto.KakaoDirectionsResponse;
+import com.sodosiro.domain.route.dto.KakaoRoute;
+import com.sodosiro.domain.route.dto.RouteWaypoint;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
+
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class KakaoDirectionsClient {
+
+    private static final int SUCCESS_RESULT_CODE = 0;
+
+    private final RestClient kakaoMobilityRestClient;
+
+    public DirectionsLegResult findRoute(RouteWaypoint origin, RouteWaypoint destination) {
+        try {
+            KakaoDirectionsResponse response = kakaoMobilityRestClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/v1/directions")
+                            .queryParam("origin", toCoordinateParam(origin))
+                            .queryParam("destination", toCoordinateParam(destination))
+                            .build())
+                    .retrieve()
+                    .body(KakaoDirectionsResponse.class);
+
+            return toResult(response);
+        } catch (RestClientException exception) {
+            log.warn("카카오 길찾기 API 호출 실패: origin={}, destination={},reason={}", origin.id(), destination.id(), exception.getMessage());
+            return DirectionsLegResult.failure();
+        }
+    }
+
+    private static String toCoordinateParam(RouteWaypoint waypoint) {
+        return waypoint.x().toPlainString() + "," + waypoint.y().toPlainString();
+    }
+
+    private static DirectionsLegResult toResult(KakaoDirectionsResponse response) {
+
+        if (response == null || response.routes() == null || response.routes().isEmpty()) {
+            return DirectionsLegResult.failure();
+        }
+
+        KakaoRoute route = response.routes().get(0);
+        if (route.resultCode() != SUCCESS_RESULT_CODE || route.summary() == null) {
+            return DirectionsLegResult.failure();
+        }
+
+        return DirectionsLegResult.success(route.summary().duration(), route.summary().distance());
+    }
+}
