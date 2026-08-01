@@ -4,6 +4,7 @@ import com.sodosiro.domain.dataextract.controller.dto.TravelRefreshRequest;
 import com.sodosiro.domain.dataextract.controller.dto.TravelRefreshResponse;
 import com.sodosiro.domain.dataextract.service.DataExtractRefreshService;
 import com.sodosiro.domain.dataextract.service.InternalEtlTokenVerifier;
+import io.swagger.v3.oas.annotations.Hidden;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
  * <p>Airflow는 {@code X-Internal-ETL-Token} 서비스 토큰을 포함해야 한다. 운영 환경에서는
  * 이 경로를 Nginx로 제한하고 Spring 애플리케이션 포트를 외부에 직접 노출하지 않는다.
  */
+@Hidden
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/internal/etl/travel")
