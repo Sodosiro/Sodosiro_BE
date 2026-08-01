@@ -1,9 +1,9 @@
-package com.sodosiro.domain.route.client;
+package com.sodosiro.domain.route.kakao.client;
 
-import com.sodosiro.domain.route.dto.DirectionsLegResult;
-import com.sodosiro.domain.route.dto.KakaoDirectionsResponse;
-import com.sodosiro.domain.route.dto.KakaoRoute;
-import com.sodosiro.domain.route.dto.RouteWaypoint;
+import com.sodosiro.domain.route.kakao.dto.DirectionsLegResult;
+import com.sodosiro.domain.route.kakao.dto.KakaoDirectionsResponse;
+import com.sodosiro.domain.route.kakao.dto.KakaoRoute;
+import com.sodosiro.domain.route.kakao.dto.RouteWaypoint;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

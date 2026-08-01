@@ -80,6 +80,10 @@ kakao:
   mobility:
     rest-api-key: ${KAKAO_CLIENT_ID}
 
+odsay:
+  api:
+    key: ${ODSAY_API_KEY}
+
 server:
   port: ${SERVER_PORT:8081}
 

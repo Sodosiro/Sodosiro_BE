@@ -1,8 +1,8 @@
-package com.sodosiro.domain.route.controller;
-import com.sodosiro.domain.route.dto.RouteDirectionsResponse;
-import com.sodosiro.domain.route.dto.RouteWaypoint;
-import com.sodosiro.domain.route.dto.RouteLeg;
-import com.sodosiro.domain.route.service.RouteLegTimeService;
+package com.sodosiro.domain.route.kakao.controller;
+import com.sodosiro.domain.route.kakao.dto.RouteDirectionsResponse;
+import com.sodosiro.domain.route.kakao.dto.RouteWaypoint;
+import com.sodosiro.domain.route.kakao.dto.RouteLeg;
+import com.sodosiro.domain.route.kakao.service.RouteLegTimeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;

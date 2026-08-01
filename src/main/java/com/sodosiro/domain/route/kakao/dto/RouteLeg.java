@@ -1,4 +1,4 @@
-package com.sodosiro.domain.route.dto;
+package com.sodosiro.domain.route.kakao.dto;
 
 public record RouteLeg(Long fromId, Long toId, Long durationSeconds, Long distanceMeters, boolean success) {
 

@@ -1,14 +1,13 @@
-package com.sodosiro.domain.route.service;
+package com.sodosiro.domain.route.kakao.service;
 
-import com.sodosiro.domain.route.client.KakaoDirectionsClient;
-import com.sodosiro.domain.route.dto.DirectionsLegResult;
-import com.sodosiro.domain.route.dto.RouteLeg;
-import com.sodosiro.domain.route.dto.RouteWaypoint;
+import com.sodosiro.domain.route.kakao.client.KakaoDirectionsClient;
+import com.sodosiro.domain.route.kakao.dto.DirectionsLegResult;
+import com.sodosiro.domain.route.kakao.dto.RouteLeg;
+import com.sodosiro.domain.route.kakao.dto.RouteWaypoint;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;

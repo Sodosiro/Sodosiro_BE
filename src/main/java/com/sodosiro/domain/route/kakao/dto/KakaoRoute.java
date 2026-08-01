@@ -1,4 +1,4 @@
-package com.sodosiro.domain.route.dto;
+package com.sodosiro.domain.route.kakao.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

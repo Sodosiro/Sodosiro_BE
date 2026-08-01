@@ -1,4 +1,4 @@
-package com.sodosiro.domain.route.dto;
+package com.sodosiro.domain.route.kakao.dto;
 
 public record DirectionsLegResult(boolean success, Long durationSeconds, Long distanceMeters) {
 
