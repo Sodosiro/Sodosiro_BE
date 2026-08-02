@@ -1,11 +1,12 @@
 package com.sodosiro.domain.travel.controller;
 
 import com.sodosiro.domain.travel.controller.dto.CursorPageResponse;
-import com.sodosiro.domain.travel.controller.dto.KakaoSpotResponse;
 import com.sodosiro.domain.travel.controller.dto.TouristSpotDetailResponse;
 import com.sodosiro.domain.travel.controller.dto.TouristSpotSummaryResponse;
+import com.sodosiro.domain.travel.controller.dto.TravelSpotSort;
 import com.sodosiro.domain.travel.docs.TravelSpotSpecification;
 import com.sodosiro.domain.travel.service.TravelSpotService;
+import com.sodosiro.global.resolver.LoginUser;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -32,8 +33,10 @@ public class TravelSpotController implements TravelSpotSpecification {
             @RequestParam(required = false) String cursor,
             @RequestParam(required = false) Integer size,
             @RequestParam(name = "category", required = false) List<Integer> categories,
-            @RequestParam(required = false) String keyword) {
-        return ResponseEntity.ok(travelSpotService.getTouristSpots(cursor, size, categories, keyword));
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "DEFAULT") TravelSpotSort sort,
+            @LoginUser Long userId) {
+        return ResponseEntity.ok(travelSpotService.getTouristSpots(cursor, size, categories, keyword, sort, userId));
     }
 
     /** 상세 조회에서만 이미지 목록을 fetch join한다. */
@@ -43,13 +46,4 @@ public class TravelSpotController implements TravelSpotSpecification {
         return ResponseEntity.ok(travelSpotService.getTouristSpotDetail(contentId));
     }
 
-    /** ETL 카카오 검색 기반 인기 장소. 일반 여행지 목록과 데이터 원천이 달라 별도 제공한다. */
-    @GetMapping("/popular-spots")
-    @Override
-    public ResponseEntity<CursorPageResponse<KakaoSpotResponse>> getPopularSpots(
-            @RequestParam(required = false) String cursor,
-            @RequestParam(required = false) Integer size,
-            @RequestParam(name = "categoryGroupCode", required = false) List<String> categoryGroupCodes) {
-        return ResponseEntity.ok(travelSpotService.getPopularSpots(cursor, size, categoryGroupCodes));
-    }
 }

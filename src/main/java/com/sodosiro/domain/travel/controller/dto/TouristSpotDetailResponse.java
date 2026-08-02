@@ -20,6 +20,9 @@ public record TouristSpotDetailResponse(
         String usetime,
         String restdate,
         String parking,
+        Integer likeCount,
+        BigDecimal avgRating,
+        Integer reviewCount,
         List<String> images
 ) {
     public static TouristSpotDetailResponse from(TouristSpot spot) {
@@ -27,6 +30,7 @@ public record TouristSpotDetailResponse(
                 spot.getContentId(), spot.getTitle(), spot.getCategory(), spot.getAddr1(), spot.getAddr2(),
                 spot.getFirstImage(), spot.getMapX(), spot.getMapY(), spot.getHomepage(), spot.getOverview(),
                 spot.getInfocenter(), spot.getUsetime(), spot.getRestdate(), spot.getParking(),
+                spot.getLikeCount(), spot.getAvgRating(), spot.getReviewCount(),
                 spot.getImages().stream().map(SpotImage::getImageUrl).toList()
         );
     }
