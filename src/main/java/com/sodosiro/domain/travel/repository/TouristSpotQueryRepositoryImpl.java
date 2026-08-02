@@ -23,4 +23,22 @@ public class TouristSpotQueryRepositoryImpl implements TouristSpotQueryRepositor
                 .where(spot.contentId.eq(contentId))
                 .execute();
     }
+
+    @Override
+    public void incrementLikeCount(Long contentId) {
+        queryFactory
+                .update(spot)
+                .set(spot.likeCount, spot.likeCount.add(1))
+                .where(spot.contentId.eq(contentId))
+                .execute();
+    }
+
+    @Override
+    public void decrementLikeCount(Long contentId) {
+        queryFactory
+                .update(spot)
+                .set(spot.likeCount, spot.likeCount.subtract(1))
+                .where(spot.contentId.eq(contentId), spot.likeCount.gt(0))
+                .execute();
+    }
 }
