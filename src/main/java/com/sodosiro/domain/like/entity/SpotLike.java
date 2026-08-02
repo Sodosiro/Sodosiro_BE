@@ -16,9 +16,7 @@ import org.hibernate.annotations.Comment;
 import java.time.LocalDateTime;
 
 /**
- * 관광지 좋아요.
- * content_id(tourist_spot) 또는 kakao_spot_id 중 정확히 하나만 값을 가진다.
- * kakao_spot 삭제 시 ON DELETE CASCADE 로 함께 제거된다.
+ * 관광지 좋아요 (tourist_spot 전용).
  */
 @Entity
 @Getter
@@ -39,13 +37,9 @@ public class SpotLike {
     @Comment("좋아요 누른 사용자")
     private Long userId;
 
-    @Column(name = "content_id")
-    @Comment("tourist_spot content_id (일반 관광지)")
+    @Column(name = "content_id", nullable = false)
+    @Comment("tourist_spot content_id")
     private Long contentId;
-
-    @Column(name = "kakao_spot_id")
-    @Comment("kakao_spot id (인기 관광지, ON DELETE CASCADE)")
-    private Long kakaoSpotId;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     @Comment("좋아요 일시")
@@ -60,13 +54,6 @@ public class SpotLike {
         SpotLike like = new SpotLike();
         like.userId = userId;
         like.contentId = contentId;
-        return like;
-    }
-
-    public static SpotLike ofKakao(Long userId, Long kakaoSpotId) {
-        SpotLike like = new SpotLike();
-        like.userId = userId;
-        like.kakaoSpotId = kakaoSpotId;
         return like;
     }
 }

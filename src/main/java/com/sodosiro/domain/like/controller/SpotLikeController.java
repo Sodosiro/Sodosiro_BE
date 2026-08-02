@@ -33,14 +33,6 @@ public class SpotLikeController implements SpotLikeSpecification {
         return ResponseEntity.ok(spotLikeService.toggleTouristSpotLike(userId, contentId));
     }
 
-    @PostMapping("/popular-spots/{kakaoSpotId}/like")
-    public ResponseEntity<LikeToggleResponse> toggleKakaoSpotLike(
-            @LoginUser Long userId,
-            @PathVariable Long kakaoSpotId) {
-
-        return ResponseEntity.ok(spotLikeService.toggleKakaoSpotLike(userId, kakaoSpotId));
-    }
-
     @GetMapping("/likes/me")
     public ResponseEntity<MyLikedSpotListResponse> getMyLikedSpots(
             @LoginUser Long userId,

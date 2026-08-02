@@ -8,6 +8,4 @@ import java.util.Optional;
 public interface SpotLikeRepository extends JpaRepository<SpotLike, Long>, SpotLikeQueryRepository {
 
     Optional<SpotLike> findByUserIdAndContentId(Long userId, Long contentId);
-
-    Optional<SpotLike> findByUserIdAndKakaoSpotId(Long userId, Long kakaoSpotId);
 }

@@ -5,11 +5,7 @@ import com.sodosiro.domain.like.controller.dto.response.MyLikedSpotItem;
 import com.sodosiro.domain.like.controller.dto.response.MyLikedSpotListResponse;
 import com.sodosiro.domain.like.entity.SpotLike;
 import com.sodosiro.domain.like.repository.SpotLikeRepository;
-import com.sodosiro.domain.travel.entity.KakaoSpot;
-import com.sodosiro.domain.travel.entity.KakaoSpotImage;
 import com.sodosiro.domain.travel.entity.TouristSpot;
-import com.sodosiro.domain.travel.repository.KakaoSpotImageRepository;
-import com.sodosiro.domain.travel.repository.KakaoSpotRepository;
 import com.sodosiro.domain.travel.repository.TouristSpotRepository;
 import com.sodosiro.global.payload.code.error.LikeErrorCode;
 import com.sodosiro.global.payload.exception.GeneralException;
@@ -19,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -32,8 +27,6 @@ public class SpotLikeService {
 
     private final SpotLikeRepository spotLikeRepository;
     private final TouristSpotRepository touristSpotRepository;
-    private final KakaoSpotRepository kakaoSpotRepository;
-    private final KakaoSpotImageRepository kakaoSpotImageRepository;
 
     @Transactional
     public LikeToggleResponse toggleTouristSpotLike(Long userId, Long contentId) {
@@ -52,23 +45,6 @@ public class SpotLikeService {
         return new LikeToggleResponse(true, spot.getLikeCount() + 1);
     }
 
-    @Transactional
-    public LikeToggleResponse toggleKakaoSpotLike(Long userId, Long kakaoSpotId) {
-        KakaoSpot spot = kakaoSpotRepository.findById(kakaoSpotId)
-                .orElseThrow(() -> new GeneralException(LikeErrorCode._KAKAO_SPOT_NOT_FOUND));
-
-        Optional<SpotLike> existing = spotLikeRepository.findByUserIdAndKakaoSpotId(userId, kakaoSpotId);
-        if (existing.isPresent()) {
-            spotLikeRepository.delete(existing.get());
-            kakaoSpotRepository.decrementLikeCount(kakaoSpotId);
-            return new LikeToggleResponse(false, spot.getLikeCount() - 1);
-        }
-
-        spotLikeRepository.save(SpotLike.ofKakao(userId, kakaoSpotId));
-        kakaoSpotRepository.incrementLikeCount(kakaoSpotId);
-        return new LikeToggleResponse(true, spot.getLikeCount() + 1);
-    }
-
     @Transactional(readOnly = true)
     public MyLikedSpotListResponse getMyLikedSpots(Long userId, Long cursor, int size) {
         long effectiveCursor = cursor == null ? CURSOR_START : cursor;
@@ -81,27 +57,13 @@ public class SpotLikeService {
 
         List<Long> contentIds = likes.stream()
                 .map(SpotLike::getContentId)
-                .filter(Objects::nonNull)
-                .toList();
-
-        List<Long> kakaoIds = likes.stream()
-                .map(SpotLike::getKakaoSpotId)
-                .filter(Objects::nonNull)
                 .toList();
 
         Map<Long, TouristSpot> touristMap = touristSpotRepository.findAllById(contentIds).stream()
                 .collect(Collectors.toMap(TouristSpot::getContentId, Function.identity()));
 
-        Map<Long, KakaoSpot> kakaoMap = kakaoSpotRepository.findAllById(kakaoIds).stream()
-                .collect(Collectors.toMap(KakaoSpot::getId, Function.identity()));
-
-        Map<Long, String> kakaoImageMap = kakaoSpotImageRepository.findByKakaoSpotIdIn(kakaoIds).stream()
-                .collect(Collectors.toMap(KakaoSpotImage::getKakaoSpotId, KakaoSpotImage::getImageUrl));
-
         List<MyLikedSpotItem> items = likes.stream()
-                .map(l -> l.getContentId() != null
-                        ? MyLikedSpotItem.fromTourist(l, touristMap.get(l.getContentId()))
-                        : MyLikedSpotItem.fromKakao(l, kakaoMap.get(l.getKakaoSpotId()), kakaoImageMap.get(l.getKakaoSpotId())))
+                .map(l -> MyLikedSpotItem.from(l, touristMap.get(l.getContentId())))
                 .toList();
 
         return new MyLikedSpotListResponse(items, nextCursor, hasNext);
