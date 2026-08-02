@@ -134,6 +134,18 @@ public class TouristSpot {
     @Comment("수집시각")
     private LocalDateTime collectedAt;
 
+    @Column(name = "avg_rating", precision = 3, scale = 2, nullable = false, columnDefinition = "numeric(3,2) default 0.00")
+    @Comment("리뷰 평균 별점 (캐시)")
+    private BigDecimal avgRating = BigDecimal.ZERO;
+
+    @Column(name = "review_count", nullable = false, columnDefinition = "integer default 0")
+    @Comment("리뷰 수 (캐시)")
+    private Integer reviewCount = 0;
+
+    @Column(name = "like_count", nullable = false, columnDefinition = "integer default 0")
+    @Comment("좋아요 수 (캐시)")
+    private Integer likeCount = 0;
+
     /** 상세 화면에서만 fetch join으로 조회한다. */
     @OneToMany
     @JoinColumn(name = "content_id", referencedColumnName = "content_id")
