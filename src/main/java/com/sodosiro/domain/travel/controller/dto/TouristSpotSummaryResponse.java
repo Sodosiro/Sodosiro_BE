@@ -9,6 +9,8 @@ public record TouristSpotSummaryResponse(
         String title,
         Integer category,
         String addr1,
+        String overview,
+        String restdate,
         String firstImage,
         BigDecimal mapX,
         BigDecimal mapY,
@@ -16,13 +18,15 @@ public record TouristSpotSummaryResponse(
         BigDecimal avgRating,
         Integer reviewCount,
         boolean liked,
+        boolean isPopular,
         Popularity popularity
 ) {
     public static TouristSpotSummaryResponse from(TouristSpot spot) {
         return new TouristSpotSummaryResponse(
                 spot.getContentId(), spot.getTitle(), spot.getCategory(), spot.getAddr1(),
+                abbreviateOverview(spot.getOverview()), spot.getRestdate(),
                 spot.getFirstImage(), spot.getMapX(), spot.getMapY(),
-                spot.getLikeCount(), spot.getAvgRating(), spot.getReviewCount(), false, null
+                spot.getLikeCount(), spot.getAvgRating(), spot.getReviewCount(), false, false, null
         );
     }
 
@@ -30,9 +34,22 @@ public record TouristSpotSummaryResponse(
             TouristSpot spot, Popularity popularity, boolean liked) {
         return new TouristSpotSummaryResponse(
                 spot.getContentId(), spot.getTitle(), spot.getCategory(), spot.getAddr1(),
+                abbreviateOverview(spot.getOverview()), spot.getRestdate(),
                 spot.getFirstImage(), spot.getMapX(), spot.getMapY(),
-                spot.getLikeCount(), spot.getAvgRating(), spot.getReviewCount(), liked, popularity
+                spot.getLikeCount(), spot.getAvgRating(), spot.getReviewCount(), liked,
+                isPopular(popularity), popularity
         );
+    }
+
+    static boolean isPopular(Popularity popularity) {
+        return popularity != null && popularity.rankTag() != null && !popularity.rankTag().isBlank();
+    }
+
+    static String abbreviateOverview(String overview) {
+        if (overview == null || overview.length() <= 30) {
+            return overview;
+        }
+        return overview.substring(0, 30) + "...";
     }
 
     public record Popularity(

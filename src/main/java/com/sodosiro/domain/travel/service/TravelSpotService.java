@@ -5,13 +5,23 @@ import com.sodosiro.domain.travel.controller.dto.TouristSpotDetailResponse;
 import com.sodosiro.domain.travel.controller.dto.TouristSpotSummaryResponse;
 import com.sodosiro.domain.travel.controller.dto.TravelSpotSort;
 import com.sodosiro.domain.like.repository.SpotLikeRepository;
+import com.sodosiro.domain.review.entity.Review;
+import com.sodosiro.domain.review.entity.ReviewImage;
+import com.sodosiro.domain.review.repository.ReviewImageRepository;
+import com.sodosiro.domain.review.repository.ReviewRepository;
 import com.sodosiro.domain.travel.entity.SpotPopularity;
 import com.sodosiro.domain.travel.entity.TouristSpot;
 import com.sodosiro.domain.travel.repository.TravelSpotQueryRepository;
+import com.sodosiro.domain.travel.repository.SpotPopularityRepository;
+import com.sodosiro.domain.user.entity.User;
+import com.sodosiro.domain.user.repository.UserRepository;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,10 +34,15 @@ import org.springframework.http.HttpStatus;
 public class TravelSpotService {
 
     private static final int DEFAULT_PAGE_SIZE = 20;
-    private static final int MAX_PAGE_SIZE = 100;
+    private static final int MAX_PAGE_SIZE = 10000;
 
     private final TravelSpotQueryRepository queryRepository;
     private final SpotLikeRepository spotLikeRepository;
+    private final ReviewRepository reviewRepository;
+    private final ReviewImageRepository reviewImageRepository;
+    private final UserRepository userRepository;
+    private final SpotPopularityRepository spotPopularityRepository;
+    private final SpotAiRecommendationService spotAiRecommendationService;
 
     public CursorPageResponse<TouristSpotSummaryResponse> getTouristSpots(
             String cursor, Integer size, List<Integer> categories, String keyword,
@@ -49,9 +64,63 @@ public class TravelSpotService {
     }
 
     public TouristSpotDetailResponse getTouristSpotDetail(Long contentId) {
-        TouristSpot spot = queryRepository.findTouristSpotDetail(contentId)
+        TouristSpot spot = findTouristSpotDetail(contentId);
+        SpotAiRecommendationService.Recommendation recommendation = spotAiRecommendationService.getCached(spot);
+        TouristSpotDetailResponse.AiRecommendation aiRecommendation = recommendation == null
+                ? TouristSpotDetailResponse.AiRecommendation.unavailable()
+                : TouristSpotDetailResponse.AiRecommendation.available(recommendation.reason());
+        List<Review> latestReviews = reviewRepository
+                .findTop3ByContentIdAndIsDeletedFalseOrderByCreatedAtDesc(contentId);
+        TouristSpotDetailResponse.Popularity popularity = spotPopularityRepository.findById(contentId)
+                .map(TouristSpotDetailResponse.Popularity::from)
+                .orElse(null);
+        return TouristSpotDetailResponse.from(
+                spot, popularity, aiRecommendation, toLatestReviewResponses(latestReviews));
+    }
+
+    @Transactional
+    public TouristSpotDetailResponse.AiRecommendation generateAiRecommendation(Long contentId) {
+        TouristSpot spot = findTouristSpotDetail(contentId);
+        SpotAiRecommendationService.Recommendation recommendation = spotAiRecommendationService.getOrGenerate(spot);
+        return TouristSpotDetailResponse.AiRecommendation.available(recommendation.reason());
+    }
+
+    private TouristSpot findTouristSpotDetail(Long contentId) {
+        return queryRepository.findTouristSpotDetail(contentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "여행지를 찾을 수 없습니다."));
-        return TouristSpotDetailResponse.from(spot);
+    }
+
+    private List<TouristSpotDetailResponse.LatestReview> toLatestReviewResponses(List<Review> reviews) {
+        if (reviews.isEmpty()) {
+            return List.of();
+        }
+        List<Long> userIds = reviews.stream().map(Review::getUserId).distinct().toList();
+        Map<Long, User> users = userRepository.findAllById(userIds).stream()
+                .collect(Collectors.toMap(User::getUserId, Function.identity()));
+        List<Long> reviewIds = reviews.stream().map(Review::getId).toList();
+        Map<Long, List<ReviewImage>> imagesByReviewId = reviewImageRepository
+                .findAllByReviewIdInOrderByReviewIdAscDisplayOrderAsc(reviewIds).stream()
+                .collect(Collectors.groupingBy(ReviewImage::getReviewId));
+
+        return reviews.stream()
+                .map(review -> new TouristSpotDetailResponse.LatestReview(
+                        review.getId(),
+                        users.containsKey(review.getUserId())
+                                ? users.get(review.getUserId()).getDisplayName() : "알 수 없음",
+                        review.getRating(),
+                        abbreviate(review.getBody()),
+                        imagesByReviewId.getOrDefault(review.getId(), List.of()).stream()
+                                .map(ReviewImage::getImageUrl)
+                                .toList(),
+                        review.getCreatedAt()))
+                .toList();
+    }
+
+    private String abbreviate(String body) {
+        if (body == null || body.length() <= 30) {
+            return body;
+        }
+        return body.substring(0, 30) + "...";
     }
 
     private int normalizePageSize(Integer size) {
@@ -92,7 +161,7 @@ public class TravelSpotService {
     }
 
     private String encodeCursor(TouristSpotSummaryResponse spot, TravelSpotSort sort) {
-        if (sort == TravelSpotSort.DEFAULT) {
+        if (sort != TravelSpotSort.POPULAR) {
             return String.valueOf(spot.contentId());
         }
         String value = spot.popularity().score() + ":" + spot.contentId();

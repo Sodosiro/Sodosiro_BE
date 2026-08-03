@@ -60,13 +60,15 @@ public class TravelSpotQueryRepository {
         if (contentIdCursor != null) {
             conditions.and(touristSpot.contentId.lt(contentIdCursor));
         }
-        return queryFactory.selectFrom(touristSpot)
+        return queryFactory.select(touristSpot, spotPopularity)
+                .from(touristSpot)
+                .leftJoin(spotPopularity).on(spotPopularity.contentId.eq(touristSpot.contentId))
                 .where(conditions)
                 .orderBy(touristSpot.contentId.desc())
                 .limit(size + 1L)
                 .fetch()
                 .stream()
-                .map(spot -> new TouristSpotWithPopularity(spot, null))
+                .map(tuple -> new TouristSpotWithPopularity(tuple.get(touristSpot), tuple.get(spotPopularity)))
                 .toList();
     }
 

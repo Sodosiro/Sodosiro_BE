@@ -20,10 +20,11 @@ public interface TravelSpotSpecification {
 
     @Operation(
             summary = "여행지 목록 조회",
-            description = "sort=DEFAULT는 TourAPI 여행지를 contentId 내림차순으로 조회합니다. "
+            description = "sort=ALL 또는 DEFAULT는 TourAPI 여행지를 contentId 내림차순으로 전체 조회합니다. "
                     + "sort=POPULAR는 ETL이 계산한 카테고리별 상위 10위 여행지를 종합 인기도순으로 반환합니다. "
                     + "category를 생략하면 전체, 반복 전달하면 여러 카테고리를 조회하며, "
-                    + "keyword는 여행지 제목 LIKE 검색에 함께 적용됩니다."
+                    + "keyword는 여행지 제목 LIKE 검색에 함께 적용됩니다. 목록의 overview는 최대 30자 미리보기이며, "
+                    + "restdate와 인기 여부(isPopular), 인기 태그(popularity.rankTag)를 함께 반환합니다."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공"),
@@ -35,19 +36,33 @@ public interface TravelSpotSpecification {
             @Parameter(in = ParameterIn.QUERY, description = "서비스 카테고리. 반복 전달 가능", example = "4") List<Integer> categories,
             @Parameter(in = ParameterIn.QUERY, description = "여행지명 부분 검색어", example = "강릉") String keyword,
             @Parameter(in = ParameterIn.QUERY, description = "조회 정렬 기준", example = "POPULAR",
-                    schema = @Schema(type = "string", allowableValues = {"DEFAULT", "POPULAR"})) TravelSpotSort sort,
+                    schema = @Schema(type = "string", allowableValues = {"ALL", "DEFAULT", "POPULAR"})) TravelSpotSort sort,
             @Parameter(hidden = true) @LoginUser Long userId
     );
 
     @Operation(
             summary = "일반 여행지 상세 조회",
-            description = "여행지 기본 정보, 좋아요 수, 리뷰 평균 평점, 리뷰 수와 detailImage2 이미지 목록을 함께 반환합니다."
+            description = "여행지 기본 정보, 좋아요 수, 리뷰 평균 평점, 리뷰 수, 인기 태그, 최신 리뷰 최대 3건(작성자명·작성일·이미지·본문 30자 요약)과 detailImage2 이미지 목록을 함께 반환합니다. "
+                    + "리뷰가 없으면 latestReviews 필드는 응답에서 제외됩니다. "
+                    + "aiRecommendation.available이 false이면 아직 추천 이유가 생성되지 않았거나 만료된 상태입니다."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공"),
             @ApiResponse(responseCode = "404", description = "여행지를 찾을 수 없음")
     })
     ResponseEntity<TouristSpotDetailResponse> getTouristSpotDetail(
+            @Parameter(description = "TourAPI 콘텐츠 ID", required = true, example = "126508") Long contentId
+    );
+
+    @Operation(
+            summary = "여행지 AI 추천 이유 생성",
+            description = "유효한 24시간 캐시가 있으면 즉시 반환하고, 없거나 만료됐을 때만 최신 리뷰를 반영해 추천 이유를 생성합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "캐시된 또는 새로 생성된 추천 이유 반환"),
+            @ApiResponse(responseCode = "404", description = "여행지를 찾을 수 없음")
+    })
+    ResponseEntity<TouristSpotDetailResponse.AiRecommendation> generateAiRecommendation(
             @Parameter(description = "TourAPI 콘텐츠 ID", required = true, example = "126508") Long contentId
     );
 }
