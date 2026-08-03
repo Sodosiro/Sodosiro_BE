@@ -5,8 +5,6 @@ import com.sodosiro.domain.like.controller.dto.response.MyLikedSpotListResponse;
 import com.sodosiro.domain.like.controller.specification.SpotLikeSpecification;
 import com.sodosiro.domain.like.service.SpotLikeService;
 import com.sodosiro.global.resolver.LoginUser;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -37,7 +35,7 @@ public class SpotLikeController implements SpotLikeSpecification {
     public ResponseEntity<MyLikedSpotListResponse> getMyLikedSpots(
             @LoginUser Long userId,
             @RequestParam(required = false) Long cursor,
-            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
+            @RequestParam(defaultValue = "20") int size) {
 
         return ResponseEntity.ok(spotLikeService.getMyLikedSpots(userId, cursor, size));
     }

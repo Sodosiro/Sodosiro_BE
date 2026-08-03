@@ -4,6 +4,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -38,6 +40,10 @@ public class TouristSpot {
     @Column(name = "content_id")
     @Comment("contentid (외부 API PK)")
     private Long contentId;
+
+    @Column(name = "kakao_map_content_id", length = 30)
+    @Comment("카카오 로컬 검색으로 연결한 장소 ID")
+    private String kakaoContentId;
 
     @Column(name = "content_type_id", length = 5)
     @Comment("TourAPI 콘텐츠 유형 코드")
@@ -143,4 +149,9 @@ public class TouristSpot {
     @Column(name = "like_count", nullable = false, columnDefinition = "integer default 0")
     @Comment("좋아요 수 (캐시)")
     private Integer likeCount = 0;
+
+    /** 상세 화면에서만 fetch join으로 조회한다. */
+    @OneToMany
+    @JoinColumn(name = "content_id", referencedColumnName = "content_id")
+    private List<SpotImage> images;
 }

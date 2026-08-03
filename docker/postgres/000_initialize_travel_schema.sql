@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS sigungu_code (
 
 CREATE TABLE IF NOT EXISTS tourist_spot (
     content_id BIGINT PRIMARY KEY,
+    kakao_map_content_id VARCHAR(30),
     addr1 VARCHAR(300),
     addr2 VARCHAR(200),
     collected_at TIMESTAMP(6),
@@ -95,6 +96,7 @@ ALTER TABLE tourist_spot
     ADD COLUMN IF NOT EXISTS ldong_signgu_code VARCHAR(5),
     ADD COLUMN IF NOT EXISTS category INTEGER,
     ADD COLUMN IF NOT EXISTS overview TEXT,
+    ADD COLUMN IF NOT EXISTS kakao_map_content_id VARCHAR(30),
     ADD COLUMN IF NOT EXISTS detail_info JSONB NOT NULL DEFAULT jsonb_build_array();
 
 ALTER TABLE spot_embedding

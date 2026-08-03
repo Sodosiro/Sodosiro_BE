@@ -1,0 +1,194 @@
+package com.sodosiro.domain.travel.service;
+
+import com.sodosiro.domain.travel.controller.dto.CursorPageResponse;
+import com.sodosiro.domain.travel.controller.dto.TouristSpotDetailResponse;
+import com.sodosiro.domain.travel.controller.dto.TouristSpotSummaryResponse;
+import com.sodosiro.domain.travel.controller.dto.TravelSpotSort;
+import com.sodosiro.domain.like.repository.SpotLikeRepository;
+import com.sodosiro.domain.review.entity.Review;
+import com.sodosiro.domain.review.entity.ReviewImage;
+import com.sodosiro.domain.review.repository.ReviewImageRepository;
+import com.sodosiro.domain.review.repository.ReviewRepository;
+import com.sodosiro.domain.travel.entity.SpotPopularity;
+import com.sodosiro.domain.travel.entity.TouristSpot;
+import com.sodosiro.domain.travel.repository.TravelSpotQueryRepository;
+import com.sodosiro.domain.travel.repository.SpotPopularityRepository;
+import com.sodosiro.domain.user.entity.User;
+import com.sodosiro.domain.user.repository.UserRepository;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
+
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class TravelSpotService {
+
+    private static final int DEFAULT_PAGE_SIZE = 20;
+    private static final int MAX_PAGE_SIZE = 10000;
+
+    private final TravelSpotQueryRepository queryRepository;
+    private final SpotLikeRepository spotLikeRepository;
+    private final ReviewRepository reviewRepository;
+    private final ReviewImageRepository reviewImageRepository;
+    private final UserRepository userRepository;
+    private final SpotPopularityRepository spotPopularityRepository;
+    private final SpotAiRecommendationService spotAiRecommendationService;
+
+    public CursorPageResponse<TouristSpotSummaryResponse> getTouristSpots(
+            String cursor, Integer size, List<Integer> categories, String keyword,
+            TravelSpotSort sort, Long userId) {
+        int pageSize = normalizePageSize(size);
+        TouristSpotCursor parsedCursor = parseTouristSpotCursor(cursor, sort);
+        List<TravelSpotQueryRepository.TouristSpotWithPopularity> rows = queryRepository.findTouristSpots(
+                sort, parsedCursor.contentId(), parsedCursor.popularityScore(), pageSize, categories, keyword);
+        boolean hasNext = rows.size() > pageSize;
+        Set<Long> likedContentIds = findLikedContentIds(userId, rows, pageSize);
+        List<TouristSpotSummaryResponse> items = rows.stream()
+                .limit(pageSize)
+                .map(row -> TouristSpotSummaryResponse.from(
+                        row.spot(), toPopularity(row.popularity()),
+                        likedContentIds.contains(row.spot().getContentId())))
+                .toList();
+        String nextCursor = hasNext ? encodeCursor(items.getLast(), sort) : null;
+        return new CursorPageResponse<>(items, nextCursor, hasNext);
+    }
+
+    public TouristSpotDetailResponse getTouristSpotDetail(Long contentId) {
+        TouristSpot spot = findTouristSpotDetail(contentId);
+        SpotAiRecommendationService.Recommendation recommendation = spotAiRecommendationService.getCached(spot);
+        TouristSpotDetailResponse.AiRecommendation aiRecommendation = recommendation == null
+                ? TouristSpotDetailResponse.AiRecommendation.unavailable()
+                : TouristSpotDetailResponse.AiRecommendation.available(recommendation.reason());
+        List<Review> latestReviews = reviewRepository
+                .findTop3ByContentIdAndIsDeletedFalseOrderByCreatedAtDesc(contentId);
+        TouristSpotDetailResponse.Popularity popularity = spotPopularityRepository.findById(contentId)
+                .map(TouristSpotDetailResponse.Popularity::from)
+                .orElse(null);
+        return TouristSpotDetailResponse.from(
+                spot, popularity, aiRecommendation, toLatestReviewResponses(latestReviews));
+    }
+
+    @Transactional
+    public TouristSpotDetailResponse.AiRecommendation generateAiRecommendation(Long contentId) {
+        TouristSpot spot = findTouristSpotDetail(contentId);
+        SpotAiRecommendationService.Recommendation recommendation = spotAiRecommendationService.getOrGenerate(spot);
+        return TouristSpotDetailResponse.AiRecommendation.available(recommendation.reason());
+    }
+
+    private TouristSpot findTouristSpotDetail(Long contentId) {
+        return queryRepository.findTouristSpotDetail(contentId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "여행지를 찾을 수 없습니다."));
+    }
+
+    private List<TouristSpotDetailResponse.LatestReview> toLatestReviewResponses(List<Review> reviews) {
+        if (reviews.isEmpty()) {
+            return List.of();
+        }
+        List<Long> userIds = reviews.stream().map(Review::getUserId).distinct().toList();
+        Map<Long, User> users = userRepository.findAllById(userIds).stream()
+                .collect(Collectors.toMap(User::getUserId, Function.identity()));
+        List<Long> reviewIds = reviews.stream().map(Review::getId).toList();
+        Map<Long, List<ReviewImage>> imagesByReviewId = reviewImageRepository
+                .findAllByReviewIdInOrderByReviewIdAscDisplayOrderAsc(reviewIds).stream()
+                .collect(Collectors.groupingBy(ReviewImage::getReviewId));
+
+        return reviews.stream()
+                .map(review -> new TouristSpotDetailResponse.LatestReview(
+                        review.getId(),
+                        users.containsKey(review.getUserId())
+                                ? users.get(review.getUserId()).getDisplayName() : "알 수 없음",
+                        review.getRating(),
+                        abbreviate(review.getBody()),
+                        imagesByReviewId.getOrDefault(review.getId(), List.of()).stream()
+                                .map(ReviewImage::getImageUrl)
+                                .toList(),
+                        review.getCreatedAt()))
+                .toList();
+    }
+
+    private String abbreviate(String body) {
+        if (body == null || body.length() <= 30) {
+            return body;
+        }
+        return body.substring(0, 30) + "...";
+    }
+
+    private int normalizePageSize(Integer size) {
+        if (size == null) {
+            return DEFAULT_PAGE_SIZE;
+        }
+        if (size < 1 || size > MAX_PAGE_SIZE) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "size는 1~100 사이여야 합니다.");
+        }
+        return size;
+    }
+
+    private TouristSpotCursor parseTouristSpotCursor(String cursor, TravelSpotSort sort) {
+        if (cursor == null || cursor.isBlank()) {
+            return new TouristSpotCursor(null, null);
+        }
+        if (sort == TravelSpotSort.POPULAR) {
+            return parsePopularityCursor(cursor);
+        }
+        try {
+            return new TouristSpotCursor(Long.valueOf(cursor), null);
+        } catch (NumberFormatException exception) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "유효하지 않은 cursor입니다.");
+        }
+    }
+
+    private TouristSpotCursor parsePopularityCursor(String cursor) {
+        try {
+            String decoded = new String(Base64.getUrlDecoder().decode(cursor), StandardCharsets.UTF_8);
+            String[] values = decoded.split(":", -1);
+            if (values.length != 2) {
+                throw new IllegalArgumentException();
+            }
+            return new TouristSpotCursor(Long.valueOf(values[1]), Double.valueOf(values[0]));
+        } catch (IllegalArgumentException exception) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "유효하지 않은 cursor입니다.");
+        }
+    }
+
+    private String encodeCursor(TouristSpotSummaryResponse spot, TravelSpotSort sort) {
+        if (sort != TravelSpotSort.POPULAR) {
+            return String.valueOf(spot.contentId());
+        }
+        String value = spot.popularity().score() + ":" + spot.contentId();
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(value.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private TouristSpotSummaryResponse.Popularity toPopularity(SpotPopularity popularity) {
+        if (popularity == null) {
+            return null;
+        }
+        return new TouristSpotSummaryResponse.Popularity(
+                popularity.getPopularityScore(), popularity.getCategoryRank(),
+                popularity.getRankTag(), popularity.getCalculatedAt());
+    }
+
+    private Set<Long> findLikedContentIds(
+            Long userId, List<TravelSpotQueryRepository.TouristSpotWithPopularity> rows, int pageSize) {
+        if (userId == null || rows.isEmpty()) {
+            return Set.of();
+        }
+        List<Long> contentIds = rows.stream()
+                .limit(pageSize)
+                .map(row -> row.spot().getContentId())
+                .toList();
+        return spotLikeRepository.findLikedContentIdsByUserIdAndContentIds(userId, contentIds);
+    }
+
+    private record TouristSpotCursor(Long contentId, Double popularityScore) {
+    }
+}
