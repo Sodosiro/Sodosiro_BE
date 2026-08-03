@@ -14,7 +14,7 @@ import java.util.List;
 
 public interface ReviewSpecification {
 
-    @Operation(summary = "리뷰 작성", description = "관광지에 별점(1~5), 이미지(최대 5장), 본문으로 리뷰를 작성합니다. (multipart/form-data)")
+    @Operation(summary = "리뷰 작성", description = "관광지에 별점(1~5)과 본문으로 리뷰를 작성합니다. 이미지는 선택이며 최대 5장까지 첨부할 수 있습니다. (multipart/form-data)")
     ResponseEntity<ReviewResponse> createReview(Long userId, ReviewCreateRequest request, List<MultipartFile> images);
 
     @Operation(summary = "관광지 리뷰 목록 조회", description = "관광지의 리뷰 목록을 커서 기반으로 조회합니다.")
