@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 
 public record TouristSpotSummaryResponse(
         Long contentId,
+        String kakaoContentId,
         String title,
         Integer category,
         String addr1,
@@ -23,7 +24,7 @@ public record TouristSpotSummaryResponse(
 ) {
     public static TouristSpotSummaryResponse from(TouristSpot spot) {
         return new TouristSpotSummaryResponse(
-                spot.getContentId(), spot.getTitle(), spot.getCategory(), spot.getAddr1(),
+                spot.getContentId(), spot.getKakaoContentId(), spot.getTitle(), spot.getCategory(), spot.getAddr1(),
                 abbreviateOverview(spot.getOverview()), spot.getRestdate(),
                 spot.getFirstImage(), spot.getMapX(), spot.getMapY(),
                 spot.getLikeCount(), spot.getAvgRating(), spot.getReviewCount(), false, false, null
@@ -33,7 +34,7 @@ public record TouristSpotSummaryResponse(
     public static TouristSpotSummaryResponse from(
             TouristSpot spot, Popularity popularity, boolean liked) {
         return new TouristSpotSummaryResponse(
-                spot.getContentId(), spot.getTitle(), spot.getCategory(), spot.getAddr1(),
+                spot.getContentId(), spot.getKakaoContentId(), spot.getTitle(), spot.getCategory(), spot.getAddr1(),
                 abbreviateOverview(spot.getOverview()), spot.getRestdate(),
                 spot.getFirstImage(), spot.getMapX(), spot.getMapY(),
                 spot.getLikeCount(), spot.getAvgRating(), spot.getReviewCount(), liked,

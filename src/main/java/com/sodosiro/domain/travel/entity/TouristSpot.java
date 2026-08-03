@@ -41,6 +41,10 @@ public class TouristSpot {
     @Comment("contentid (외부 API PK)")
     private Long contentId;
 
+    @Column(name = "kakao_map_content_id", length = 30)
+    @Comment("카카오 로컬 검색으로 연결한 장소 ID")
+    private String kakaoContentId;
+
     @Column(name = "content_type_id", length = 5)
     @Comment("TourAPI 콘텐츠 유형 코드")
     private String contentTypeId;

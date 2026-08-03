@@ -10,6 +10,7 @@ import java.util.List;
 
 public record TouristSpotDetailResponse(
         Long contentId,
+        String kakaoContentId,
         String title,
         Integer category,
         String addr1,
@@ -36,7 +37,7 @@ public record TouristSpotDetailResponse(
             TouristSpot spot, Popularity popularity, AiRecommendation aiRecommendation,
             List<LatestReview> latestReviews) {
         return new TouristSpotDetailResponse(
-                spot.getContentId(), spot.getTitle(), spot.getCategory(), spot.getAddr1(), spot.getAddr2(),
+                spot.getContentId(), spot.getKakaoContentId(), spot.getTitle(), spot.getCategory(), spot.getAddr1(), spot.getAddr2(),
                 spot.getFirstImage(), spot.getMapX(), spot.getMapY(), spot.getHomepage(), spot.getOverview(),
                 spot.getInfocenter(), spot.getUsetime(), spot.getRestdate(), spot.getParking(),
                 spot.getLikeCount(), spot.getAvgRating(), spot.getReviewCount(), popularity, aiRecommendation,
