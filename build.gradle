@@ -41,6 +41,9 @@ dependencies {
 	// Web
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-json'
+	// Spring Boot 4는 별도 AOP starter 대신 Spring AOP와 AspectJ Weaver를 직접 추가한다.
+	implementation 'org.springframework:spring-aop'
+	implementation 'org.aspectj:aspectjweaver'
 
 	// JPA & PostgreSQL
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
