@@ -1,6 +1,6 @@
 package com.sodosiro.domain.route.odsay.controller;
 
-import com.sodosiro.domain.route.kakao.dto.RouteWaypoint;
+import com.sodosiro.domain.route.dto.RouteWaypoint;
 import com.sodosiro.domain.route.odsay.client.OdsayDirectionsClient;
 import com.sodosiro.domain.route.odsay.dto.OdsayRouteDetailResponse;
 import lombok.RequiredArgsConstructor;

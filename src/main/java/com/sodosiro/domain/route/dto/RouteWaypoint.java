@@ -1,4 +1,4 @@
-package com.sodosiro.domain.route.kakao.dto;
+package com.sodosiro.domain.route.dto;
 
 import java.math.BigDecimal;
 

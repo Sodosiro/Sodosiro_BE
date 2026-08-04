@@ -7,6 +7,8 @@ public record OdsayRouteDetailResponse(
         Integer totalTimeMinutes,
         Integer totalDistanceMeters,
         Integer payment,
+        String mapObj,
+        List<OdsayCoordinateResponse> path,
         List<OdsaySegmentResponse> segments
 ) {
 
@@ -14,12 +16,14 @@ public record OdsayRouteDetailResponse(
             Integer totalTimeMinutes,
             Integer totalDistanceMeters,
             Integer payment,
+            String mapObj,
+            List<OdsayCoordinateResponse> path,
             List<OdsaySegmentResponse> segments
     ) {
-        return new OdsayRouteDetailResponse(true, totalTimeMinutes, totalDistanceMeters, payment, segments);
+        return new OdsayRouteDetailResponse(true, totalTimeMinutes, totalDistanceMeters, payment, mapObj, path, segments);
     }
 
     public static OdsayRouteDetailResponse failure() {
-        return new OdsayRouteDetailResponse(false, null, null, null, List.of());
+        return new OdsayRouteDetailResponse(false, null, null, null, null, List.of(), List.of());
     }
 }

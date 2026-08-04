@@ -1,9 +1,11 @@
 package com.sodosiro.domain.route.kakao.client;
 
+import com.sodosiro.domain.route.RouteSearchClient;
 import com.sodosiro.domain.route.kakao.dto.DirectionsLegResult;
 import com.sodosiro.domain.route.kakao.dto.KakaoDirectionsResponse;
 import com.sodosiro.domain.route.kakao.dto.KakaoRoute;
-import com.sodosiro.domain.route.kakao.dto.RouteWaypoint;
+import com.sodosiro.domain.route.dto.RouteLeg;
+import com.sodosiro.domain.route.dto.RouteWaypoint;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -13,13 +15,13 @@ import org.springframework.web.client.RestClientException;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class KakaoDirectionsClient {
+public class KakaoDirectionsClient implements RouteSearchClient {
 
     private static final int SUCCESS_RESULT_CODE = 0;
 
     private final RestClient kakaoMobilityRestClient;
 
-    public DirectionsLegResult findRoute(RouteWaypoint origin, RouteWaypoint destination) {
+    public RouteLeg findRoute(RouteWaypoint origin, RouteWaypoint destination) {
         try {
             KakaoDirectionsResponse response = kakaoMobilityRestClient.get()
                     .uri(uriBuilder -> uriBuilder
@@ -30,15 +32,22 @@ public class KakaoDirectionsClient {
                     .retrieve()
                     .body(KakaoDirectionsResponse.class);
 
-            return toResult(response);
+            return toRouteLeg(origin, destination, toResult(response));
         } catch (RestClientException exception) {
             log.warn("카카오 길찾기 API 호출 실패: origin={}, destination={},reason={}", origin.id(), destination.id(), exception.getMessage());
-            return DirectionsLegResult.failure();
+            return RouteLeg.failure(origin.id(), destination.id());
         }
     }
 
     private static String toCoordinateParam(RouteWaypoint waypoint) {
         return waypoint.x().toPlainString() + "," + waypoint.y().toPlainString();
+    }
+
+    private static RouteLeg toRouteLeg(RouteWaypoint origin, RouteWaypoint destination, DirectionsLegResult result) {
+        if (!result.success()) {
+            return RouteLeg.failure(origin.id(), destination.id());
+        }
+        return RouteLeg.success(origin.id(), destination.id(), result.durationSeconds(), result.distanceMeters());
     }
 
     private static DirectionsLegResult toResult(KakaoDirectionsResponse response) {

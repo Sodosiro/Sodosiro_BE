@@ -1,10 +1,10 @@
 package com.sodosiro.domain.route.odsay.service;
 
 import com.sodosiro.domain.route.RouteSearchClient;
-import com.sodosiro.domain.route.kakao.dto.RouteLeg;
-import com.sodosiro.domain.route.kakao.dto.RouteWaypoint;
-import lombok.RequiredArgsConstructor;
+import com.sodosiro.domain.route.dto.RouteLeg;
+import com.sodosiro.domain.route.dto.RouteWaypoint;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -15,10 +15,13 @@ import java.util.concurrent.Executors;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class ODsayRouteLegTimeService {
 
     private final RouteSearchClient routeSearchClient;
+
+    public ODsayRouteLegTimeService(@Qualifier("odsayDirectionsClient") RouteSearchClient routeSearchClient) {
+        this.routeSearchClient = routeSearchClient;
+    }
 
     public List<RouteLeg> calculateAdjacentLegTimes(List<RouteWaypoint> orderedWaypoints) {
         if (orderedWaypoints.size() < 2) {

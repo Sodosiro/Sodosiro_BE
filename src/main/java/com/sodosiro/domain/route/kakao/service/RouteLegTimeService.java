@@ -1,9 +1,8 @@
 package com.sodosiro.domain.route.kakao.service;
 
 import com.sodosiro.domain.route.kakao.client.KakaoDirectionsClient;
-import com.sodosiro.domain.route.kakao.dto.DirectionsLegResult;
-import com.sodosiro.domain.route.kakao.dto.RouteLeg;
-import com.sodosiro.domain.route.kakao.dto.RouteWaypoint;
+import com.sodosiro.domain.route.dto.RouteLeg;
+import com.sodosiro.domain.route.dto.RouteWaypoint;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -34,7 +33,7 @@ public class RouteLegTimeService {
                 RouteWaypoint to = orderedWaypoints.get(i + 1);
 
                 CompletableFuture<RouteLeg> future = CompletableFuture
-                        .supplyAsync(() -> toRouteLeg(from, to), executor)
+                        .supplyAsync(() -> kakaoDirectionsClient.findRoute(from, to), executor)
                         .exceptionally(throwable -> {
                             log.warn("구간 이동시간 계산 실패: from={}, to={}", from.id(), to.id(), throwable);
                             return RouteLeg.failure(from.id(), to.id());
@@ -47,13 +46,5 @@ public class RouteLegTimeService {
                     .map(CompletableFuture::join)
                     .toList();
         }
-    }
-
-    private RouteLeg toRouteLeg(RouteWaypoint from, RouteWaypoint to) {
-        DirectionsLegResult result = kakaoDirectionsClient.findRoute(from, to);
-        if (!result.success()) {
-            return RouteLeg.failure(from.id(), to.id());
-        }
-        return RouteLeg.success(from.id(), to.id(), result.durationSeconds(), result.distanceMeters());
     }
 }

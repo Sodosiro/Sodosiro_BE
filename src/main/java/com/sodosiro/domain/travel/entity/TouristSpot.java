@@ -83,7 +83,7 @@ public class TouristSpot {
     @Comment("시군구코드 (sigungucode)")
     private String sigunguCode;
 
-    @Column(name = "category", nullable = true)
+    @Column(name = "category", nullable = false)
     @Comment("서비스 카테고리 (1=식당, 2=카페, 3=쇼핑, 4=관광지, 5=자연, 6=액티비티, 7=숙박)")
     private Integer category;
 
@@ -132,11 +132,11 @@ public class TouristSpot {
     @Comment("수집시각")
     private LocalDateTime collectedAt;
 
-    @Column(name = "avg_rating", precision = 3, scale = 2, nullable = true)
+    @Column(name = "avg_rating", precision = 3, scale = 2, nullable = false)
     @Comment("리뷰 평균 별점 (캐시)")
     private BigDecimal avgRating = BigDecimal.ZERO;
 
-    @Column(name = "review_count", nullable = true)
+    @Column(name = "review_count", nullable = false)
     @Comment("리뷰 수 (캐시)")
     private Integer reviewCount = 0;
 }

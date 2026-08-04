@@ -1,5 +1,7 @@
 package com.sodosiro.domain.route.kakao.dto;
 
+import com.sodosiro.domain.route.dto.RouteLeg;
+
 import java.util.List;
 
 public record RouteDirectionsResponse(

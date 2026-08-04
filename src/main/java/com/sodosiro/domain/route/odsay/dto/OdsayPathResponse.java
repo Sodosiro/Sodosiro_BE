@@ -25,7 +25,8 @@ public record OdsayPathResponse(
     public record OdsayInfo(
             @JsonProperty("totalTime") Integer totalTime,
             @JsonProperty("totalDistance") Integer totalDistance,
-            @JsonProperty("payment") Integer payment
+            @JsonProperty("payment") Integer payment,
+            @JsonProperty("mapObj") String mapObj
     ) {}
 
     @JsonIgnoreProperties(ignoreUnknown = true)
@@ -38,6 +39,7 @@ public record OdsayPathResponse(
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record OdsayLane(
-            @JsonProperty("name") String name // 버스 번호 (예: "140", "지선 3412" 등) 또는 지하철 노선명
+            @JsonProperty("name") String name,     // 지하철 노선명 (지하철 구간에서만 존재)
+            @JsonProperty("busNo") String busNo    // 버스 번호 (버스 구간에서만 존재)
     ) {}
 }
