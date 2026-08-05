@@ -7,7 +7,6 @@ import java.time.LocalDateTime;
 
 public record MyLikedSpotItem(
         Long id,
-        String kakaoContentId,
         String name,
         String address,
         String imageUrl,
@@ -17,7 +16,6 @@ public record MyLikedSpotItem(
     public static MyLikedSpotItem from(SpotLike like, TouristSpot spot) {
         return new MyLikedSpotItem(
                 spot.getContentId(),
-                spot.getKakaoContentId(),
                 spot.getTitle(),
                 spot.getAddr1(),
                 spot.getFirstImage(),
