@@ -2,6 +2,7 @@ package com.sodosiro.domain.review.controller.dto.response;
 
 import com.sodosiro.domain.review.entity.Review;
 import com.sodosiro.domain.review.entity.ReviewImage;
+import com.sodosiro.domain.review.constants.ReviewVisitType;
 import com.sodosiro.domain.travel.entity.TouristSpot;
 
 import java.time.LocalDateTime;
@@ -18,7 +19,10 @@ public record MyReviewListResponse(
             Short rating,
             String body,
             List<ReviewImageResponse> images,
-            LocalDateTime createdAt
+            LocalDateTime createdAt,
+            ReviewVisitType visitType,
+            boolean gpsVerified,
+            LocalDateTime gpsVerifiedAt
     ) {
         public record SpotSummary(Long contentId, String title, String firstImage) {
             public static SpotSummary from(TouristSpot spot) {
@@ -34,7 +38,10 @@ public record MyReviewListResponse(
                     review.getRating(),
                     review.getBody(),
                     images.stream().map(ReviewImageResponse::from).toList(),
-                    review.getCreatedAt()
+                    review.getCreatedAt(),
+                    review.getVisitType(),
+                    review.getVisitType() == ReviewVisitType.GPS_VERIFIED,
+                    review.getGpsVerifiedAt()
             );
         }
     }

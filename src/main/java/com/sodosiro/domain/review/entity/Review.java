@@ -1,7 +1,10 @@
 package com.sodosiro.domain.review.entity;
 
+import com.sodosiro.domain.review.constants.ReviewVisitType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -59,6 +62,15 @@ public class Review {
     @Comment("소프트 딜리트 여부")
     private Boolean isDeleted;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "visit_type", nullable = false, length = 20)
+    @Comment("방문 인증 유형")
+    private ReviewVisitType visitType = ReviewVisitType.GENERAL;
+
+    @Column(name = "gps_verified_at")
+    @Comment("GPS 방문 인증 성공 시각")
+    private LocalDateTime gpsVerifiedAt;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     @Comment("작성 일시")
     private LocalDateTime createdAt;
@@ -86,6 +98,14 @@ public class Review {
         this.rating    = rating;
         this.body      = body;
         this.updatedAt = LocalDateTime.now();
+    }
+
+    public void verifyGpsVisit() {
+        if (visitType == ReviewVisitType.GPS_VERIFIED) {
+            return;
+        }
+        visitType = ReviewVisitType.GPS_VERIFIED;
+        gpsVerifiedAt = LocalDateTime.now();
     }
 
     public void delete() {

@@ -2,9 +2,11 @@ package com.sodosiro.domain.review.controller;
 
 import com.sodosiro.domain.review.constants.ReviewSort;
 import com.sodosiro.domain.review.controller.dto.request.ReviewCreateRequest;
+import com.sodosiro.domain.review.controller.dto.request.ReviewGpsVerificationRequest;
 import com.sodosiro.domain.review.controller.dto.request.ReviewUpdateRequest;
 import com.sodosiro.domain.review.controller.dto.response.MyReviewListResponse;
 import com.sodosiro.domain.review.controller.dto.response.ReviewListResponse;
+import com.sodosiro.domain.review.controller.dto.response.ReviewGpsVerificationResponse;
 import com.sodosiro.domain.review.controller.dto.response.ReviewResponse;
 import com.sodosiro.domain.review.service.ReviewService;
 import com.sodosiro.domain.review.specification.ReviewSpecification;
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -42,6 +45,14 @@ public class ReviewController implements ReviewSpecification {
 
         ReviewResponse response = reviewService.createReview(userId, request, images);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/reviews/{reviewId}/gps-verification")
+    public ResponseEntity<ReviewGpsVerificationResponse> verifyGpsVisit(
+            @LoginUser Long userId,
+            @PathVariable Long reviewId,
+            @RequestBody @Valid ReviewGpsVerificationRequest request) {
+        return ResponseEntity.ok(reviewService.verifyGpsVisit(userId, reviewId, request));
     }
 
     @GetMapping("/spots/{contentId}/reviews")
