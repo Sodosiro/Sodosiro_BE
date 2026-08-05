@@ -8,21 +8,19 @@ services:
     container_name: sodosiro-postgres
     restart: unless-stopped
     environment:
-      # PostgreSQL 자체의 관리 DB. 업무 DB(DB_NAME)는 deploy.sh가 없을 때 생성한다.
-      POSTGRES_DB: ${POSTGRES_DATABASE:-sodosiro}
+      POSTGRES_DB: ${DB_NAME:-sodosiro}
       POSTGRES_USER: ${DB_USERNAME:-postgres}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
-      APP_DB_NAME: ${DB_NAME:-sodosiro}
     ports:
-      # 업무 DB 접속 포트(DB_PORT)와 호스트 공개 포트는 분리한다.
       - "${POSTGRES_HOST_PORT:-5432}:5432"
     volumes:
-      # 데이터 영속화 (named volume)
       - postgres-data:/var/lib/postgresql/data
-      # pgvector 확장 자동 생성 (최초 기동 시 1회)
-      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      # postgres/ 전체 마운트: SQL 파일 + seed CSV 접근용
+      - ./postgres:/docker/postgres:ro
+      # 볼륨이 빈 상태(첫 기동)일 때만 자동 실행
+      - ./db-init.sh:/docker-entrypoint-initdb.d/db_init.sh:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-postgres} -d ${POSTGRES_DATABASE:-sodosiro}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-postgres} -d ${DB_NAME:-sodosiro}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -34,7 +32,6 @@ services:
     ports:
       - "${REDIS_HOST_PORT:-6380}:6379"
     volumes:
-      # 데이터 영속화 (named volume)
       - redis-data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -44,7 +41,6 @@ services:
 
   app:
     build:
-      # 컨텍스트는 프로젝트 루트, Dockerfile 은 docker/ 안
       context: ..
       dockerfile: docker/Dockerfile
     container_name: sodosiro-app
@@ -54,11 +50,9 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    # 루트 .env 로부터 OPENAI_API_KEY 등 주입 (아래 environment 가 host 값은 덮어씀)
     env_file:
       - ../.env
     environment:
-      # 컨테이너 네트워크에서는 서비스명으로 접속 (env_file 값보다 우선)
       DB_HOST: postgres
       DB_PORT: 5432
       DB_NAME: ${DB_NAME:-sodosiro}
@@ -67,10 +61,8 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
     ports:
-      # 호스트 포트는 로컬에서 직접 실행한 서버와 충돌하지 않도록 분리한다.
       - "${APP_HOST_PORT:-8082}:${SERVER_PORT:-8081}"
     volumes:
-      # 애플리케이션 로그를 호스트(프로젝트 루트/logs)에 마운트
       - ../logs:/app/logs
 
 volumes:
