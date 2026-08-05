@@ -2,10 +2,12 @@ package com.sodosiro.domain.review.service;
 
 import com.sodosiro.domain.review.constants.ReviewSort;
 import com.sodosiro.domain.review.controller.dto.request.ReviewCreateRequest;
+import com.sodosiro.domain.review.controller.dto.request.ReviewGpsVerificationRequest;
 import com.sodosiro.domain.review.controller.dto.request.ReviewUpdateRequest;
 import com.sodosiro.domain.review.controller.dto.response.MyReviewListResponse;
 import com.sodosiro.domain.review.controller.dto.response.MyReviewListResponse.MyReviewResponse;
 import com.sodosiro.domain.review.controller.dto.response.ReviewListResponse;
+import com.sodosiro.domain.review.controller.dto.response.ReviewGpsVerificationResponse;
 import com.sodosiro.domain.review.controller.dto.response.ReviewResponse;
 import com.sodosiro.domain.review.entity.Review;
 import com.sodosiro.domain.review.entity.ReviewImage;
@@ -74,6 +76,26 @@ public class ReviewService {
                 .orElseThrow(() -> new GeneralException(UserErrorCode._USER_NOT_FOUND));
 
         return ReviewResponse.of(review, author, reviewImages, userId);
+    }
+
+    @Transactional
+    public ReviewGpsVerificationResponse verifyGpsVisit(
+            Long userId, Long reviewId, ReviewGpsVerificationRequest request) {
+        Review review = reviewRepository.findByIdAndIsDeletedFalse(reviewId)
+                .orElseThrow(() -> new GeneralException(ReviewErrorCode._REVIEW_NOT_FOUND));
+        if (!review.getUserId().equals(userId)) {
+            throw new GeneralException(ReviewErrorCode._REVIEW_FORBIDDEN);
+        }
+        TouristSpot spot = touristSpotRepository.findById(review.getContentId())
+                .orElseThrow(() -> new GeneralException(ReviewErrorCode._SPOT_NOT_FOUND));
+        if (spot.getMapY() == null || spot.getMapX() == null) {
+            throw new GeneralException(ReviewErrorCode._SPOT_LOCATION_UNAVAILABLE);
+        }
+        if (ReviewGpsVerifier.isWithinVerificationRadius(
+                spot.getMapY(), spot.getMapX(), request.latitude(), request.longitude())) {
+            review.verifyGpsVisit();
+        }
+        return ReviewGpsVerificationResponse.from(review);
     }
 
     @Transactional(readOnly = true)
