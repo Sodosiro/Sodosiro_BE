@@ -3,6 +3,7 @@ package com.sodosiro.domain.route.odsay.client;
 import com.sodosiro.domain.route.RouteSearchClient;
 import com.sodosiro.domain.route.dto.RouteLeg;
 import com.sodosiro.domain.route.dto.RouteWaypoint;
+import com.sodosiro.domain.route.dto.TransportMode;
 import com.sodosiro.domain.route.odsay.dto.OdsayCoordinateResponse;
 import com.sodosiro.domain.route.odsay.dto.OdsayLegResult;
 import com.sodosiro.domain.route.odsay.dto.OdsayLoadLaneResponse;
@@ -29,6 +30,11 @@ public class OdsayDirectionsClient implements RouteSearchClient {
 
     @Value("${odsay.api.key}")
     private String apiKey;
+
+    @Override
+    public TransportMode supports() {
+        return TransportMode.PUBLIC_TRANSPORT;
+    }
 
     public RouteLeg findRoute(RouteWaypoint origin, RouteWaypoint destination) {
         try {

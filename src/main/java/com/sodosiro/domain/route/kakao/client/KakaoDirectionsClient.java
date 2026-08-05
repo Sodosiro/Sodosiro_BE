@@ -6,6 +6,7 @@ import com.sodosiro.domain.route.kakao.dto.KakaoDirectionsResponse;
 import com.sodosiro.domain.route.kakao.dto.KakaoRoute;
 import com.sodosiro.domain.route.dto.RouteLeg;
 import com.sodosiro.domain.route.dto.RouteWaypoint;
+import com.sodosiro.domain.route.dto.TransportMode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -20,6 +21,11 @@ public class KakaoDirectionsClient implements RouteSearchClient {
     private static final int SUCCESS_RESULT_CODE = 0;
 
     private final RestClient kakaoMobilityRestClient;
+
+    @Override
+    public TransportMode supports() {
+        return TransportMode.CAR;
+    }
 
     public RouteLeg findRoute(RouteWaypoint origin, RouteWaypoint destination) {
         try {

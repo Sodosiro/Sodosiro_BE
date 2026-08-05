@@ -1,10 +1,12 @@
-package com.sodosiro.domain.route.odsay.service;
+package com.sodosiro.domain.route.service;
 
 import com.sodosiro.domain.route.RouteSearchClient;
+import com.sodosiro.domain.route.RouteSearchClientFactory;
 import com.sodosiro.domain.route.dto.RouteLeg;
 import com.sodosiro.domain.route.dto.RouteWaypoint;
+import com.sodosiro.domain.route.dto.TransportMode;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -15,18 +17,17 @@ import java.util.concurrent.Executors;
 
 @Slf4j
 @Service
-public class ODsayRouteLegTimeService {
+@RequiredArgsConstructor
+public class RouteLegTimeService {
 
-    private final RouteSearchClient routeSearchClient;
+    private final RouteSearchClientFactory routeSearchClientFactory;
 
-    public ODsayRouteLegTimeService(@Qualifier("odsayDirectionsClient") RouteSearchClient routeSearchClient) {
-        this.routeSearchClient = routeSearchClient;
-    }
-
-    public List<RouteLeg> calculateAdjacentLegTimes(List<RouteWaypoint> orderedWaypoints) {
+    public List<RouteLeg> calculateAdjacentLegTimes(List<RouteWaypoint> orderedWaypoints, TransportMode mode) {
         if (orderedWaypoints.size() < 2) {
             return List.of();
         }
+
+        RouteSearchClient routeSearchClient = routeSearchClientFactory.getClient(mode);
 
         try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
             List<CompletableFuture<RouteLeg>> futures = new ArrayList<>();
