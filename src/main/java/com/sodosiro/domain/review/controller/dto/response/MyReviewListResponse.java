@@ -20,10 +20,10 @@ public record MyReviewListResponse(
             List<ReviewImageResponse> images,
             LocalDateTime createdAt
     ) {
-        public record SpotSummary(Long contentId, String kakaoContentId, String title, String firstImage) {
+        public record SpotSummary(Long contentId, String title, String firstImage) {
             public static SpotSummary from(TouristSpot spot) {
                 return new SpotSummary(
-                        spot.getContentId(), spot.getKakaoContentId(), spot.getTitle(), spot.getFirstImage());
+                        spot.getContentId(), spot.getTitle(), spot.getFirstImage());
             }
         }
 
