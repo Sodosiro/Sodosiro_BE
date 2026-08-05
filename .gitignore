@@ -45,3 +45,7 @@ src/main/generated/
 .env
 .env.*
 !.env.example
+
+### DB 시드 (로컬 CSV/SQL dump는 제외) ###
+docker/postgres/seed/seed-data.sql
+docker/postgres/seed/csv/

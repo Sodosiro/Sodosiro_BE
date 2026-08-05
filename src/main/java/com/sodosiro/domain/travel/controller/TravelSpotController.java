@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/v1/travel")
+@RequestMapping("/api/v1/travel")
 public class TravelSpotController implements TravelSpotSpecification {
 
     private final TravelSpotService travelSpotService;
