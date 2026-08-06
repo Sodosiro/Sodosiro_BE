@@ -68,8 +68,16 @@ public class UserService {
             String oldUrl = user.getProfileImageUrl();
 
             user.updateProfileImage(newUrl);
-            eventPublisher.publishEvent(new ProfileImageChangedEvent(newUrl, oldUrl));
+            eventPublisher.publishEvent(ProfileImageChangedEvent.updated(newUrl, oldUrl));
+        } else if (request.removeImage()) {
+            String oldUrl = user.getProfileImageUrl();
+
+            if (oldUrl != null && !oldUrl.isBlank()) {
+                user.updateProfileImage(null);
+                eventPublisher.publishEvent(ProfileImageChangedEvent.removed(oldUrl));
+            }
         }
+
         return ProfileResponse.from(user);
     }
 
