@@ -16,9 +16,17 @@ public interface SpotLikeSpecification {
     ResponseEntity<LikeToggleResponse> toggleTouristSpotLike(Long userId, Long contentId);
 
     @Operation(summary = "내가 좋아요한 관광지 목록",
-               description = "커서 기반 페이지네이션. 첫 요청은 cursor 생략, 이후 응답의 nextCursor 값을 사용하세요.")
+               description = "커서 기반 무한스크롤. 첫 요청은 cursor 생략, 이후 응답의 nextCursor 값을 사용하세요.")
     ResponseEntity<MyLikedSpotListResponse> getMyLikedSpots(
             Long userId,
+            Long cursor,
+            @Min(1) @Max(100) int size);
+
+    @Operation(summary = "내가 좋아요한 관광지 목록 (지역별)",
+               description = "sigunguCode에 해당하는 지역의 좋아요 목록만 조회합니다. 커서 기반 무한스크롤. 첫 요청은 cursor 생략, 이후 응답의 nextCursor 값을 사용하세요.")
+    ResponseEntity<MyLikedSpotListResponse> getMyLikedSpotsByRegion(
+            Long userId,
+            String sigunguCode,
             Long cursor,
             @Min(1) @Max(100) int size);
 }

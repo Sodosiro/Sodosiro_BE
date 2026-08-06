@@ -39,4 +39,14 @@ public class SpotLikeController implements SpotLikeSpecification {
 
         return ResponseEntity.ok(spotLikeService.getMyLikedSpots(userId, cursor, size));
     }
+
+    @GetMapping("/likes/regions/{sigunguCode}")
+    public ResponseEntity<MyLikedSpotListResponse> getMyLikedSpotsByRegion(
+            @LoginUser Long userId,
+            @PathVariable String sigunguCode,
+            @RequestParam(required = false) Long cursor,
+            @RequestParam(defaultValue = "20") int size) {
+
+        return ResponseEntity.ok(spotLikeService.getMyLikedSpotsByRegion(userId, sigunguCode, cursor, size));
+    }
 }

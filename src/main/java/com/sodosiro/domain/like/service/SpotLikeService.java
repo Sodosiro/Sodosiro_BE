@@ -68,4 +68,28 @@ public class SpotLikeService {
 
         return new MyLikedSpotListResponse(items, nextCursor, hasNext);
     }
+
+    @Transactional(readOnly = true)
+    public MyLikedSpotListResponse getMyLikedSpotsByRegion(Long userId, String sigunguCode, Long cursor, int size) {
+        long effectiveCursor = cursor == null ? CURSOR_START : cursor;
+
+        List<SpotLike> fetched = spotLikeRepository.findByUserIdAndSigunguCode(userId, sigunguCode, effectiveCursor, size + 1);
+
+        boolean hasNext = fetched.size() > size;
+        List<SpotLike> likes = hasNext ? fetched.subList(0, size) : fetched;
+        Long nextCursor = hasNext && !likes.isEmpty() ? likes.getLast().getId() : null;
+
+        List<Long> contentIds = likes.stream()
+                .map(SpotLike::getContentId)
+                .toList();
+
+        Map<Long, TouristSpot> touristMap = touristSpotRepository.findAllById(contentIds).stream()
+                .collect(Collectors.toMap(TouristSpot::getContentId, Function.identity()));
+
+        List<MyLikedSpotItem> items = likes.stream()
+                .map(l -> MyLikedSpotItem.from(l, touristMap.get(l.getContentId())))
+                .toList();
+
+        return new MyLikedSpotListResponse(items, nextCursor, hasNext);
+    }
 }
