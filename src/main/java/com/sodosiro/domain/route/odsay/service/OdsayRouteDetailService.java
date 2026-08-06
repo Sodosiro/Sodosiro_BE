@@ -1,8 +1,8 @@
-package com.sodosiro.domain.route.service;
+package com.sodosiro.domain.route.odsay.service;
 
-import com.sodosiro.domain.route.kakao.client.KakaoDirectionsClient;
-import com.sodosiro.domain.route.dto.RouteLeg;
 import com.sodosiro.domain.route.dto.RouteWaypoint;
+import com.sodosiro.domain.route.odsay.client.OdsayDirectionsClient;
+import com.sodosiro.domain.route.odsay.dto.OdsayRouteDetailResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -13,31 +13,31 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-/** 자차(Kakao) 전용 구간 소요시간 계산. 대중교통은 항상 상세 응답이 필요해 별도 서비스로 처리한다. */
+/** 대중교통 전용 구간별 상세 경로 계산(버스/지하철 구간, 좌표 포함) */
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class RouteLegTimeService {
+public class OdsayRouteDetailService {
 
-    private final KakaoDirectionsClient kakaoDirectionsClient;
+    private final OdsayDirectionsClient odsayDirectionsClient;
 
-    public List<RouteLeg> calculateAdjacentLegTimes(List<RouteWaypoint> orderedWaypoints) {
+    public List<OdsayRouteDetailResponse> calculateAdjacentRouteDetails(List<RouteWaypoint> orderedWaypoints) {
         if (orderedWaypoints.size() < 2) {
             return List.of();
         }
 
         try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
-            List<CompletableFuture<RouteLeg>> futures = new ArrayList<>();
+            List<CompletableFuture<OdsayRouteDetailResponse>> futures = new ArrayList<>();
 
             for (int i = 0; i < orderedWaypoints.size() - 1; i++) {
                 RouteWaypoint from = orderedWaypoints.get(i);
                 RouteWaypoint to = orderedWaypoints.get(i + 1);
 
-                CompletableFuture<RouteLeg> future = CompletableFuture
-                        .supplyAsync(() -> kakaoDirectionsClient.findRoute(from, to), executor)
+                CompletableFuture<OdsayRouteDetailResponse> future = CompletableFuture
+                        .supplyAsync(() -> odsayDirectionsClient.findRouteDetail(from, to), executor)
                         .exceptionally(throwable -> {
-                            log.warn("구간 이동시간 계산 실패: from={}, to={}", from.id(), to.id(), throwable);
-                            return RouteLeg.failure(from.id(), to.id());
+                            log.warn("대중교통 구간 상세 계산 실패: from={}, to={}", from.id(), to.id(), throwable);
+                            return OdsayRouteDetailResponse.failure();
                         });
 
                 futures.add(future);

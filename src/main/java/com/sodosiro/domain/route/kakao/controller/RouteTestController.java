@@ -2,7 +2,6 @@ package com.sodosiro.domain.route.kakao.controller;
 import com.sodosiro.domain.route.kakao.dto.RouteDirectionsResponse;
 import com.sodosiro.domain.route.dto.RouteWaypoint;
 import com.sodosiro.domain.route.dto.RouteLeg;
-import com.sodosiro.domain.route.dto.TransportMode;
 import com.sodosiro.domain.route.service.RouteLegTimeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,14 +22,13 @@ public class RouteTestController {
             @RequestParam BigDecimal startX,
             @RequestParam BigDecimal startY,
             @RequestParam BigDecimal endX,
-            @RequestParam BigDecimal endY,
-            @RequestParam TransportMode transportMode
+            @RequestParam BigDecimal endY
     ) {
         List<RouteWaypoint> waypoints = List.of(
                 new RouteWaypoint(1L, startX, startY),
                 new RouteWaypoint(2L, endX, endY)
         );
-        List<RouteLeg> legs = routeLegTimeService.calculateAdjacentLegTimes(waypoints, transportMode);
+        List<RouteLeg> legs = routeLegTimeService.calculateAdjacentLegTimes(waypoints);
 
         return RouteDirectionsResponse.from(legs);
     }

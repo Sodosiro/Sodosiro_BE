@@ -1,11 +1,7 @@
 package com.sodosiro.domain.route.odsay.client;
 
-import com.sodosiro.domain.route.RouteSearchClient;
-import com.sodosiro.domain.route.dto.RouteLeg;
 import com.sodosiro.domain.route.dto.RouteWaypoint;
-import com.sodosiro.domain.route.dto.TransportMode;
 import com.sodosiro.domain.route.odsay.dto.OdsayCoordinateResponse;
-import com.sodosiro.domain.route.odsay.dto.OdsayLegResult;
 import com.sodosiro.domain.route.odsay.dto.OdsayLoadLaneResponse;
 import com.sodosiro.domain.route.odsay.dto.OdsayPathResponse;
 import com.sodosiro.domain.route.odsay.dto.OdsayRouteDetailResponse;
@@ -24,29 +20,14 @@ import java.util.stream.Stream;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class OdsayDirectionsClient implements RouteSearchClient {
+public class OdsayDirectionsClient {
 
     private final RestClient odsayRestClient;
 
     @Value("${odsay.api.key}")
     private String apiKey;
 
-    @Override
-    public TransportMode supports() {
-        return TransportMode.PUBLIC_TRANSPORT;
-    }
-
-    public RouteLeg findRoute(RouteWaypoint origin, RouteWaypoint destination) {
-        try {
-            OdsayPathResponse response = callOdsayApi(origin, destination);
-            return toRouteLeg(origin, destination, toResult(response));
-        } catch (RestClientException exception) {
-            log.warn("ODsay 대중교통 길찾기 API 호출 실패: origin={}, destination={}", origin.id(), destination.id(), exception);
-            return RouteLeg.failure(origin.id(), destination.id());
-        }
-    }
-
-    /** 도보/버스/지하철 구간별 상세 정보(수동 테스트용) */
+    /** 대중교통은 항상 도보/버스/지하철 구간별 상세 정보까지 보여준다 */
     public OdsayRouteDetailResponse findRouteDetail(RouteWaypoint origin, RouteWaypoint destination) {
         try {
             OdsayPathResponse response = callOdsayApi(origin, destination);
@@ -70,23 +51,6 @@ public class OdsayDirectionsClient implements RouteSearchClient {
                         .build())
                 .retrieve()
                 .body(OdsayPathResponse.class);
-    }
-
-    private static RouteLeg toRouteLeg(RouteWaypoint origin, RouteWaypoint destination, OdsayLegResult result) {
-        if (!result.success()) {
-            return RouteLeg.failure(origin.id(), destination.id());
-        }
-        return RouteLeg.success(origin.id(), destination.id(), result.durationSeconds(), result.distanceMeters());
-    }
-
-    private static OdsayLegResult toResult(OdsayPathResponse response) {
-        OdsayPathResponse.OdsayPath bestPath = bestPath(response);
-        OdsayPathResponse.OdsayInfo info = bestPath == null ? null : bestPath.info();
-        if (info == null || info.totalTime() == null || info.totalDistance() == null || info.payment() == null) {
-            return OdsayLegResult.failure();
-        }
-
-        return OdsayLegResult.success(info.totalTime(), info.totalDistance(), info.payment());
     }
 
     private OdsayRouteDetailResponse toDetailResponse(OdsayPathResponse response) {
