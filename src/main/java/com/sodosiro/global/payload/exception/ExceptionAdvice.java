@@ -87,7 +87,17 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
     public ResponseEntity<ReasonDTO> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException e, HttpServletRequest request) {
         log.warn("[{}] {} - Max upload size exceeded", request.getMethod(), request.getRequestURI());
 
-        ReasonDTO body = S3ErrorCode._FILE_SIZE_EXCEEDED.getReasonHttpStatus();
+        long requestSize = request.getContentLengthLong();
+
+        long maxRequestSize = 20 * 1024 * 1024L;
+
+        ReasonDTO body;
+
+        if (requestSize > maxRequestSize) {
+            body = S3ErrorCode._REQUEST_SIZE_EXCEEDED.getReasonHttpStatus();
+        } else {
+            body = S3ErrorCode._FILE_SIZE_EXCEEDED.getReasonHttpStatus();
+        }
 
         return ResponseEntity.status(body.getHttpStatus()).body(body);
     }
