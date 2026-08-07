@@ -2,6 +2,7 @@ package com.sodosiro.global.payload.exception;
 
 import com.sodosiro.global.payload.code.ReasonDTO;
 import com.sodosiro.global.payload.code.error.CommonErrorCode;
+import com.sodosiro.global.payload.code.error.S3ErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 @Slf4j
@@ -79,5 +81,14 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
         log.error("Unhandled exception", e);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(CommonErrorCode._INTERNAL_SERVER_ERROR.getReasonHttpStatus());
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ReasonDTO> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException e, HttpServletRequest request) {
+        log.warn("[{}] {} - Max upload size exceeded", request.getMethod(), request.getRequestURI());
+
+        ReasonDTO body = S3ErrorCode._FILE_SIZE_EXCEEDED.getReasonHttpStatus();
+
+        return ResponseEntity.status(body.getHttpStatus()).body(body);
     }
 }
