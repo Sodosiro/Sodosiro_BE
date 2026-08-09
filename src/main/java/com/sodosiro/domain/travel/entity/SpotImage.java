@@ -6,6 +6,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
@@ -42,6 +44,11 @@ public class SpotImage {
     @Column(name = "content_id", nullable = false)
     @Comment("관광지 contentid (tourist_spot 참조)")
     private Long contentId;
+
+    @ManyToOne(fetch = jakarta.persistence.FetchType.LAZY)
+    @JoinColumn(name = "content_id", insertable = false, updatable = false,
+            foreignKey = @jakarta.persistence.ForeignKey(jakarta.persistence.ConstraintMode.NO_CONSTRAINT))
+    private TouristSpot touristSpot;
 
     /** 이미지 순서 ("order" 는 예약어라 백틱으로 이스케이프) */
     @Column(name = "`order`", nullable = false)

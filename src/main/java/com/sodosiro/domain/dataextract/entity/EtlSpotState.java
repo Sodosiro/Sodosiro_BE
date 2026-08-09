@@ -1,8 +1,12 @@
 package com.sodosiro.domain.dataextract.entity;
 
+import com.sodosiro.domain.travel.entity.TouristSpot;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -20,6 +24,11 @@ public class EtlSpotState {
     @Id
     @Column(name = "content_id")
     private Long contentId;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "content_id", insertable = false, updatable = false,
+            foreignKey = @jakarta.persistence.ForeignKey(jakarta.persistence.ConstraintMode.NO_CONSTRAINT))
+    private TouristSpot touristSpot;
 
     @Column(name = "overview", columnDefinition = "text")
     private String overview;
