@@ -79,15 +79,8 @@ public class SpotLikeService {
         List<SpotLike> likes = hasNext ? fetched.subList(0, size) : fetched;
         Long nextCursor = hasNext && !likes.isEmpty() ? likes.getLast().getId() : null;
 
-        List<Long> contentIds = likes.stream()
-                .map(SpotLike::getContentId)
-                .toList();
-
-        Map<Long, TouristSpot> touristMap = touristSpotRepository.findAllById(contentIds).stream()
-                .collect(Collectors.toMap(TouristSpot::getContentId, Function.identity()));
-
         List<MyLikedSpotItem> items = likes.stream()
-                .map(l -> MyLikedSpotItem.from(l, touristMap.get(l.getContentId())))
+                .map(l -> MyLikedSpotItem.from(l, l.getTouristSpot()))
                 .toList();
 
         return new MyLikedSpotListResponse(items, nextCursor, hasNext);

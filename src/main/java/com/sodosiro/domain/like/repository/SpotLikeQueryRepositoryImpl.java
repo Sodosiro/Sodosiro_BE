@@ -34,7 +34,7 @@ public class SpotLikeQueryRepositoryImpl implements SpotLikeQueryRepository {
     public List<SpotLike> findByUserIdAndSigunguCode(Long userId, String sigunguCode, Long cursor, int size) {
         return queryFactory
                 .selectFrom(l)
-                .join(spot).on(spot.contentId.eq(l.contentId))
+                .join(l.touristSpot, spot).fetchJoin()
                 .where(
                         l.userId.eq(userId),
                         spot.sigunguCode.eq(sigunguCode),

@@ -6,6 +6,7 @@ import com.sodosiro.global.payload.code.error.S3ErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -69,6 +70,7 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
         return super.handleExceptionInternal(e, body, headers, status, request);
     }
 
+
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ReasonDTO> onDataIntegrityViolation(DataIntegrityViolationException e) {
         log.warn("Data Integrity Violation: {}", e.getMostSpecificCause().getMessage());
@@ -83,22 +85,4 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
                 .body(CommonErrorCode._INTERNAL_SERVER_ERROR.getReasonHttpStatus());
     }
 
-    @ExceptionHandler(MaxUploadSizeExceededException.class)
-    public ResponseEntity<ReasonDTO> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException e, HttpServletRequest request) {
-        log.warn("[{}] {} - Max upload size exceeded", request.getMethod(), request.getRequestURI());
-
-        long requestSize = request.getContentLengthLong();
-
-        long maxRequestSize = 20 * 1024 * 1024L;
-
-        ReasonDTO body;
-
-        if (requestSize > maxRequestSize) {
-            body = S3ErrorCode._REQUEST_SIZE_EXCEEDED.getReasonHttpStatus();
-        } else {
-            body = S3ErrorCode._FILE_SIZE_EXCEEDED.getReasonHttpStatus();
-        }
-
-        return ResponseEntity.status(body.getHttpStatus()).body(body);
-    }
 }
