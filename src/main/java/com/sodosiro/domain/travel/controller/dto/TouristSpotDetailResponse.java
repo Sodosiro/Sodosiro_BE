@@ -1,6 +1,8 @@
 package com.sodosiro.domain.travel.controller.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.sodosiro.domain.review.controller.dto.response.ReviewImageResponse;
+import com.sodosiro.domain.review.controller.dto.response.ReviewResponse;
 import com.sodosiro.domain.travel.entity.SpotImage;
 import com.sodosiro.domain.travel.entity.SpotPopularity;
 import com.sodosiro.domain.travel.entity.TouristSpot;
@@ -66,10 +68,10 @@ public record TouristSpotDetailResponse(
 
     public record LatestReview(
             Long reviewId,
-            String authorName,
+            ReviewResponse.AuthorInfo author,
             Short rating,
             String body,
-            @JsonInclude(JsonInclude.Include.NON_EMPTY) List<String> images,
+            @JsonInclude(JsonInclude.Include.NON_EMPTY) List<ReviewImageResponse> images,
             LocalDateTime createdAt
     ) {
     }

@@ -5,6 +5,8 @@ import com.sodosiro.domain.travel.controller.dto.TouristSpotDetailResponse;
 import com.sodosiro.domain.travel.controller.dto.TouristSpotSummaryResponse;
 import com.sodosiro.domain.travel.controller.dto.TravelSpotSort;
 import com.sodosiro.domain.like.repository.SpotLikeRepository;
+import com.sodosiro.domain.review.controller.dto.response.ReviewImageResponse;
+import com.sodosiro.domain.review.controller.dto.response.ReviewResponse;
 import com.sodosiro.domain.review.entity.Review;
 import com.sodosiro.domain.review.entity.ReviewImage;
 import com.sodosiro.domain.review.repository.ReviewImageRepository;
@@ -105,22 +107,21 @@ public class TravelSpotService {
         return reviews.stream()
                 .map(review -> new TouristSpotDetailResponse.LatestReview(
                         review.getId(),
-                        users.containsKey(review.getUserId())
-                                ? users.get(review.getUserId()).getDisplayName() : "알 수 없음",
+                        toAuthorInfo(users.get(review.getUserId())),
                         review.getRating(),
-                        abbreviate(review.getBody()),
+                        review.getBody(),
                         imagesByReviewId.getOrDefault(review.getId(), List.of()).stream()
-                                .map(ReviewImage::getImageUrl)
+                                .map(ReviewImageResponse::from)
                                 .toList(),
                         review.getCreatedAt()))
                 .toList();
     }
 
-    private String abbreviate(String body) {
-        if (body == null || body.length() <= 30) {
-            return body;
+    private ReviewResponse.AuthorInfo toAuthorInfo(User user) {
+        if (user == null) {
+            return new ReviewResponse.AuthorInfo(null, "알 수 없음", null);
         }
-        return body.substring(0, 30) + "...";
+        return ReviewResponse.AuthorInfo.from(user);
     }
 
     private int normalizePageSize(Integer size) {
