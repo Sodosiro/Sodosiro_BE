@@ -32,7 +32,7 @@ public interface TravelSpotSpecification {
     })
     ResponseEntity<CursorPageResponse<TouristSpotSummaryResponse>> getTouristSpots(
             @Parameter(in = ParameterIn.QUERY, description = "직전 응답의 nextCursor. sort별 커서는 서로 호환되지 않음", example = "126508") String cursor,
-            @Parameter(in = ParameterIn.QUERY, description = "페이지 크기 (기본 20, 최대 100)", example = "20") Integer size,
+            @Parameter(in = ParameterIn.QUERY, description = "페이지 크기 (기본 20, 최대 10000)", example = "10000") Integer size,
             @Parameter(in = ParameterIn.QUERY, description = "서비스 카테고리. 반복 전달 가능", example = "4") List<Integer> categories,
             @Parameter(in = ParameterIn.QUERY, description = "여행지명 부분 검색어", example = "강릉") String keyword,
             @Parameter(in = ParameterIn.QUERY, description = "조회 정렬 기준", example = "POPULAR",
