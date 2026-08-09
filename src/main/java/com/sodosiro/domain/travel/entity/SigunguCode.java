@@ -5,6 +5,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
@@ -38,6 +41,11 @@ public class SigunguCode {
     @Column(name = "area_code", length = 5, nullable = false)
     @Comment("지역코드 (area_code 참조)")
     private String areaCode;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "area_code", referencedColumnName = "area_code", insertable = false, updatable = false,
+            foreignKey = @jakarta.persistence.ForeignKey(jakarta.persistence.ConstraintMode.NO_CONSTRAINT))
+    private AreaCode area;
 
     @Column(name = "sigungu_code", length = 5, nullable = false)
     @Comment("시군구코드")

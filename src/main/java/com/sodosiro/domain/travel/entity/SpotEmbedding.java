@@ -3,6 +3,9 @@ package com.sodosiro.domain.travel.entity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -29,6 +32,11 @@ public class SpotEmbedding {
     @Column(name = "content_id")
     @Comment("관광지 contentid (tourist_spot 와 1:1)")
     private Long contentId;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "content_id", insertable = false, updatable = false,
+            foreignKey = @jakarta.persistence.ForeignKey(jakarta.persistence.ConstraintMode.NO_CONSTRAINT))
+    private TouristSpot touristSpot;
 
     @JdbcTypeCode(SqlTypes.VECTOR)
     @Array(length = 1536)

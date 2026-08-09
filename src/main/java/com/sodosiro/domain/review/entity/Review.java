@@ -1,6 +1,8 @@
 package com.sodosiro.domain.review.entity;
 
 import com.sodosiro.domain.review.constants.ReviewVisitType;
+import com.sodosiro.domain.travel.entity.TouristSpot;
+import com.sodosiro.domain.user.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -9,6 +11,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
@@ -46,9 +50,19 @@ public class Review {
     @Comment("관광지 content_id (tourist_spot 참조)")
     private Long contentId;
 
+    @ManyToOne(fetch = jakarta.persistence.FetchType.LAZY)
+    @JoinColumn(name = "content_id", insertable = false, updatable = false,
+            foreignKey = @jakarta.persistence.ForeignKey(jakarta.persistence.ConstraintMode.NO_CONSTRAINT))
+    private TouristSpot touristSpot;
+
     @Column(name = "user_id", nullable = false)
     @Comment("작성자 user_id (users 참조)")
     private Long userId;
+
+    @ManyToOne(fetch = jakarta.persistence.FetchType.LAZY)
+    @JoinColumn(name = "user_id", insertable = false, updatable = false,
+            foreignKey = @jakarta.persistence.ForeignKey(jakarta.persistence.ConstraintMode.NO_CONSTRAINT))
+    private User user;
 
     @Column(name = "rating", nullable = false)
     @Comment("별점 (1~5)")

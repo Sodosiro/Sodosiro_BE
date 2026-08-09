@@ -3,6 +3,9 @@ package com.sodosiro.domain.travel.entity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
@@ -33,6 +36,11 @@ public class SpotPopularity {
     @Column(name = "content_id")
     @Comment("tourist_spot PK (1:1)")
     private Long contentId;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "content_id", insertable = false, updatable = false,
+            foreignKey = @jakarta.persistence.ForeignKey(jakarta.persistence.ConstraintMode.NO_CONSTRAINT))
+    private TouristSpot touristSpot;
 
     @Column(name = "mention_score", nullable = false)
     @Comment("카카오 블로그·카페 언급 누적 점수 (시간당 감쇠 적용)")

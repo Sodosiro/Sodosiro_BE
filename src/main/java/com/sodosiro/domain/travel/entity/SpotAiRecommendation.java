@@ -3,6 +3,9 @@ package com.sodosiro.domain.travel.entity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
@@ -17,6 +20,11 @@ public class SpotAiRecommendation {
     @Id
     @Column(name = "content_id")
     private Long contentId;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "content_id", insertable = false, updatable = false,
+            foreignKey = @jakarta.persistence.ForeignKey(jakarta.persistence.ConstraintMode.NO_CONSTRAINT))
+    private TouristSpot touristSpot;
     @Column(nullable = false, columnDefinition = "text")
     private String reason;
     @Column(name = "prompt_version", nullable = false, length = 30)
