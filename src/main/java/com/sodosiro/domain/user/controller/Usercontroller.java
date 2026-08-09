@@ -19,11 +19,6 @@ public class Usercontroller implements UserSpecification {
 
     private final UserService userService;
 
-    /**
-     * 프로필 수정 API (닉네임, 한줄소개, 프로필 이미지 통합 수정)
-     * image 없이 removeImage=true를 보내면 기존 프로필 이미지를 제거한다.
-     */
-
     @GetMapping
     public ResponseEntity<ProfileResponse> getProfile(@LoginUser Long userId) {
         ProfileResponse response = userService.getProfile(userId);

@@ -21,6 +21,7 @@ public enum S3ErrorCode implements BaseCode {
     _EMPTY_FILE_PATH(HttpStatus.BAD_REQUEST, "FILE400-EMPTY_PATH", "URL에 파일 경로가 포함되어 있지 않습니다."),
 
     _FILE_SIZE_EXCEEDED(HttpStatus.PAYLOAD_TOO_LARGE, "FILE413-SIZE_EXCEEDED", "파일 크기는 2MB를 초과할 수 없습니다."),
+//    _REQUEST_SIZE_EXCEEDED(HttpStatus.PAYLOAD_TOO_LARGE, "FILE413-REQUEST_EXCEEDED", "전체 요청 용량은 20MB를 초과할 수 없습니다."),
     _IO_EXCEPTION_UPLOAD_FILE(HttpStatus.INTERNAL_SERVER_ERROR, "FILE500-UPLOAD_IO", "업로드 중 오류가 발생했습니다."),
     _IO_EXCEPTION_DELETE_FILE(HttpStatus.INTERNAL_SERVER_ERROR, "FILE500-DELETE_IO", "파일삭제에 실패했습니다");
 

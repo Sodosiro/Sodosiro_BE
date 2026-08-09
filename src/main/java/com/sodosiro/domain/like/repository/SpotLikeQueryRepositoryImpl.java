@@ -1,8 +1,10 @@
 package com.sodosiro.domain.like.repository;
 
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sodosiro.domain.like.entity.QSpotLike;
 import com.sodosiro.domain.like.entity.SpotLike;
+import com.sodosiro.domain.travel.entity.QTouristSpot;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -14,6 +16,7 @@ public class SpotLikeQueryRepositoryImpl implements SpotLikeQueryRepository {
 
     private final JPAQueryFactory queryFactory;
     private static final QSpotLike l = QSpotLike.spotLike;
+    private static final QTouristSpot spot = QTouristSpot.touristSpot;
 
     @Override
     public List<SpotLike> findByUserId(Long userId, Long cursor, int size) {
@@ -26,5 +29,24 @@ public class SpotLikeQueryRepositoryImpl implements SpotLikeQueryRepository {
                 .orderBy(l.id.desc())
                 .limit(size)
                 .fetch();
+    }
+
+    @Override
+    public List<SpotLike> findByUserIdAndFilters(Long userId, String sigunguCode, Long cursor, int size) {
+        return queryFactory
+                .selectFrom(l)
+                .join(l.touristSpot, spot).fetchJoin()
+                .where(
+                        l.userId.eq(userId),
+                        sigunguCodeEq(sigunguCode),
+                        l.id.lt(cursor)
+                )
+                .orderBy(l.id.desc())
+                .limit(size)
+                .fetch();
+    }
+
+    private BooleanExpression sigunguCodeEq(String sigunguCode) {
+        return sigunguCode != null ? spot.sigunguCode.eq(sigunguCode) : null;
     }
 }
