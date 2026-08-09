@@ -32,7 +32,7 @@ public interface TravelSpotSpecification {
     })
     ResponseEntity<CursorPageResponse<TouristSpotSummaryResponse>> getTouristSpots(
             @Parameter(in = ParameterIn.QUERY, description = "직전 응답의 nextCursor. sort별 커서는 서로 호환되지 않음", example = "126508") String cursor,
-            @Parameter(in = ParameterIn.QUERY, description = "페이지 크기 (기본 20, 최대 100)", example = "20") Integer size,
+            @Parameter(in = ParameterIn.QUERY, description = "페이지 크기 (기본 20, 최대 10000)", example = "10000") Integer size,
             @Parameter(in = ParameterIn.QUERY, description = "서비스 카테고리. 반복 전달 가능", example = "4") List<Integer> categories,
             @Parameter(in = ParameterIn.QUERY, description = "여행지명 부분 검색어", example = "강릉") String keyword,
             @Parameter(in = ParameterIn.QUERY, description = "조회 정렬 기준", example = "POPULAR",
@@ -42,7 +42,7 @@ public interface TravelSpotSpecification {
 
     @Operation(
             summary = "일반 여행지 상세 조회",
-            description = "여행지 기본 정보, 좋아요 수, 리뷰 평균 평점, 리뷰 수, 인기 태그, 최신 리뷰 최대 3건(작성자명·작성일·이미지·본문 30자 요약)과 detailImage2 이미지 목록을 함께 반환합니다. "
+            description = "여행지 기본 정보, 좋아요 수, 리뷰 평균 평점, 리뷰 수, 인기 태그, 최신 리뷰 최대 3건(작성자 정보·작성일·이미지·전체 본문)과 detailImage2 이미지 목록을 함께 반환합니다. 최신 리뷰에는 방문 유형, GPS 인증, 내 리뷰 여부를 포함하지 않습니다. "
                     + "리뷰가 없으면 latestReviews 필드는 응답에서 제외됩니다. "
                     + "aiRecommendation.available이 false이면 아직 추천 이유가 생성되지 않았거나 만료된 상태입니다."
     )
