@@ -15,16 +15,9 @@ public interface SpotLikeSpecification {
                description = "좋아요가 없으면 추가, 있으면 취소합니다. 응답의 liked 필드로 현재 상태를 확인하세요.")
     ResponseEntity<LikeToggleResponse> toggleTouristSpotLike(Long userId, Long contentId);
 
-    @Operation(summary = "내가 좋아요한 관광지 목록",
-               description = "커서 기반 무한스크롤. 첫 요청은 cursor 생략, 이후 응답의 nextCursor 값을 사용하세요.")
-    ResponseEntity<MyLikedSpotListResponse> getMyLikedSpots(
-            Long userId,
-            Long cursor,
-            @Min(1) @Max(100) int size);
-
     @Operation(summary = "내가 좋아요한 관광지 목록 (지역별)",
-               description = "sigunguCode에 해당하는 지역의 좋아요 목록만 조회합니다. 커서 기반 무한스크롤. 첫 요청은 cursor 생략, 이후 응답의 nextCursor 값을 사용하세요.")
-    ResponseEntity<MyLikedSpotListResponse> getMyLikedSpotsByRegion(
+               description = "sigunguCode에 해당하는 지역의 좋아요 목록만 조회합니다(NULL 시 전체조회). 커서 기반 무한스크롤. 첫 요청은 cursor 생략, 이후 응답의 nextCursor 값을 사용하세요.")
+    ResponseEntity<MyLikedSpotListResponse> getMyLikedSpots(
             Long userId,
             String sigunguCode,
             Long cursor,

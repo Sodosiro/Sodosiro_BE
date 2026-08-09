@@ -31,22 +31,13 @@ public class SpotLikeController implements SpotLikeSpecification {
         return ResponseEntity.ok(spotLikeService.toggleTouristSpotLike(userId, contentId));
     }
 
-    @GetMapping("/likes/me")
+    @GetMapping("/likes")
     public ResponseEntity<MyLikedSpotListResponse> getMyLikedSpots(
             @LoginUser Long userId,
+            @RequestParam(required = false) String sigunguCode,
             @RequestParam(required = false) Long cursor,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "5") int size) {
 
-        return ResponseEntity.ok(spotLikeService.getMyLikedSpots(userId, cursor, size));
-    }
-
-    @GetMapping("/likes/regions/{sigunguCode}")
-    public ResponseEntity<MyLikedSpotListResponse> getMyLikedSpotsByRegion(
-            @LoginUser Long userId,
-            @PathVariable String sigunguCode,
-            @RequestParam(required = false) Long cursor,
-            @RequestParam(defaultValue = "20") int size) {
-
-        return ResponseEntity.ok(spotLikeService.getMyLikedSpotsByRegion(userId, sigunguCode, cursor, size));
+        return ResponseEntity.ok(spotLikeService.getMyLikedSpots(userId, sigunguCode, cursor, size));
     }
 }

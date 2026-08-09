@@ -1,5 +1,6 @@
 package com.sodosiro.domain.like.repository;
 
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sodosiro.domain.like.entity.QSpotLike;
 import com.sodosiro.domain.like.entity.SpotLike;
@@ -31,17 +32,21 @@ public class SpotLikeQueryRepositoryImpl implements SpotLikeQueryRepository {
     }
 
     @Override
-    public List<SpotLike> findByUserIdAndSigunguCode(Long userId, String sigunguCode, Long cursor, int size) {
+    public List<SpotLike> findByUserIdAndFilters(Long userId, String sigunguCode, Long cursor, int size) {
         return queryFactory
                 .selectFrom(l)
                 .join(l.touristSpot, spot).fetchJoin()
                 .where(
                         l.userId.eq(userId),
-                        spot.sigunguCode.eq(sigunguCode),
+                        sigunguCodeEq(sigunguCode),
                         l.id.lt(cursor)
                 )
                 .orderBy(l.id.desc())
                 .limit(size)
                 .fetch();
+    }
+
+    private BooleanExpression sigunguCodeEq(String sigunguCode) {
+        return sigunguCode != null ? spot.sigunguCode.eq(sigunguCode) : null;
     }
 }
