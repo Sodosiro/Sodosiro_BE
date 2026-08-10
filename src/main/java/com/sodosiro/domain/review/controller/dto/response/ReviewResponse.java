@@ -30,6 +30,9 @@ public record ReviewResponse(
 
     public record SpotSummary(Long contentId, String title, String firstImage) {
         public static SpotSummary from(TouristSpot spot) {
+            if (spot == null) {
+                return null;
+            }
             return new SpotSummary(spot.getContentId(), spot.getTitle(), spot.getFirstImage());
         }
     }
