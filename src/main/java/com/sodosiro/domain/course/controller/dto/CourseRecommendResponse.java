@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
-public record CourseRecommendResponse(List<DayCourse> days) {
+public record CourseRecommendResponse(Long courseId, List<DayCourse> days) {
 
     public record DayCourse(int day, LocalDate date, List<RecommendedSpot> spots) {
     }

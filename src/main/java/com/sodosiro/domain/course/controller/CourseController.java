@@ -8,6 +8,7 @@ import com.sodosiro.domain.course.controller.dto.CourseRecommendRequest;
 import com.sodosiro.domain.course.controller.dto.CourseRecommendResponse;
 import com.sodosiro.domain.course.service.CourseConfirmationService;
 import com.sodosiro.domain.course.service.CourseRecommendationService;
+import com.sodosiro.global.resolver.LoginUser;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -25,18 +26,20 @@ public class CourseController {
     private final CourseConfirmationService courseConfirmationService;
 
     @PostMapping("/recommendations")
-    public ResponseEntity<CourseRecommendResponse> recommend(@RequestBody @Valid CourseRecommendRequest request) {
-        return ResponseEntity.ok(courseRecommendationService.recommend(request));
+    public ResponseEntity<CourseRecommendResponse> recommend(
+            @LoginUser Long userId, @RequestBody @Valid CourseRecommendRequest request) {
+        return ResponseEntity.ok(courseRecommendationService.recommend(userId, request));
     }
 
     @PostMapping("/confirm/car")
-    public ResponseEntity<CourseConfirmCarResponse> confirmCar(@RequestBody @Valid CourseConfirmCarRequest request) {
-        return ResponseEntity.ok(courseConfirmationService.confirmCar(request));
+    public ResponseEntity<CourseConfirmCarResponse> confirmCar(
+            @LoginUser Long userId, @RequestBody @Valid CourseConfirmCarRequest request) {
+        return ResponseEntity.ok(courseConfirmationService.confirmCar(userId, request));
     }
 
     @PostMapping("/confirm/public-transport")
     public ResponseEntity<CourseConfirmPublicTransportResponse> confirmPublicTransport(
-            @RequestBody @Valid CourseConfirmPublicTransportRequest request) {
-        return ResponseEntity.ok(courseConfirmationService.confirmPublicTransport(request));
+            @LoginUser Long userId, @RequestBody @Valid CourseConfirmPublicTransportRequest request) {
+        return ResponseEntity.ok(courseConfirmationService.confirmPublicTransport(userId, request));
     }
 }

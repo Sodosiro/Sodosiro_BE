@@ -1,5 +1,6 @@
 package com.sodosiro.domain.course.controller.dto;
 
+import com.sodosiro.domain.course.constants.TravelStyle;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDate;

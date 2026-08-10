@@ -1,8 +1,10 @@
 package com.sodosiro.domain.course.service;
 
+import com.sodosiro.domain.course.constants.TravelStyle;
 import com.sodosiro.domain.course.controller.dto.CourseRecommendRequest;
 import com.sodosiro.domain.course.controller.dto.CourseRecommendResponse;
-import com.sodosiro.domain.course.controller.dto.TravelStyle;
+import com.sodosiro.domain.course.entity.Course;
+import com.sodosiro.domain.course.repository.CourseRepository;
 import com.sodosiro.domain.travel.entity.TouristSpot;
 import com.sodosiro.domain.travel.repository.SpotEmbeddingRepository;
 import com.sodosiro.domain.travel.repository.TouristSpotRepository;
@@ -36,7 +38,7 @@ import org.springframework.web.server.ResponseStatusException;
  */
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+@Transactional
 public class CourseRecommendationService {
 
     private static final int FREE_SLOTS_PER_DAY = 2;
@@ -55,8 +57,9 @@ public class CourseRecommendationService {
     private final TouristSpotRepository touristSpotRepository;
     private final SpotEmbeddingRepository spotEmbeddingRepository;
     private final EmbeddingModel embeddingModel;
+    private final CourseRepository courseRepository;
 
-    public CourseRecommendResponse recommend(CourseRecommendRequest request) {
+    public CourseRecommendResponse recommend(Long userId, CourseRecommendRequest request) {
 
         validateDateRange(request.startDate(), request.endDate());
 
@@ -102,7 +105,28 @@ public class CourseRecommendationService {
                     .toList();
             days.add(new CourseRecommendResponse.DayCourse(i + 1, date, spots));
         }
-        return new CourseRecommendResponse(days);
+
+        Long courseId = saveDraft(userId, request, days);
+        return new CourseRecommendResponse(courseId, days);
+    }
+
+    /** 사용자당 미확정 draft는 1개만 유지한다: 기존 미확정 draft가 있으면 지우고 새로 저장한다. */
+    private Long saveDraft(Long userId, CourseRecommendRequest request, List<CourseRecommendResponse.DayCourse> days) {
+        courseRepository.findByUserIdAndIsConfirmedFalse(userId).ifPresent(courseRepository::delete);
+        List<Course.DaySnapshot> snapshots = days.stream().map(this::toSnapshot).toList();
+        Course draft = Course.createDraft(
+                userId, request.startDate(), request.endDate(),
+                request.travelStylesOrEmpty(), request.mustVisitContentId(), request.aiMessage(), snapshots);
+        return courseRepository.save(draft).getId();
+    }
+
+    private Course.DaySnapshot toSnapshot(CourseRecommendResponse.DayCourse day) {
+        List<Course.SpotSnapshot> spots = day.spots().stream()
+                .map(spot -> new Course.SpotSnapshot(
+                        spot.contentId(), spot.title(), spot.firstImage(),
+                        spot.mapX(), spot.mapY(), spot.category(), spot.mustVisit()))
+                .toList();
+        return new Course.DaySnapshot(day.day(), day.date(), spots);
     }
 
     private void validateDateRange(LocalDate startDate, LocalDate endDate) {
