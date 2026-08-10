@@ -67,4 +67,8 @@ services:
 
 volumes:
   postgres-data:
+    external: true
+    name: docker_postgres-data   # <--- 이 부분 추가
   redis-data:
+    external: true
+    name: docker_redis-data     # <--- 이 부분 추가

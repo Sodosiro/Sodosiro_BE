@@ -1,4 +1,4 @@
-package com.sodosiro.domain.auth.dto.response;
+package com.sodosiro.domain.auth.contoller.dto.response;
 
 public record SocialLoginResponse(String accessToken,
                                   String refreshToken) {

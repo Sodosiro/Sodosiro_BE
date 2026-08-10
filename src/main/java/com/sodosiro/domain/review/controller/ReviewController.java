@@ -9,7 +9,7 @@ import com.sodosiro.domain.review.controller.dto.response.ReviewListResponse;
 import com.sodosiro.domain.review.controller.dto.response.ReviewGpsVerificationResponse;
 import com.sodosiro.domain.review.controller.dto.response.ReviewResponse;
 import com.sodosiro.domain.review.service.ReviewService;
-import com.sodosiro.domain.review.specification.ReviewSpecification;
+import com.sodosiro.domain.review.controller.specification.ReviewSpecification;
 import com.sodosiro.global.resolver.LoginUser;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

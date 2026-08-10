@@ -1,4 +1,4 @@
-package com.sodosiro.domain.region.docs;
+package com.sodosiro.domain.region.controller.specification;
 
 import com.sodosiro.domain.region.controller.dto.AreaCodeResponse;
 import com.sodosiro.domain.region.controller.dto.RegionCodeResponse;

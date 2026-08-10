@@ -1,12 +1,12 @@
 package com.sodosiro.domain.auth.contoller;
 
-import com.sodosiro.domain.auth.dto.request.LogoutRequest;
-import com.sodosiro.domain.auth.dto.request.ReissueRequest;
-import com.sodosiro.domain.auth.dto.request.SocialLoginRequest;
-import com.sodosiro.domain.auth.dto.response.ReissueResponse;
-import com.sodosiro.domain.auth.dto.response.SocialLoginResponse;
+import com.sodosiro.domain.auth.contoller.dto.request.LogoutRequest;
+import com.sodosiro.domain.auth.contoller.dto.request.ReissueRequest;
+import com.sodosiro.domain.auth.contoller.dto.request.SocialLoginRequest;
+import com.sodosiro.domain.auth.contoller.dto.response.ReissueResponse;
+import com.sodosiro.domain.auth.contoller.dto.response.SocialLoginResponse;
 import com.sodosiro.domain.auth.service.AuthService;
-import com.sodosiro.domain.auth.specification.AuthSpecification;
+import com.sodosiro.domain.auth.contoller.specification.AuthSpecification;
 import com.sodosiro.global.resolver.LoginUser;
 import com.sodosiro.global.utils.AuthorizationUtils;
 import lombok.RequiredArgsConstructor;

@@ -1,7 +1,7 @@
 package com.sodosiro.domain.user.entity;
 
 
-import com.sodosiro.domain.auth.dto.response.SocialUserInfo;
+import com.sodosiro.domain.auth.contoller.dto.response.SocialUserInfo;
 import com.sodosiro.domain.user.constants.Provider;
 import jakarta.persistence.*;
 import lombok.*;

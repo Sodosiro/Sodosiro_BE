@@ -1,7 +1,7 @@
 package com.sodosiro.domain.user.service;
 
-import com.sodosiro.domain.user.dto.request.ProfileRequest;
-import com.sodosiro.domain.user.dto.response.ProfileResponse;
+import com.sodosiro.domain.user.controller.dto.request.ProfileRequest;
+import com.sodosiro.domain.user.controller.dto.response.ProfileResponse;
 import com.sodosiro.domain.user.entity.User;
 import com.sodosiro.domain.user.service.event.ProfileImageChangedEvent;
 import com.sodosiro.domain.user.repository.UserRepository;

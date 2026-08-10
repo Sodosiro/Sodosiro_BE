@@ -1,4 +1,4 @@
-package com.sodosiro.domain.review.specification;
+package com.sodosiro.domain.review.controller.specification;
 
 import com.sodosiro.domain.review.constants.ReviewSort;
 import com.sodosiro.domain.review.controller.dto.request.ReviewCreateRequest;

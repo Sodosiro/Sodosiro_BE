@@ -1,4 +1,4 @@
-package com.sodosiro.domain.user.dto.request;
+package com.sodosiro.domain.user.controller.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

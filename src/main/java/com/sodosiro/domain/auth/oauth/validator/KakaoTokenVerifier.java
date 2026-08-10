@@ -8,7 +8,7 @@ import com.auth0.jwt.exceptions.SignatureVerificationException;
 import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.auth0.jwt.interfaces.JWTVerifier;
-import com.sodosiro.domain.auth.dto.response.SocialUserInfo;
+import com.sodosiro.domain.auth.contoller.dto.response.SocialUserInfo;
 import com.sodosiro.domain.user.constants.Provider;
 import com.sodosiro.global.payload.code.error.UserErrorCode;
 import com.sodosiro.global.payload.exception.GeneralException;

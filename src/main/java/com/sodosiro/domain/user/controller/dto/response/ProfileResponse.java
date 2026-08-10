@@ -1,4 +1,4 @@
-package com.sodosiro.domain.user.dto.response;
+package com.sodosiro.domain.user.controller.dto.response;
 
 import com.sodosiro.domain.user.entity.User;
 

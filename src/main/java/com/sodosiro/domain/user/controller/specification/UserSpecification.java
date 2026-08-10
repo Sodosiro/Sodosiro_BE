@@ -1,7 +1,7 @@
-package com.sodosiro.domain.user.specification;
+package com.sodosiro.domain.user.controller.specification;
 
-import com.sodosiro.domain.user.dto.request.ProfileRequest;
-import com.sodosiro.domain.user.dto.response.ProfileResponse;
+import com.sodosiro.domain.user.controller.dto.request.ProfileRequest;
+import com.sodosiro.domain.user.controller.dto.response.ProfileResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;

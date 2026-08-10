@@ -1,4 +1,4 @@
-package com.sodosiro.domain.auth.dto.request;
+package com.sodosiro.domain.auth.contoller.dto.request;
 
 
 public record SocialLoginRequest (

@@ -1,4 +1,4 @@
-package com.sodosiro.domain.auth.dto.response;
+package com.sodosiro.domain.auth.contoller.dto.response;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.sodosiro.domain.user.constants.Provider;

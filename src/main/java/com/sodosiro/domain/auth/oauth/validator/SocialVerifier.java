@@ -1,6 +1,6 @@
 package com.sodosiro.domain.auth.oauth.validator;
 
-import com.sodosiro.domain.auth.dto.response.SocialUserInfo;
+import com.sodosiro.domain.auth.contoller.dto.response.SocialUserInfo;
 import com.sodosiro.domain.user.constants.Provider;
 
 import java.util.Collections;

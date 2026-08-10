@@ -1,10 +1,10 @@
-package com.sodosiro.domain.auth.specification;
+package com.sodosiro.domain.auth.contoller.specification;
 
-import com.sodosiro.domain.auth.dto.request.LogoutRequest;
-import com.sodosiro.domain.auth.dto.request.ReissueRequest;
-import com.sodosiro.domain.auth.dto.request.SocialLoginRequest;
-import com.sodosiro.domain.auth.dto.response.ReissueResponse;
-import com.sodosiro.domain.auth.dto.response.SocialLoginResponse;
+import com.sodosiro.domain.auth.contoller.dto.request.LogoutRequest;
+import com.sodosiro.domain.auth.contoller.dto.request.ReissueRequest;
+import com.sodosiro.domain.auth.contoller.dto.request.SocialLoginRequest;
+import com.sodosiro.domain.auth.contoller.dto.response.ReissueResponse;
+import com.sodosiro.domain.auth.contoller.dto.response.SocialLoginResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.annotation.security.PermitAll;
 import org.springframework.http.ResponseEntity;

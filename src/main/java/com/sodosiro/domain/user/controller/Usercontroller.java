@@ -1,9 +1,9 @@
 package com.sodosiro.domain.user.controller;
 
-import com.sodosiro.domain.user.dto.request.ProfileRequest;
-import com.sodosiro.domain.user.dto.response.ProfileResponse;
+import com.sodosiro.domain.user.controller.dto.request.ProfileRequest;
+import com.sodosiro.domain.user.controller.dto.response.ProfileResponse;
 import com.sodosiro.domain.user.service.UserService;
-import com.sodosiro.domain.user.specification.UserSpecification;
+import com.sodosiro.domain.user.controller.specification.UserSpecification;
 import com.sodosiro.global.resolver.LoginUser;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

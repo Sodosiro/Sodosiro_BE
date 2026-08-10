@@ -1,4 +1,4 @@
-package com.sodosiro.domain.travel.docs;
+package com.sodosiro.domain.travel.controller.specification;
 
 import com.sodosiro.domain.travel.controller.dto.CursorPageResponse;
 import com.sodosiro.domain.travel.controller.dto.TouristSpotDetailResponse;
