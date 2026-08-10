@@ -38,7 +38,7 @@ public record TouristSpotDetailResponse(
         return new TouristSpotDetailResponse(
                 spot.getContentId(), spot.getTitle(), spot.getCategory(), spot.getAddr1(), spot.getAddr2(),
                 spot.getFirstImage(), spot.getMapX(), spot.getMapY(), spot.getHomepage(), spot.getOverview(),
-                spot.getInfocenter(), spot.getUsetime(), spot.getRestdate(), spot.getParking(),
+                InfoCenterPhoneParser.extract(spot.getInfocenter()), spot.getUsetime(), spot.getRestdate(), spot.getParking(),
                 spot.getLikeCount(), spot.getAvgRating(), spot.getReviewCount(), popularity, aiRecommendation,
                 latestReviews.isEmpty() ? null : latestReviews,
                 spot.getImages().stream().map(SpotImage::getImageUrl).toList()
