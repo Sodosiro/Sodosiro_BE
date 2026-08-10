@@ -5,7 +5,6 @@ import com.sodosiro.domain.review.controller.dto.request.ReviewCreateRequest;
 import com.sodosiro.domain.review.controller.dto.request.ReviewGpsVerificationRequest;
 import com.sodosiro.domain.review.controller.dto.request.ReviewUpdateRequest;
 import com.sodosiro.domain.review.controller.dto.response.MyReviewListResponse;
-import com.sodosiro.domain.review.controller.dto.response.MyReviewListResponse.MyReviewResponse;
 import com.sodosiro.domain.review.controller.dto.response.ReviewListResponse;
 import com.sodosiro.domain.review.controller.dto.response.ReviewGpsVerificationResponse;
 import com.sodosiro.domain.review.controller.dto.response.ReviewResponse;
@@ -75,7 +74,7 @@ public class ReviewService {
         User author = userRepository.findById(userId)
                 .orElseThrow(() -> new GeneralException(UserErrorCode._USER_NOT_FOUND));
 
-        return ReviewResponse.of(review, author, reviewImages, userId);
+        return ReviewResponse.of(review, author, spot, reviewImages, userId);
     }
 
     @Transactional
@@ -132,18 +131,7 @@ public class ReviewService {
         List<Review> reviews = hasNext ? fetched.subList(0, size) : fetched;
         Long nextCursor = (hasNext && !reviews.isEmpty()) ? reviews.getLast().getId() : null;
 
-        List<Long> contentIds = reviews.stream().map(Review::getContentId).distinct().toList();
-        Map<Long, TouristSpot> spotMap = touristSpotRepository.findAllById(contentIds).stream()
-                .collect(Collectors.toMap(TouristSpot::getContentId, Function.identity()));
-
-        List<Long> reviewIds = reviews.stream().map(Review::getId).toList();
-        Map<Long, List<ReviewImage>> imageMap = groupImagesByReviewId(reviewIds);
-
-        List<MyReviewResponse> responses = reviews.stream()
-                .map(r -> MyReviewResponse.of(r, spotMap.get(r.getContentId()), imageMap.getOrDefault(r.getId(), List.of())))
-                .toList();
-
-        return new MyReviewListResponse(responses, nextCursor, hasNext);
+        return new MyReviewListResponse(assembleReviewResponses(reviews, userId), nextCursor, hasNext);
     }
 
     @Transactional
@@ -173,8 +161,10 @@ public class ReviewService {
 
         User author = userRepository.findById(userId)
                 .orElseThrow(() -> new GeneralException(UserErrorCode._USER_NOT_FOUND));
+        TouristSpot spot = touristSpotRepository.findById(review.getContentId())
+                .orElseThrow(() -> new GeneralException(ReviewErrorCode._SPOT_NOT_FOUND));
 
-        return ReviewResponse.of(review, author, reviewImages, userId);
+        return ReviewResponse.of(review, author, spot, reviewImages, userId);
     }
 
     @Transactional
@@ -204,6 +194,9 @@ public class ReviewService {
         List<Long> userIds = reviews.stream().map(Review::getUserId).distinct().toList();
         Map<Long, User> userMap = userRepository.findAllById(userIds).stream()
                 .collect(Collectors.toMap(User::getUserId, Function.identity()));
+        List<Long> contentIds = reviews.stream().map(Review::getContentId).distinct().toList();
+        Map<Long, TouristSpot> spotMap = touristSpotRepository.findAllById(contentIds).stream()
+                .collect(Collectors.toMap(TouristSpot::getContentId, Function.identity()));
 
         List<Long> reviewIds = reviews.stream().map(Review::getId).toList();
         Map<Long, List<ReviewImage>> imageMap = groupImagesByReviewId(reviewIds);
@@ -212,6 +205,7 @@ public class ReviewService {
                 .map(r -> ReviewResponse.of(
                         r,
                         userMap.get(r.getUserId()),
+                        spotMap.get(r.getContentId()),
                         imageMap.getOrDefault(r.getId(), List.of()),
                         loginUserId))
                 .toList();

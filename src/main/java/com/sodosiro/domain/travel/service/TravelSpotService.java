@@ -5,7 +5,6 @@ import com.sodosiro.domain.travel.controller.dto.TouristSpotDetailResponse;
 import com.sodosiro.domain.travel.controller.dto.TouristSpotSummaryResponse;
 import com.sodosiro.domain.travel.controller.dto.TravelSpotSort;
 import com.sodosiro.domain.like.repository.SpotLikeRepository;
-import com.sodosiro.domain.review.controller.dto.response.ReviewImageResponse;
 import com.sodosiro.domain.review.controller.dto.response.ReviewResponse;
 import com.sodosiro.domain.review.entity.Review;
 import com.sodosiro.domain.review.entity.ReviewImage;
@@ -65,7 +64,7 @@ public class TravelSpotService {
         return new CursorPageResponse<>(items, nextCursor, hasNext);
     }
 
-    public TouristSpotDetailResponse getTouristSpotDetail(Long contentId) {
+    public TouristSpotDetailResponse getTouristSpotDetail(Long contentId, Long loginUserId) {
         TouristSpot spot = findTouristSpotDetail(contentId);
         SpotAiRecommendationService.Recommendation recommendation = spotAiRecommendationService.getCached(spot);
         TouristSpotDetailResponse.AiRecommendation aiRecommendation = recommendation == null
@@ -77,7 +76,7 @@ public class TravelSpotService {
                 .map(TouristSpotDetailResponse.Popularity::from)
                 .orElse(null);
         return TouristSpotDetailResponse.from(
-                spot, popularity, aiRecommendation, toLatestReviewResponses(latestReviews));
+                spot, popularity, aiRecommendation, toLatestReviewResponses(spot, latestReviews, loginUserId));
     }
 
     @Transactional
@@ -92,7 +91,8 @@ public class TravelSpotService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "여행지를 찾을 수 없습니다."));
     }
 
-    private List<TouristSpotDetailResponse.LatestReview> toLatestReviewResponses(List<Review> reviews) {
+    private List<ReviewResponse> toLatestReviewResponses(
+            TouristSpot spot, List<Review> reviews, Long loginUserId) {
         if (reviews.isEmpty()) {
             return List.of();
         }
@@ -105,23 +105,13 @@ public class TravelSpotService {
                 .collect(Collectors.groupingBy(ReviewImage::getReviewId));
 
         return reviews.stream()
-                .map(review -> new TouristSpotDetailResponse.LatestReview(
-                        review.getId(),
-                        toAuthorInfo(users.get(review.getUserId())),
-                        review.getRating(),
-                        review.getBody(),
-                        imagesByReviewId.getOrDefault(review.getId(), List.of()).stream()
-                                .map(ReviewImageResponse::from)
-                                .toList(),
-                        review.getCreatedAt()))
+                .map(review -> ReviewResponse.of(
+                        review,
+                        users.get(review.getUserId()),
+                        spot,
+                        imagesByReviewId.getOrDefault(review.getId(), List.of()),
+                        loginUserId))
                 .toList();
-    }
-
-    private ReviewResponse.AuthorInfo toAuthorInfo(User user) {
-        if (user == null) {
-            return new ReviewResponse.AuthorInfo(null, "알 수 없음", null);
-        }
-        return ReviewResponse.AuthorInfo.from(user);
     }
 
     private int normalizePageSize(Integer size) {

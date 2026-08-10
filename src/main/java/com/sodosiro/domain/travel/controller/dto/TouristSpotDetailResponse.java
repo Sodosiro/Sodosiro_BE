@@ -1,13 +1,11 @@
 package com.sodosiro.domain.travel.controller.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.sodosiro.domain.review.controller.dto.response.ReviewImageResponse;
 import com.sodosiro.domain.review.controller.dto.response.ReviewResponse;
 import com.sodosiro.domain.travel.entity.SpotImage;
 import com.sodosiro.domain.travel.entity.SpotPopularity;
 import com.sodosiro.domain.travel.entity.TouristSpot;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 
 public record TouristSpotDetailResponse(
@@ -31,12 +29,12 @@ public record TouristSpotDetailResponse(
         Popularity popularity,
         AiRecommendation aiRecommendation,
         @JsonInclude(JsonInclude.Include.NON_EMPTY)
-        List<LatestReview> latestReviews,
+        List<ReviewResponse> latestReviews,
         List<String> images
 ) {
     public static TouristSpotDetailResponse from(
             TouristSpot spot, Popularity popularity, AiRecommendation aiRecommendation,
-            List<LatestReview> latestReviews) {
+            List<ReviewResponse> latestReviews) {
         return new TouristSpotDetailResponse(
                 spot.getContentId(), spot.getTitle(), spot.getCategory(), spot.getAddr1(), spot.getAddr2(),
                 spot.getFirstImage(), spot.getMapX(), spot.getMapY(), spot.getHomepage(), spot.getOverview(),
@@ -66,13 +64,4 @@ public record TouristSpotDetailResponse(
         }
     }
 
-    public record LatestReview(
-            Long reviewId,
-            ReviewResponse.AuthorInfo author,
-            Short rating,
-            String body,
-            @JsonInclude(JsonInclude.Include.NON_EMPTY) List<ReviewImageResponse> images,
-            LocalDateTime createdAt
-    ) {
-    }
 }

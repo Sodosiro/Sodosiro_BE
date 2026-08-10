@@ -3,6 +3,7 @@ package com.sodosiro.domain.review.controller.dto.response;
 import com.sodosiro.domain.review.entity.Review;
 import com.sodosiro.domain.review.entity.ReviewImage;
 import com.sodosiro.domain.review.constants.ReviewVisitType;
+import com.sodosiro.domain.travel.entity.TouristSpot;
 import com.sodosiro.domain.user.entity.User;
 
 import java.time.LocalDateTime;
@@ -11,6 +12,7 @@ import java.util.List;
 public record ReviewResponse(
         Long reviewId,
         AuthorInfo author,
+        SpotSummary spot,
         Short rating,
         String body,
         List<ReviewImageResponse> images,
@@ -26,10 +28,18 @@ public record ReviewResponse(
         }
     }
 
-    public static ReviewResponse of(Review review, User author, List<ReviewImage> images, Long loginUserId) {
+    public record SpotSummary(Long contentId, String title, String firstImage) {
+        public static SpotSummary from(TouristSpot spot) {
+            return new SpotSummary(spot.getContentId(), spot.getTitle(), spot.getFirstImage());
+        }
+    }
+
+    public static ReviewResponse of(
+            Review review, User author, TouristSpot spot, List<ReviewImage> images, Long loginUserId) {
         return new ReviewResponse(
                 review.getId(),
                 AuthorInfo.from(author),
+                SpotSummary.from(spot),
                 review.getRating(),
                 review.getBody(),
                 images.stream().map(ReviewImageResponse::from).toList(),

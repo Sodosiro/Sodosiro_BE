@@ -43,8 +43,9 @@ public class TravelSpotController implements TravelSpotSpecification {
     /** 상세 조회에서만 이미지 목록을 fetch join한다. */
     @GetMapping("/spots/{contentId}")
     @Override
-    public ResponseEntity<TouristSpotDetailResponse> getTouristSpotDetail(@PathVariable Long contentId) {
-        return ResponseEntity.ok(travelSpotService.getTouristSpotDetail(contentId));
+    public ResponseEntity<TouristSpotDetailResponse> getTouristSpotDetail(
+            @PathVariable Long contentId, @LoginUser Long userId) {
+        return ResponseEntity.ok(travelSpotService.getTouristSpotDetail(contentId, userId));
     }
 
     @PostMapping("/spots/{contentId}/ai-recommendation")
