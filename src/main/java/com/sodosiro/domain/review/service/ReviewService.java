@@ -64,7 +64,7 @@ public class ReviewService {
         List<String> uploadedUrls = uploadImages(images);
         eventPublisher.publishEvent(ReviewImageChangedEvent.onlyNew(uploadedUrls));
 
-        Review review = Review.create(request.contentId(), userId, request.rating().shortValue(), request.body());
+        Review review = Review.create(request.contentId(), userId, request.rating(), request.body());
         reviewRepository.save(review);
 
         List<ReviewImage> reviewImages = saveImages(review.getId(), uploadedUrls);
@@ -155,7 +155,7 @@ public class ReviewService {
         reviewImageRepository.deleteAllByReviewId(reviewId);
         List<ReviewImage> reviewImages = saveImages(reviewId, newUrls);
 
-        review.update(request.rating().shortValue(), request.body());
+        review.update(request.rating(), request.body());
 
         refreshRatingStats(review.getContentId());
 

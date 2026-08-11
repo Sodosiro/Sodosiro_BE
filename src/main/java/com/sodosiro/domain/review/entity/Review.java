@@ -21,6 +21,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Comment;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -64,9 +65,9 @@ public class Review {
             foreignKey = @jakarta.persistence.ForeignKey(jakarta.persistence.ConstraintMode.NO_CONSTRAINT))
     private User user;
 
-    @Column(name = "rating", nullable = false)
-    @Comment("별점 (1~5)")
-    private Short rating;
+    @Column(name = "rating", nullable = false, precision = 3, scale = 1)
+    @Comment("별점 (1.0~5.0, 소수점 한 자리)")
+    private BigDecimal rating;
 
     @Column(name = "body", columnDefinition = "text")
     @Comment("리뷰 본문")
@@ -99,7 +100,7 @@ public class Review {
         this.isDeleted = false;
     }
 
-    public static Review create(Long contentId, Long userId, Short rating, String body) {
+    public static Review create(Long contentId, Long userId, BigDecimal rating, String body) {
         Review review = new Review();
         review.contentId = contentId;
         review.userId    = userId;
@@ -108,7 +109,7 @@ public class Review {
         return review;
     }
 
-    public void update(Short rating, String body) {
+    public void update(BigDecimal rating, String body) {
         this.rating    = rating;
         this.body      = body;
         this.updatedAt = LocalDateTime.now();

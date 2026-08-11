@@ -6,6 +6,7 @@ import com.sodosiro.domain.review.constants.ReviewVisitType;
 import com.sodosiro.domain.travel.entity.TouristSpot;
 import com.sodosiro.domain.user.entity.User;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -13,7 +14,7 @@ public record ReviewResponse(
         Long reviewId,
         AuthorInfo author,
         SpotSummary spot,
-        Short rating,
+        BigDecimal rating,
         String body,
         List<ReviewImageResponse> images,
         LocalDateTime createdAt,
