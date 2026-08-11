@@ -69,11 +69,6 @@ public class CourseRecommendationService {
                 ? null
                 : findTouristSpot(request.mustVisitContentId());
 
-        List<Integer> categoryCodes = request.travelStylesOrEmpty().stream()
-                .map(TravelStyle::categoryCode)
-                .toList();
-        List<TouristSpot> candidatePool = buildCandidatePool(categoryCodes, request.aiMessage());
-
         Set<Long> usedContentIds = new HashSet<>();
         int mustVisitDayIndex = -1;
         if (mustVisitSpot != null) {
@@ -81,7 +76,15 @@ public class CourseRecommendationService {
             mustVisitDayIndex = resolveMustVisitDayIndex(mustVisitSpot, dates);
         }
 
+        List<Integer> categoryCodes = request.travelStylesOrEmpty().stream()
+                .map(TravelStyle::categoryCode)
+                .toList();
+        List<TouristSpot> candidatePool = buildCandidatePool(categoryCodes, request.aiMessage());
+
+
+
         List<CourseRecommendResponse.DayCourse> days = new ArrayList<>();
+
         for (int i = 0; i < dates.size(); i++) {
             LocalDate date = dates.get(i);
             String weekdayLabel = WEEKDAY_LABELS.get(date.getDayOfWeek());
@@ -153,7 +156,7 @@ public class CourseRecommendationService {
                 return i;
             }
         }
-        return 0;
+        return 0; // 모두 휴무일이면 1일차로반환인데 예외를 던져줘야함
     }
 
     /**
@@ -162,6 +165,7 @@ public class CourseRecommendationService {
      * AI 한마디 유사도 검색 결과 안에서 우선순위를 높이는 가중치로 쓴다.
      */
     private List<TouristSpot> buildCandidatePool(List<Integer> categoryCodes, String aiMessage) {
+
         List<TouristSpot> embeddingCandidates = (aiMessage == null || aiMessage.isBlank())
                 ? List.of()
                 : findEmbeddingCandidates(aiMessage, categoryCodes);
@@ -189,6 +193,7 @@ public class CourseRecommendationService {
         float[] queryEmbedding = embeddingModel.embed(aiMessage);
         List<Long> nearestIds = spotEmbeddingRepository
                 .findNearestContentIds(queryEmbedding, categoryCodes, EMBEDDING_POOL_LIMIT);
+
         Map<Long, TouristSpot> spotsById = touristSpotRepository.findAllById(nearestIds).stream()
                 .collect(Collectors.toMap(TouristSpot::getContentId, Function.identity()));
         return nearestIds.stream().map(spotsById::get).filter(Objects::nonNull).toList();
