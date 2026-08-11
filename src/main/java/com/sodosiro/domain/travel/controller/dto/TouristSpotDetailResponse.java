@@ -24,6 +24,7 @@ public record TouristSpotDetailResponse(
         String restdate,
         String parking,
         Integer likeCount,
+        boolean liked,
         BigDecimal avgRating,
         Integer reviewCount,
         Popularity popularity,
@@ -34,12 +35,12 @@ public record TouristSpotDetailResponse(
 ) {
     public static TouristSpotDetailResponse from(
             TouristSpot spot, Popularity popularity, AiRecommendation aiRecommendation,
-            List<ReviewResponse> latestReviews) {
+            List<ReviewResponse> latestReviews, boolean liked) {
         return new TouristSpotDetailResponse(
                 spot.getContentId(), spot.getTitle(), spot.getCategory(), spot.getAddr1(), spot.getAddr2(),
                 spot.getFirstImage(), spot.getMapX(), spot.getMapY(), spot.getHomepage(), spot.getOverview(),
                 InfoCenterPhoneParser.extract(spot.getInfocenter()), spot.getUsetime(), spot.getRestdate(), spot.getParking(),
-                spot.getLikeCount(), spot.getAvgRating(), spot.getReviewCount(), popularity, aiRecommendation,
+                spot.getLikeCount(), liked, spot.getAvgRating(), spot.getReviewCount(), popularity, aiRecommendation,
                 latestReviews.isEmpty() ? null : latestReviews,
                 spot.getImages().stream().map(SpotImage::getImageUrl).toList()
         );
