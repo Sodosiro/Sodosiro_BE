@@ -6,10 +6,10 @@ import com.sodosiro.domain.travel.entity.TouristSpot;
 import java.time.LocalDateTime;
 
 public record MyLikedSpotItem(
-        Long id,
-        String name,
-        String address,
-        String imageUrl,
+        Long contentId,
+        String title,
+        String addr1,
+        String firstImage,
         Integer likeCount,
         LocalDateTime likedAt
 ) {

@@ -5,7 +5,10 @@ import com.sodosiro.domain.review.entity.ReviewImage;
 import com.sodosiro.domain.review.constants.ReviewVisitType;
 import com.sodosiro.domain.travel.entity.TouristSpot;
 import com.sodosiro.domain.user.entity.User;
+import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -13,7 +16,8 @@ public record ReviewResponse(
         Long reviewId,
         AuthorInfo author,
         SpotSummary spot,
-        Short rating,
+        @Schema(description = "별점 (1.0~5.0, 소수점 한 자리)", example = "4.5")
+        BigDecimal rating,
         String body,
         List<ReviewImageResponse> images,
         LocalDateTime createdAt,
@@ -43,7 +47,7 @@ public record ReviewResponse(
                 review.getId(),
                 AuthorInfo.from(author),
                 SpotSummary.from(spot),
-                review.getRating(),
+                review.getRating().setScale(1, RoundingMode.HALF_UP),
                 review.getBody(),
                 images.stream().map(ReviewImageResponse::from).toList(),
                 review.getCreatedAt(),

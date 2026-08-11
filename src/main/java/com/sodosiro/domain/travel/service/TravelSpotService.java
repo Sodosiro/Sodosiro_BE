@@ -75,8 +75,10 @@ public class TravelSpotService {
         TouristSpotDetailResponse.Popularity popularity = spotPopularityRepository.findById(contentId)
                 .map(TouristSpotDetailResponse.Popularity::from)
                 .orElse(null);
+        boolean liked = loginUserId != null
+                && spotLikeRepository.findByUserIdAndContentId(loginUserId, contentId).isPresent();
         return TouristSpotDetailResponse.from(
-                spot, popularity, aiRecommendation, toLatestReviewResponses(spot, latestReviews, loginUserId));
+                spot, popularity, aiRecommendation, toLatestReviewResponses(spot, latestReviews, loginUserId), liked);
     }
 
     @Transactional

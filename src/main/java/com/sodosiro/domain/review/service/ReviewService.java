@@ -64,7 +64,7 @@ public class ReviewService {
         List<String> uploadedUrls = uploadImages(images);
         eventPublisher.publishEvent(ReviewImageChangedEvent.onlyNew(uploadedUrls));
 
-        Review review = Review.create(request.contentId(), userId, request.rating().shortValue(), request.body());
+        Review review = Review.create(request.contentId(), userId, request.rating(), request.body());
         reviewRepository.save(review);
 
         List<ReviewImage> reviewImages = saveImages(review.getId(), uploadedUrls);
@@ -114,7 +114,7 @@ public class ReviewService {
 
         return new ReviewListResponse(
                 spot.getReviewCount(),
-                spot.getAvgRating(),
+                spot.getAvgRating().setScale(1, RoundingMode.HALF_UP),
                 responses,
                 nextCursor,
                 hasNext
@@ -155,7 +155,7 @@ public class ReviewService {
         reviewImageRepository.deleteAllByReviewId(reviewId);
         List<ReviewImage> reviewImages = saveImages(reviewId, newUrls);
 
-        review.update(request.rating().shortValue(), request.body());
+        review.update(request.rating(), request.body());
 
         refreshRatingStats(review.getContentId());
 
@@ -234,7 +234,7 @@ public class ReviewService {
         long count   = reviewRepository.countActiveByContentId(contentId);
         BigDecimal rounded = avg == null
                 ? BigDecimal.ZERO
-                : BigDecimal.valueOf(avg).setScale(2, RoundingMode.HALF_UP);
+                : BigDecimal.valueOf(avg).setScale(1, RoundingMode.HALF_UP);
         touristSpotRepository.updateRatingStats(contentId, rounded, (int) count);
     }
 

@@ -5,7 +5,9 @@ import com.sodosiro.domain.review.controller.dto.response.ReviewResponse;
 import com.sodosiro.domain.travel.entity.SpotImage;
 import com.sodosiro.domain.travel.entity.SpotPopularity;
 import com.sodosiro.domain.travel.entity.TouristSpot;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 public record TouristSpotDetailResponse(
@@ -24,6 +26,8 @@ public record TouristSpotDetailResponse(
         String restdate,
         String parking,
         Integer likeCount,
+        boolean liked,
+        @Schema(description = "리뷰 평균 별점 (소수점 한 자리)", example = "4.5")
         BigDecimal avgRating,
         Integer reviewCount,
         Popularity popularity,
@@ -34,12 +38,12 @@ public record TouristSpotDetailResponse(
 ) {
     public static TouristSpotDetailResponse from(
             TouristSpot spot, Popularity popularity, AiRecommendation aiRecommendation,
-            List<ReviewResponse> latestReviews) {
+            List<ReviewResponse> latestReviews, boolean liked) {
         return new TouristSpotDetailResponse(
                 spot.getContentId(), spot.getTitle(), spot.getCategory(), spot.getAddr1(), spot.getAddr2(),
                 spot.getFirstImage(), spot.getMapX(), spot.getMapY(), spot.getHomepage(), spot.getOverview(),
                 InfoCenterPhoneParser.extract(spot.getInfocenter()), spot.getUsetime(), spot.getRestdate(), spot.getParking(),
-                spot.getLikeCount(), spot.getAvgRating(), spot.getReviewCount(), popularity, aiRecommendation,
+                spot.getLikeCount(), liked, spot.getAvgRating().setScale(1, RoundingMode.HALF_UP), spot.getReviewCount(), popularity, aiRecommendation,
                 latestReviews.isEmpty() ? null : latestReviews,
                 spot.getImages().stream().map(SpotImage::getImageUrl).toList()
         );
