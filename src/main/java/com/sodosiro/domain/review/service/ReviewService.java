@@ -98,13 +98,13 @@ public class ReviewService {
     }
 
     @Transactional(readOnly = true)
-    public ReviewListResponse getReviews(Long contentId, Long cursor, int size, ReviewSort sort, Long loginUserId) {
+    public ReviewListResponse getReviews(Long contentId, Long cursor, int size, ReviewSort sort, boolean hasImage, Long loginUserId) {
         TouristSpot spot = touristSpotRepository.findById(contentId)
                 .orElseThrow(() -> new GeneralException(ReviewErrorCode._SPOT_NOT_FOUND));
 
         long effectiveCursor = (cursor == null) ? CURSOR_START : cursor;
 
-        List<Review> fetched = reviewRepository.findByContentId(contentId, effectiveCursor, size + 1, sort);
+        List<Review> fetched = reviewRepository.findByContentId(contentId, effectiveCursor, size + 1, sort, hasImage);
 
         boolean hasNext = fetched.size() > size;
         List<Review> reviews = hasNext ? fetched.subList(0, size) : fetched;
