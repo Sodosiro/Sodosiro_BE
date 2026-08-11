@@ -61,9 +61,10 @@ public class ReviewController implements ReviewSpecification {
             @RequestParam(required = false) Long cursor,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "RECENT") ReviewSort sort,
+            @RequestParam(defaultValue = "false") boolean hasImage,
             @LoginUser Long loginUserId) {
 
-        ReviewListResponse response = reviewService.getReviews(contentId, cursor, size, sort, loginUserId);
+        ReviewListResponse response = reviewService.getReviews(contentId, cursor, size, sort, hasImage, loginUserId);
         return ResponseEntity.ok(response);
     }
 

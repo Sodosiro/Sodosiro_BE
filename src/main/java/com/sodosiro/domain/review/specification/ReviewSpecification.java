@@ -9,6 +9,7 @@ import com.sodosiro.domain.review.controller.dto.response.ReviewListResponse;
 import com.sodosiro.domain.review.controller.dto.response.ReviewGpsVerificationResponse;
 import com.sodosiro.domain.review.controller.dto.response.ReviewResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,8 +24,9 @@ public interface ReviewSpecification {
     ResponseEntity<ReviewGpsVerificationResponse> verifyGpsVisit(
             Long userId, Long reviewId, ReviewGpsVerificationRequest request);
 
-    @Operation(summary = "관광지 리뷰 목록 조회", description = "관광지의 리뷰 목록을 커서 기반으로 조회합니다.")
-    ResponseEntity<ReviewListResponse> getReviews(Long contentId, Long cursor, int size, ReviewSort sort, Long loginUserId);
+    @Operation(summary = "관광지 리뷰 목록 조회", description = "관광지의 리뷰 목록을 커서 기반으로 조회합니다. hasImage=true 시 이미지가 첨부된 리뷰만 반환합니다.")
+    ResponseEntity<ReviewListResponse> getReviews(Long contentId, Long cursor, int size, ReviewSort sort,
+            @Parameter(description = "true 시 이미지가 있는 리뷰만 조회") boolean hasImage, Long loginUserId);
 
     @Operation(summary = "내가 쓴 리뷰 목록", description = "로그인 유저가 작성한 리뷰 목록을 커서 기반으로 조회합니다.")
     ResponseEntity<MyReviewListResponse> getMyReviews(Long userId, Long cursor, int size);
