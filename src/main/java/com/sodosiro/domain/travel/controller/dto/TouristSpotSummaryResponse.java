@@ -1,7 +1,9 @@
 package com.sodosiro.domain.travel.controller.dto;
 
 import com.sodosiro.domain.travel.entity.TouristSpot;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 
 public record TouristSpotSummaryResponse(
@@ -15,6 +17,7 @@ public record TouristSpotSummaryResponse(
         BigDecimal mapX,
         BigDecimal mapY,
         Integer likeCount,
+        @Schema(description = "리뷰 평균 별점 (소수점 한 자리)", example = "4.5")
         BigDecimal avgRating,
         Integer reviewCount,
         boolean liked,
@@ -26,7 +29,7 @@ public record TouristSpotSummaryResponse(
                 spot.getContentId(), spot.getTitle(), spot.getCategory(), spot.getAddr1(),
                 abbreviateOverview(spot.getOverview()), spot.getRestdate(),
                 spot.getFirstImage(), spot.getMapX(), spot.getMapY(),
-                spot.getLikeCount(), spot.getAvgRating(), spot.getReviewCount(), false, false, null
+                spot.getLikeCount(), scale1(spot.getAvgRating()), spot.getReviewCount(), false, false, null
         );
     }
 
@@ -36,9 +39,13 @@ public record TouristSpotSummaryResponse(
                 spot.getContentId(), spot.getTitle(), spot.getCategory(), spot.getAddr1(),
                 abbreviateOverview(spot.getOverview()), spot.getRestdate(),
                 spot.getFirstImage(), spot.getMapX(), spot.getMapY(),
-                spot.getLikeCount(), spot.getAvgRating(), spot.getReviewCount(), liked,
+                spot.getLikeCount(), scale1(spot.getAvgRating()), spot.getReviewCount(), liked,
                 isPopular(popularity), popularity
         );
+    }
+
+    private static BigDecimal scale1(BigDecimal value) {
+        return value == null ? null : value.setScale(1, RoundingMode.HALF_UP);
     }
 
     static boolean isPopular(Popularity popularity) {

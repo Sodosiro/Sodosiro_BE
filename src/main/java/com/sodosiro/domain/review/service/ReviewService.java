@@ -114,7 +114,7 @@ public class ReviewService {
 
         return new ReviewListResponse(
                 spot.getReviewCount(),
-                spot.getAvgRating(),
+                spot.getAvgRating().setScale(1, RoundingMode.HALF_UP),
                 responses,
                 nextCursor,
                 hasNext
@@ -234,7 +234,7 @@ public class ReviewService {
         long count   = reviewRepository.countActiveByContentId(contentId);
         BigDecimal rounded = avg == null
                 ? BigDecimal.ZERO
-                : BigDecimal.valueOf(avg).setScale(2, RoundingMode.HALF_UP);
+                : BigDecimal.valueOf(avg).setScale(1, RoundingMode.HALF_UP);
         touristSpotRepository.updateRatingStats(contentId, rounded, (int) count);
     }
 
