@@ -8,6 +8,8 @@ import com.sodosiro.domain.course.repository.CourseRepository;
 import com.sodosiro.domain.travel.entity.TouristSpot;
 import com.sodosiro.domain.travel.repository.SpotEmbeddingRepository;
 import com.sodosiro.domain.travel.repository.TouristSpotRepository;
+import com.sodosiro.global.payload.code.error.CourseErrorCode;
+import com.sodosiro.global.payload.exception.GeneralException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -25,6 +27,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -36,6 +39,7 @@ import org.springframework.web.server.ResponseStatusException;
  * 하루 5개 슬롯 = 필수 슬롯 3개(식당 1, 카페 1, 관광/자연/액티비티/쇼핑 1) + 자율 슬롯 2개(후보 풀 상위에서 자유롭게)로 구성하고,
  * 요일 휴무는 전 슬롯에서 제외하며, 같은 날은 동선(위경도) 근접순으로 정렬한다.
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -61,21 +65,25 @@ public class CourseRecommendationService {
 
     public CourseRecommendResponse recommend(Long userId, CourseRecommendRequest request) {
 
-        validateDateRange(request.startDate(), request.endDate());
 
+        validateDateRange(request.startDate(), request.endDate());
         List<LocalDate> dates = buildDateRange(request.startDate(), request.endDate());
 
         TouristSpot mustVisitSpot = request.mustVisitContentId() == null
                 ? null
                 : findTouristSpot(request.mustVisitContentId());
 
+
+        // AI 임베딩 호출 전에 필수 방문지 검증
         Set<Long> usedContentIds = new HashSet<>();
         int mustVisitDayIndex = -1;
+
         if (mustVisitSpot != null) {
             usedContentIds.add(mustVisitSpot.getContentId());
             mustVisitDayIndex = resolveMustVisitDayIndex(mustVisitSpot, dates);
         }
 
+        // 비용발생: 사전 검증을 통과한 요청 AI 임베딩 수행
         List<Integer> categoryCodes = request.travelStylesOrEmpty().stream()
                 .map(TravelStyle::categoryCode)
                 .toList();
@@ -83,6 +91,7 @@ public class CourseRecommendationService {
 
 
 
+        // 일자별 코스 조립
         List<CourseRecommendResponse.DayCourse> days = new ArrayList<>();
 
         for (int i = 0; i < dates.size(); i++) {
@@ -148,7 +157,7 @@ public class CourseRecommendationService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "여행지를 찾을 수 없습니다."));
     }
 
-    /** mustVisit이 휴무가 아닌 첫 날짜에 배치한다. 여행 기간 내내 휴무면 첫째 날에 배치한다. */
+    /** mustVisit이 휴무가 아닌 첫 날짜에 배치한다. 여행 기간 내내 휴무면 예외를 던진다. */
     private int resolveMustVisitDayIndex(TouristSpot mustVisitSpot, List<LocalDate> dates) {
         for (int i = 0; i < dates.size(); i++) {
             String weekdayLabel = WEEKDAY_LABELS.get(dates.get(i).getDayOfWeek());
@@ -156,7 +165,7 @@ public class CourseRecommendationService {
                 return i;
             }
         }
-        return 0; // 모두 휴무일이면 1일차로반환인데 예외를 던져줘야함
+        throw new GeneralException(CourseErrorCode._MUST_VISIT_SPOT_ALWAYS_CLOSED);
     }
 
     /**
@@ -168,7 +177,7 @@ public class CourseRecommendationService {
 
         List<TouristSpot> embeddingCandidates = (aiMessage == null || aiMessage.isBlank())
                 ? List.of()
-                : findEmbeddingCandidates(aiMessage, categoryCodes);
+                : findEmbeddingCandidatesSafely(aiMessage, categoryCodes);
 
         List<TouristSpot> categoryCandidates = categoryCodes.isEmpty()
                 ? List.of()
@@ -189,6 +198,16 @@ public class CourseRecommendationService {
         return List.copyOf(merged.values());
     }
 
+    /** AI 임베딩 호출은 외부 API 의존이라 실패할 수 있는데, 그래도 추천 자체는 계속 진행되어야 하므로 실패 시 후보 없이 폴백한다. */
+    private List<TouristSpot> findEmbeddingCandidatesSafely(String aiMessage, List<Integer> categoryCodes) {
+        try {
+            return findEmbeddingCandidates(aiMessage, categoryCodes);
+        } catch (RuntimeException exception) {
+            log.warn("AI 한마디 임베딩 후보 조회 실패: aiMessage={}", aiMessage, exception);
+            return List.of();
+        }
+    }
+
     private List<TouristSpot> findEmbeddingCandidates(String aiMessage, List<Integer> categoryCodes) {
         float[] queryEmbedding = embeddingModel.embed(aiMessage);
         List<Long> nearestIds = spotEmbeddingRepository
@@ -203,8 +222,7 @@ public class CourseRecommendationService {
      * 필수 슬롯(satisfiedGroup으로 이미 채워진 그룹은 제외) 각 1개 + 자율 슬롯 {@value #FREE_SLOTS_PER_DAY}개를 채운다.
      * 자율 슬롯은 후보 풀 상위 순서를 그대로 따르므로 여행스타일/AI 한마디 가중치가 자연스럽게 반영된다.
      */
-    private List<TouristSpot> pickForDay(
-            List<TouristSpot> pool, Set<Long> usedContentIds, String weekdayLabel, RequiredSlotGroup satisfiedGroup) {
+    private List<TouristSpot> pickForDay(List<TouristSpot> pool, Set<Long> usedContentIds, String weekdayLabel, RequiredSlotGroup satisfiedGroup) {
         Set<Long> excluded = new HashSet<>(usedContentIds);
         List<TouristSpot> picked = new ArrayList<>();
 
