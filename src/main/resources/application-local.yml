@@ -1,0 +1,13 @@
+spring:
+  datasource:
+    # ⭐️ 중요: 여기서는 RDS 주소가 아니라 무조건 localhost를 적어야 합니다!
+    # (내 노트북의 터널 입구로 데이터를 쏘면, 인텔리제이가 알아서 EC2를 거쳐 RDS로 보내주니까요)
+    url: jdbc:postgresql://localhost:5432/${DB_USERNAME}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
