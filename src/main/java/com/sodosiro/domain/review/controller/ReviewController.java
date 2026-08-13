@@ -72,9 +72,10 @@ public class ReviewController implements ReviewSpecification {
     public ResponseEntity<MyReviewListResponse> getMyReviews(
             @LoginUser Long userId,
             @RequestParam(required = false) Long cursor,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "false") boolean hasImage) {
 
-        MyReviewListResponse response = reviewService.getMyReviews(userId, cursor, size);
+        MyReviewListResponse response = reviewService.getMyReviews(userId, cursor, size, hasImage);
         return ResponseEntity.ok(response);
     }
 

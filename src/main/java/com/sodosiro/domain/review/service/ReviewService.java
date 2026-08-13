@@ -127,10 +127,10 @@ public class ReviewService {
     }
 
     @Transactional(readOnly = true)
-    public MyReviewListResponse getMyReviews(Long userId, Long cursor, int size) {
+    public MyReviewListResponse getMyReviews(Long userId, Long cursor, int size, boolean hasImage) {
         long effectiveCursor = (cursor == null) ? CURSOR_START : cursor;
 
-        List<Review> fetched = reviewRepository.findByUserId(userId, effectiveCursor, size + 1);
+        List<Review> fetched = reviewRepository.findByUserId(userId, effectiveCursor, size + 1, hasImage);
 
         boolean hasNext = fetched.size() > size;
         List<Review> reviews = hasNext ? fetched.subList(0, size) : fetched;
