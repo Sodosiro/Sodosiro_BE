@@ -80,6 +80,14 @@ public class ReviewController implements ReviewSpecification {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/reviews/{reviewId}")
+    public ResponseEntity<ReviewResponse> getMyReview(
+            @LoginUser Long userId,
+            @PathVariable Long reviewId) {
+
+        return ResponseEntity.ok(reviewService.getMyReview(userId, reviewId));
+    }
+
     @PatchMapping(value = "/reviews/{reviewId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ReviewResponse> updateReview(
             @LoginUser Long userId,
