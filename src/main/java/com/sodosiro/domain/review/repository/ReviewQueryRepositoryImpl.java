@@ -1,9 +1,12 @@
 package com.sodosiro.domain.review.repository;
 
 import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sodosiro.domain.review.constants.ReviewSort;
 import com.sodosiro.domain.review.entity.QReview;
+import com.sodosiro.domain.review.entity.QReviewImage;
 import com.sodosiro.domain.review.entity.Review;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -16,19 +19,29 @@ public class ReviewQueryRepositoryImpl implements ReviewQueryRepository {
 
     private final JPAQueryFactory queryFactory;
     private static final QReview r = QReview.review;
+    private static final QReviewImage ri = QReviewImage.reviewImage;
 
     @Override
-    public List<Review> findByContentId(Long contentId, Long cursor, int size, ReviewSort sort) {
+    public List<Review> findByContentId(Long contentId, Long cursor, int size, ReviewSort sort, boolean hasImage) {
         return queryFactory
                 .selectFrom(r)
                 .where(
                         r.contentId.eq(contentId),
                         r.isDeleted.isFalse(),
-                        r.id.lt(cursor)
+                        r.id.lt(cursor),
+                        hasImageFilter(hasImage)
                 )
                 .orderBy(orderBy(sort))
                 .limit(size)
                 .fetch();
+    }
+
+    private BooleanExpression hasImageFilter(boolean hasImage) {
+        if (!hasImage) return null;
+        return JPAExpressions.selectOne()
+                .from(ri)
+                .where(ri.reviewId.eq(r.id))
+                .exists();
     }
 
     @Override

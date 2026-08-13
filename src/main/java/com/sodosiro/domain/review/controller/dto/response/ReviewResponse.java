@@ -3,15 +3,21 @@ package com.sodosiro.domain.review.controller.dto.response;
 import com.sodosiro.domain.review.entity.Review;
 import com.sodosiro.domain.review.entity.ReviewImage;
 import com.sodosiro.domain.review.constants.ReviewVisitType;
+import com.sodosiro.domain.travel.entity.TouristSpot;
 import com.sodosiro.domain.user.entity.User;
+import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 
 public record ReviewResponse(
         Long reviewId,
         AuthorInfo author,
-        Short rating,
+        SpotSummary spot,
+        @Schema(description = "별점 (1.0~5.0, 소수점 한 자리)", example = "4.5")
+        BigDecimal rating,
         String body,
         List<ReviewImageResponse> images,
         LocalDateTime createdAt,
@@ -26,11 +32,22 @@ public record ReviewResponse(
         }
     }
 
-    public static ReviewResponse of(Review review, User author, List<ReviewImage> images, Long loginUserId) {
+    public record SpotSummary(Long contentId, String title, String firstImage) {
+        public static SpotSummary from(TouristSpot spot) {
+            if (spot == null) {
+                return null;
+            }
+            return new SpotSummary(spot.getContentId(), spot.getTitle(), spot.getFirstImage());
+        }
+    }
+
+    public static ReviewResponse of(
+            Review review, User author, TouristSpot spot, List<ReviewImage> images, Long loginUserId) {
         return new ReviewResponse(
                 review.getId(),
                 AuthorInfo.from(author),
-                review.getRating(),
+                SpotSummary.from(spot),
+                review.getRating().setScale(1, RoundingMode.HALF_UP),
                 review.getBody(),
                 images.stream().map(ReviewImageResponse::from).toList(),
                 review.getCreatedAt(),

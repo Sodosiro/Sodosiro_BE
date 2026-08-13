@@ -5,7 +5,6 @@ import com.sodosiro.domain.review.controller.dto.request.ReviewCreateRequest;
 import com.sodosiro.domain.review.controller.dto.request.ReviewGpsVerificationRequest;
 import com.sodosiro.domain.review.controller.dto.request.ReviewUpdateRequest;
 import com.sodosiro.domain.review.controller.dto.response.MyReviewListResponse;
-import com.sodosiro.domain.review.controller.dto.response.MyReviewListResponse.MyReviewResponse;
 import com.sodosiro.domain.review.controller.dto.response.ReviewListResponse;
 import com.sodosiro.domain.review.controller.dto.response.ReviewGpsVerificationResponse;
 import com.sodosiro.domain.review.controller.dto.response.ReviewResponse;
@@ -65,7 +64,7 @@ public class ReviewService {
         List<String> uploadedUrls = uploadImages(images);
         eventPublisher.publishEvent(ReviewImageChangedEvent.onlyNew(uploadedUrls));
 
-        Review review = Review.create(request.contentId(), userId, request.rating().shortValue(), request.body());
+        Review review = Review.create(request.contentId(), userId, request.rating(), request.body());
         reviewRepository.save(review);
 
         List<ReviewImage> reviewImages = saveImages(review.getId(), uploadedUrls);
@@ -75,7 +74,7 @@ public class ReviewService {
         User author = userRepository.findById(userId)
                 .orElseThrow(() -> new GeneralException(UserErrorCode._USER_NOT_FOUND));
 
-        return ReviewResponse.of(review, author, reviewImages, userId);
+        return ReviewResponse.of(review, author, spot, reviewImages, userId);
     }
 
     @Transactional
@@ -99,13 +98,13 @@ public class ReviewService {
     }
 
     @Transactional(readOnly = true)
-    public ReviewListResponse getReviews(Long contentId, Long cursor, int size, ReviewSort sort, Long loginUserId) {
+    public ReviewListResponse getReviews(Long contentId, Long cursor, int size, ReviewSort sort, boolean hasImage, Long loginUserId) {
         TouristSpot spot = touristSpotRepository.findById(contentId)
                 .orElseThrow(() -> new GeneralException(ReviewErrorCode._SPOT_NOT_FOUND));
 
         long effectiveCursor = (cursor == null) ? CURSOR_START : cursor;
 
-        List<Review> fetched = reviewRepository.findByContentId(contentId, effectiveCursor, size + 1, sort);
+        List<Review> fetched = reviewRepository.findByContentId(contentId, effectiveCursor, size + 1, sort, hasImage);
 
         boolean hasNext = fetched.size() > size;
         List<Review> reviews = hasNext ? fetched.subList(0, size) : fetched;
@@ -115,7 +114,7 @@ public class ReviewService {
 
         return new ReviewListResponse(
                 spot.getReviewCount(),
-                spot.getAvgRating(),
+                spot.getAvgRating().setScale(1, RoundingMode.HALF_UP),
                 responses,
                 nextCursor,
                 hasNext
@@ -132,18 +131,7 @@ public class ReviewService {
         List<Review> reviews = hasNext ? fetched.subList(0, size) : fetched;
         Long nextCursor = (hasNext && !reviews.isEmpty()) ? reviews.getLast().getId() : null;
 
-        List<Long> contentIds = reviews.stream().map(Review::getContentId).distinct().toList();
-        Map<Long, TouristSpot> spotMap = touristSpotRepository.findAllById(contentIds).stream()
-                .collect(Collectors.toMap(TouristSpot::getContentId, Function.identity()));
-
-        List<Long> reviewIds = reviews.stream().map(Review::getId).toList();
-        Map<Long, List<ReviewImage>> imageMap = groupImagesByReviewId(reviewIds);
-
-        List<MyReviewResponse> responses = reviews.stream()
-                .map(r -> MyReviewResponse.of(r, spotMap.get(r.getContentId()), imageMap.getOrDefault(r.getId(), List.of())))
-                .toList();
-
-        return new MyReviewListResponse(responses, nextCursor, hasNext);
+        return new MyReviewListResponse(assembleReviewResponses(reviews, userId), nextCursor, hasNext);
     }
 
     @Transactional
@@ -167,14 +155,16 @@ public class ReviewService {
         reviewImageRepository.deleteAllByReviewId(reviewId);
         List<ReviewImage> reviewImages = saveImages(reviewId, newUrls);
 
-        review.update(request.rating().shortValue(), request.body());
+        review.update(request.rating(), request.body());
 
         refreshRatingStats(review.getContentId());
 
         User author = userRepository.findById(userId)
                 .orElseThrow(() -> new GeneralException(UserErrorCode._USER_NOT_FOUND));
+        TouristSpot spot = touristSpotRepository.findById(review.getContentId())
+                .orElseThrow(() -> new GeneralException(ReviewErrorCode._SPOT_NOT_FOUND));
 
-        return ReviewResponse.of(review, author, reviewImages, userId);
+        return ReviewResponse.of(review, author, spot, reviewImages, userId);
     }
 
     @Transactional
@@ -204,6 +194,9 @@ public class ReviewService {
         List<Long> userIds = reviews.stream().map(Review::getUserId).distinct().toList();
         Map<Long, User> userMap = userRepository.findAllById(userIds).stream()
                 .collect(Collectors.toMap(User::getUserId, Function.identity()));
+        List<Long> contentIds = reviews.stream().map(Review::getContentId).distinct().toList();
+        Map<Long, TouristSpot> spotMap = touristSpotRepository.findAllById(contentIds).stream()
+                .collect(Collectors.toMap(TouristSpot::getContentId, Function.identity()));
 
         List<Long> reviewIds = reviews.stream().map(Review::getId).toList();
         Map<Long, List<ReviewImage>> imageMap = groupImagesByReviewId(reviewIds);
@@ -212,6 +205,7 @@ public class ReviewService {
                 .map(r -> ReviewResponse.of(
                         r,
                         userMap.get(r.getUserId()),
+                        spotMap.get(r.getContentId()),
                         imageMap.getOrDefault(r.getId(), List.of()),
                         loginUserId))
                 .toList();
@@ -240,7 +234,7 @@ public class ReviewService {
         long count   = reviewRepository.countActiveByContentId(contentId);
         BigDecimal rounded = avg == null
                 ? BigDecimal.ZERO
-                : BigDecimal.valueOf(avg).setScale(2, RoundingMode.HALF_UP);
+                : BigDecimal.valueOf(avg).setScale(1, RoundingMode.HALF_UP);
         touristSpotRepository.updateRatingStats(contentId, rounded, (int) count);
     }
 

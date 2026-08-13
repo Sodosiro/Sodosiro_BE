@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface ReviewQueryRepository {
 
-    List<Review> findByContentId(Long contentId, Long cursor, int size, ReviewSort sort);
+    List<Review> findByContentId(Long contentId, Long cursor, int size, ReviewSort sort, boolean hasImage);
 
     List<Review> findByUserId(Long userId, Long cursor, int size);
 

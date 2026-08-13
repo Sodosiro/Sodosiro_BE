@@ -1,0 +1,45 @@
+# 실행: 프로젝트 루트에서
+#   docker compose -f docker/docker-compose.prod.yml up --build
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: sodosiro-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_HOST_PORT:-6380}:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: sodosiro-app
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    env_file:
+      - ../.env
+    environment:
+      # AWS RDS를 바라보도록 수정
+      DB_HOST: ${DB_HOST}
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-postgres}
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    ports:
+      - "${APP_HOST_PORT:-8082}:${SERVER_PORT:-8081}"
+    volumes:
+      - ../logs:/app/logs
+
+volumes:
+  redis-data:

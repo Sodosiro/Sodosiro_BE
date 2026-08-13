@@ -42,7 +42,7 @@ public interface TravelSpotSpecification {
 
     @Operation(
             summary = "일반 여행지 상세 조회",
-            description = "여행지 기본 정보, 좋아요 수, 리뷰 평균 평점, 리뷰 수, 인기 태그, 최신 리뷰 최대 3건(작성자 정보·작성일·이미지·전체 본문)과 detailImage2 이미지 목록을 함께 반환합니다. 최신 리뷰에는 방문 유형, GPS 인증, 내 리뷰 여부를 포함하지 않습니다. "
+            description = "여행지 기본 정보, 좋아요 수, 리뷰 평균 평점, 리뷰 수, 인기 태그, 공통 ReviewResponse 형식의 최신 리뷰 최대 3건과 detailImage2 이미지 목록을 함께 반환합니다. infocenter는 원문에서 추출한 전화번호만 슬래시(/)로 연결해 반환합니다. 최신 리뷰에는 작성자·여행지·방문 유형·GPS 인증·내 리뷰 여부를 모두 포함합니다. "
                     + "리뷰가 없으면 latestReviews 필드는 응답에서 제외됩니다. "
                     + "aiRecommendation.available이 false이면 아직 추천 이유가 생성되지 않았거나 만료된 상태입니다."
     )
@@ -51,7 +51,8 @@ public interface TravelSpotSpecification {
             @ApiResponse(responseCode = "404", description = "여행지를 찾을 수 없음")
     })
     ResponseEntity<TouristSpotDetailResponse> getTouristSpotDetail(
-            @Parameter(description = "TourAPI 콘텐츠 ID", required = true, example = "126508") Long contentId
+            @Parameter(description = "TourAPI 콘텐츠 ID", required = true, example = "126508") Long contentId,
+            @Parameter(hidden = true) @LoginUser Long userId
     );
 
     @Operation(
