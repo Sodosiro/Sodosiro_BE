@@ -9,7 +9,7 @@ public interface ReviewQueryRepository {
 
     List<Review> findByContentId(Long contentId, Long cursor, int size, ReviewSort sort, boolean hasImage);
 
-    List<Review> findByUserId(Long userId, Long cursor, int size, boolean hasImage);
+    List<Review> findByUserId(Long userId, Long cursor, int size, ReviewSort sort, boolean hasImage);
 
     Double avgRatingByContentId(Long contentId);
 

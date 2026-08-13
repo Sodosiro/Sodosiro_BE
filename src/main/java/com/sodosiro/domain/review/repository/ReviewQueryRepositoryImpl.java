@@ -45,7 +45,7 @@ public class ReviewQueryRepositoryImpl implements ReviewQueryRepository {
     }
 
     @Override
-    public List<Review> findByUserId(Long userId, Long cursor, int size, boolean hasImage) {
+    public List<Review> findByUserId(Long userId, Long cursor, int size, ReviewSort sort, boolean hasImage) {
         return queryFactory
                 .selectFrom(r)
                 .where(
@@ -54,7 +54,7 @@ public class ReviewQueryRepositoryImpl implements ReviewQueryRepository {
                         r.id.lt(cursor),
                         hasImageFilter(hasImage)
                 )
-                .orderBy(r.createdAt.desc(), r.id.desc())
+                .orderBy(orderBy(sort))
                 .limit(size)
                 .fetch();
     }
