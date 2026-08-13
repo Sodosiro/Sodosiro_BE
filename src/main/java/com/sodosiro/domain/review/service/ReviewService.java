@@ -112,9 +112,14 @@ public class ReviewService {
 
         List<ReviewResponse> responses = assembleReviewResponses(reviews, loginUserId);
 
+        Long myReviewId = (loginUserId == null) ? null :
+                reviewRepository.findByContentIdAndUserIdAndIsDeletedFalse(contentId, loginUserId)
+                        .map(Review::getId).orElse(null);
+
         return new ReviewListResponse(
                 spot.getReviewCount(),
                 spot.getAvgRating().setScale(1, RoundingMode.HALF_UP),
+                myReviewId,
                 responses,
                 nextCursor,
                 hasNext
