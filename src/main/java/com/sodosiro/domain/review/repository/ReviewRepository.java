@@ -12,6 +12,8 @@ public interface ReviewRepository extends JpaRepository<Review, Long>, ReviewQue
 
     Optional<Review> findByIdAndIsDeletedFalse(Long id);
 
+    Optional<Review> findByContentIdAndUserIdAndIsDeletedFalse(Long contentId, Long userId);
+
     List<Review> findTop5ByContentIdAndIsDeletedFalseOrderByCreatedAtDesc(Long contentId);
 
     List<Review> findTop3ByContentIdAndIsDeletedFalseOrderByCreatedAtDesc(Long contentId);

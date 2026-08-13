@@ -28,8 +28,13 @@ public interface ReviewSpecification {
     ResponseEntity<ReviewListResponse> getReviews(Long contentId, Long cursor, int size, ReviewSort sort,
             @Parameter(description = "true 시 이미지가 있는 리뷰만 조회") boolean hasImage, Long loginUserId);
 
-    @Operation(summary = "내가 쓴 리뷰 목록", description = "로그인 유저가 작성한 리뷰 목록을 커서 기반으로 조회합니다.")
-    ResponseEntity<MyReviewListResponse> getMyReviews(Long userId, Long cursor, int size);
+    @Operation(summary = "내가 쓴 리뷰 목록", description = "로그인 유저가 작성한 리뷰 목록을 커서 기반으로 조회합니다. hasImage=true 시 이미지가 첨부된 리뷰만 반환합니다.")
+    ResponseEntity<MyReviewListResponse> getMyReviews(Long userId, Long cursor, int size,
+            @Parameter(description = "정렬 기준 (RECENT, HIGH_RATING, LOW_RATING)") ReviewSort sort,
+            @Parameter(description = "true 시 이미지가 있는 리뷰만 조회") boolean hasImage);
+
+    @Operation(summary = "내 리뷰 상세 조회", description = "본인이 작성한 리뷰 한 건을 상세 조회합니다. 타 사용자의 리뷰 조회 시 403을 반환합니다.")
+    ResponseEntity<ReviewResponse> getMyReview(Long userId, Long reviewId);
 
     @Operation(summary = "리뷰 수정", description = "본인이 작성한 리뷰의 별점(1.0~5.0, 소수점 한 자리)·본문·이미지를 수정합니다. (multipart/form-data)")
     ResponseEntity<ReviewResponse> updateReview(Long userId, Long reviewId, ReviewUpdateRequest request, List<MultipartFile> images);

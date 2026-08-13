@@ -112,9 +112,14 @@ public class ReviewService {
 
         List<ReviewResponse> responses = assembleReviewResponses(reviews, loginUserId);
 
+        Long myReviewId = (loginUserId == null) ? null :
+                reviewRepository.findByContentIdAndUserIdAndIsDeletedFalse(contentId, loginUserId)
+                        .map(Review::getId).orElse(null);
+
         return new ReviewListResponse(
                 spot.getReviewCount(),
                 spot.getAvgRating().setScale(1, RoundingMode.HALF_UP),
+                myReviewId,
                 responses,
                 nextCursor,
                 hasNext
@@ -122,16 +127,34 @@ public class ReviewService {
     }
 
     @Transactional(readOnly = true)
-    public MyReviewListResponse getMyReviews(Long userId, Long cursor, int size) {
+    public MyReviewListResponse getMyReviews(Long userId, Long cursor, int size, ReviewSort sort, boolean hasImage) {
         long effectiveCursor = (cursor == null) ? CURSOR_START : cursor;
 
-        List<Review> fetched = reviewRepository.findByUserId(userId, effectiveCursor, size + 1);
+        List<Review> fetched = reviewRepository.findByUserId(userId, effectiveCursor, size + 1, sort, hasImage);
 
         boolean hasNext = fetched.size() > size;
         List<Review> reviews = hasNext ? fetched.subList(0, size) : fetched;
         Long nextCursor = (hasNext && !reviews.isEmpty()) ? reviews.getLast().getId() : null;
 
         return new MyReviewListResponse(assembleReviewResponses(reviews, userId), nextCursor, hasNext);
+    }
+
+    @Transactional(readOnly = true)
+    public ReviewResponse getMyReview(Long userId, Long reviewId) {
+        Review review = reviewRepository.findByIdAndIsDeletedFalse(reviewId)
+                .orElseThrow(() -> new GeneralException(ReviewErrorCode._REVIEW_NOT_FOUND));
+
+        if (!review.getUserId().equals(userId)) {
+            throw new GeneralException(ReviewErrorCode._REVIEW_FORBIDDEN);
+        }
+
+        User author = userRepository.findById(userId)
+                .orElseThrow(() -> new GeneralException(UserErrorCode._USER_NOT_FOUND));
+        TouristSpot spot = touristSpotRepository.findById(review.getContentId())
+                .orElseThrow(() -> new GeneralException(ReviewErrorCode._SPOT_NOT_FOUND));
+        List<ReviewImage> images = reviewImageRepository.findAllByReviewIdOrderByDisplayOrderAsc(reviewId);
+
+        return ReviewResponse.of(review, author, spot, images, userId);
     }
 
     @Transactional

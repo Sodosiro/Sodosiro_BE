@@ -72,10 +72,20 @@ public class ReviewController implements ReviewSpecification {
     public ResponseEntity<MyReviewListResponse> getMyReviews(
             @LoginUser Long userId,
             @RequestParam(required = false) Long cursor,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "RECENT") ReviewSort sort,
+            @RequestParam(defaultValue = "false") boolean hasImage) {
 
-        MyReviewListResponse response = reviewService.getMyReviews(userId, cursor, size);
+        MyReviewListResponse response = reviewService.getMyReviews(userId, cursor, size, sort, hasImage);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/reviews/{reviewId}")
+    public ResponseEntity<ReviewResponse> getMyReview(
+            @LoginUser Long userId,
+            @PathVariable Long reviewId) {
+
+        return ResponseEntity.ok(reviewService.getMyReview(userId, reviewId));
     }
 
     @PatchMapping(value = "/reviews/{reviewId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
