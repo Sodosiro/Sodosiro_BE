@@ -89,6 +89,10 @@ odsay:
   api:
     key: ${ODSAY_API_KEY}
 
+swagger:
+  username: ${SWAGGER_USERNAME:admin}
+  password: ${SWAGGER_PASSWORD:admin}
+
 server:
   port: ${SERVER_PORT:8081}
 
