@@ -134,7 +134,7 @@ public class TouristSpot {
     @Comment("수집시각")
     private LocalDateTime collectedAt;
 
-    @Column(name = "avg_rating", precision = 3, scale = 2, nullable = false, columnDefinition = "numeric(3,2) default 0.00")
+    @Column(name = "avg_rating", precision = 3, scale = 2, nullable = false)
     @Comment("리뷰 평균 별점 (캐시)")
     private BigDecimal avgRating = BigDecimal.ZERO;
 

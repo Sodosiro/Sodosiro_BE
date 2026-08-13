@@ -18,6 +18,7 @@ public record CourseRecommendRequest(
 
         Long mustVisitContentId,
 
+        @Size(max = 20, message = "AI 메시지는 최대 20자까지 입력할 수 있습니다.")
         String aiMessage
 ) {
     public List<TravelStyle> travelStylesOrEmpty() {
