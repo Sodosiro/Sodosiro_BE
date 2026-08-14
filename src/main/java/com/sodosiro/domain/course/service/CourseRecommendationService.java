@@ -10,6 +10,7 @@ import com.sodosiro.domain.travel.repository.SpotEmbeddingRepository;
 import com.sodosiro.domain.travel.repository.TouristSpotRepository;
 import com.sodosiro.global.payload.code.error.CourseErrorCode;
 import com.sodosiro.global.payload.exception.GeneralException;
+import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -22,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Random;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -36,8 +38,10 @@ import org.springframework.web.server.ResponseStatusException;
 
 /**
  * 여행스타일 카테고리 필터 + AI 한마디 임베딩 유사도를 섞은 후보군에서 하루 일정을 채운다.
- * 하루 5개 슬롯 = 필수 슬롯 3개(식당 1, 카페 1, 관광/자연/액티비티/쇼핑 1) + 자율 슬롯 2개(후보 풀 상위에서 자유롭게)로 구성하고,
+ * 하루 5개 슬롯 = 필수 슬롯 3개(식당 1, 카페 1, 관광/자연/액티비티/쇼핑 1) + 자율 슬롯 2개(후보 풀 상위에서 가중치 랜덤)로 구성하고,
  * 요일 휴무는 전 슬롯에서 제외하며, 같은 날은 동선(위경도) 근접순으로 정렬한다.
+ * 슬롯은 후보 풀 상위 {@value #RANDOM_POOL_SIZE}개 안에서 가중치 랜덤으로 뽑으므로,
+ * 같은 조건으로 다시 호출해도 매번 다른 조합이 나오되 aiMessage 매칭·선택 카테고리·평점이 높을수록 더 자주 뽑힌다.
  */
 @Slf4j
 @Service
@@ -47,6 +51,7 @@ public class CourseRecommendationService {
 
     private static final int FREE_SLOTS_PER_DAY = 2;
     private static final int EMBEDDING_POOL_LIMIT = 60;
+    private static final int RANDOM_POOL_SIZE = 12;
 
     private static final Map<DayOfWeek, String> WEEKDAY_LABELS = Map.of(
             DayOfWeek.MONDAY, "월요일",
@@ -62,6 +67,7 @@ public class CourseRecommendationService {
     private final SpotEmbeddingRepository spotEmbeddingRepository;
     private final EmbeddingModel embeddingModel;
     private final CourseRepository courseRepository;
+    private final Random random = new Random();
 
     public CourseRecommendResponse recommend(Long userId, CourseRecommendRequest request) {
 
@@ -223,6 +229,7 @@ public class CourseRecommendationService {
      * 자율 슬롯은 후보 풀 상위 순서를 그대로 따르므로 여행스타일/AI 한마디 가중치가 자연스럽게 반영된다.
      */
     private List<TouristSpot> pickForDay(List<TouristSpot> pool, Set<Long> usedContentIds, String weekdayLabel, RequiredSlotGroup satisfiedGroup) {
+
         Set<Long> excluded = new HashSet<>(usedContentIds);
         List<TouristSpot> picked = new ArrayList<>();
 
@@ -241,42 +248,77 @@ public class CourseRecommendationService {
         return picked;
     }
 
-    /** 후보 풀에서 먼저 찾고, 풀에 없으면 해당 그룹 카테고리로 직접 조회해 채운다. */
-    private Optional<TouristSpot> pickForGroup(
-            List<TouristSpot> pool, Set<Long> excluded, String weekdayLabel, RequiredSlotGroup group) {
-        for (TouristSpot spot : pool) {
-            if (group.matches(spot.getCategory())
-                    && !excluded.contains(spot.getContentId())
-                    && !isClosedOn(spot, weekdayLabel)) {
-                return Optional.of(spot);
-            }
+    /** 후보 풀(가중치 랜덤)에서 먼저 찾고, 풀에 없으면 해당 그룹 카테고리로 직접 조회해 채운다. */
+    private Optional<TouristSpot> pickForGroup(List<TouristSpot> pool, Set<Long> excluded, String weekdayLabel, RequiredSlotGroup group) {
+
+        List<TouristSpot> eligible = pool.stream()
+                .filter(spot -> group.matches(spot.getCategory())
+                        && !excluded.contains(spot.getContentId())
+                        && !isClosedOn(spot, weekdayLabel))
+                .toList();
+        if (!eligible.isEmpty()) {
+            return pickWeighted(eligible);
         }
+
         List<TouristSpot> broaderCandidates = touristSpotRepository
                 .findTop200ByCategoryInOrderByAvgRatingDesc(group.categoryCodes);
-        for (TouristSpot spot : broaderCandidates) {
-            if (!excluded.contains(spot.getContentId()) && !isClosedOn(spot, weekdayLabel)) {
-                return Optional.of(spot);
-            }
-        }
-        return Optional.empty();
+        List<TouristSpot> broaderEligible = broaderCandidates.stream()
+                .filter(spot -> !excluded.contains(spot.getContentId()) && !isClosedOn(spot, weekdayLabel))
+                .toList();
+        return pickWeighted(broaderEligible);
     }
 
     private List<TouristSpot> pickFreeSlots(
             List<TouristSpot> pool, Set<Long> excluded, String weekdayLabel, int quota) {
+        Set<Long> picking = new HashSet<>(excluded);
         List<TouristSpot> picked = new ArrayList<>(quota);
-        for (TouristSpot spot : pool) {
-            if (picked.size() >= quota) {
+        for (int i = 0; i < quota; i++) {
+            List<TouristSpot> eligible = pool.stream()
+                    .filter(spot -> !picking.contains(spot.getContentId()) && !isClosedOn(spot, weekdayLabel))
+                    .toList();
+            Optional<TouristSpot> chosen = pickWeighted(eligible);
+            if (chosen.isEmpty()) {
                 break;
             }
-            if (excluded.contains(spot.getContentId()) || isClosedOn(spot, weekdayLabel)) {
-                continue;
-            }
-            picked.add(spot);
+            picked.add(chosen.get());
+            picking.add(chosen.get().getContentId());
         }
         if (picked.size() < quota) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "조건에 맞는 관광지가 부족합니다.");
         }
         return picked;
+    }
+
+    /**
+     * 후보를 상위 {@value #RANDOM_POOL_SIZE}개로 좁힌 뒤 가중치 랜덤으로 하나를 뽑는다.
+     * 풀 안 순번(rank)이 곧 aiMessage 임베딩 매칭 → 선택 카테고리 매칭 → 인기 폴백 순서를 반영하므로,
+     * 순번이 앞설수록 가중치가 커지고(최대 {@value #RANDOM_POOL_SIZE}) 평점은 그 안에서 보조 가중치로만 더해진다.
+     */
+    private Optional<TouristSpot> pickWeighted(List<TouristSpot> eligible) {
+        if (eligible.isEmpty()) {
+            return Optional.empty();
+        }
+        List<TouristSpot> narrowed = eligible.size() > RANDOM_POOL_SIZE
+                ? eligible.subList(0, RANDOM_POOL_SIZE)
+                : eligible;
+
+        double[] weights = new double[narrowed.size()];
+        double totalWeight = 0;
+        for (int i = 0; i < narrowed.size(); i++) {
+            BigDecimal rating = narrowed.get(i).getAvgRating();
+            weights[i] = (narrowed.size() - i) + (rating == null ? 0.0 : rating.doubleValue());
+            totalWeight += weights[i];
+        }
+
+        double target = random.nextDouble() * totalWeight;
+        double cumulative = 0;
+        for (int i = 0; i < narrowed.size(); i++) {
+            cumulative += weights[i];
+            if (target < cumulative) {
+                return Optional.of(narrowed.get(i));
+            }
+        }
+        return Optional.of(narrowed.get(narrowed.size() - 1));
     }
 
     /** 필수 슬롯 그룹: 식당(1), 카페(2), 관광/자연/액티비티/쇼핑(3~6). 숙박(7)은 어느 그룹에도 속하지 않는다. */

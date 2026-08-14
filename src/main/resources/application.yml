@@ -5,10 +5,7 @@ spring:
     multipart:
       max-file-size: 2MB
       max-request-size: 20MB
-#  security:
-#    user:
-#      name: admin
-#      password: 1234
+
   security:
     oauth2:
       client:
