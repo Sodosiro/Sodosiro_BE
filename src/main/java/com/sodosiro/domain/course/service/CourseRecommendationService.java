@@ -71,7 +71,6 @@ public class CourseRecommendationService {
 
     public CourseRecommendResponse recommend(Long userId, CourseRecommendRequest request) {
 
-
         validateDateRange(request.startDate(), request.endDate());
         List<LocalDate> dates = buildDateRange(request.startDate(), request.endDate());
 
@@ -84,6 +83,7 @@ public class CourseRecommendationService {
         Set<Long> usedContentIds = new HashSet<>();
         int mustVisitDayIndex = -1;
 
+        // 필수 방문지 지정 및 userContentIds에 등록 (중복 방지)
         if (mustVisitSpot != null) {
             usedContentIds.add(mustVisitSpot.getContentId());
             mustVisitDayIndex = resolveMustVisitDayIndex(mustVisitSpot, dates);
@@ -94,8 +94,6 @@ public class CourseRecommendationService {
                 .map(TravelStyle::categoryCode)
                 .toList();
         List<TouristSpot> candidatePool = buildCandidatePool(categoryCodes, request.aiMessage());
-
-
 
         // 일자별 코스 조립
         List<CourseRecommendResponse.DayCourse> days = new ArrayList<>();
@@ -163,7 +161,7 @@ public class CourseRecommendationService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "여행지를 찾을 수 없습니다."));
     }
 
-    /** mustVisit이 휴무가 아닌 첫 날짜에 배치한다. 여행 기간 내내 휴무면 예외를 던진다. */
+    /** mustVisit이 휴무가 아닌 첫 날짜에 배치한다. 여행 기간 내내 휴무면 예외를 던진다.*/
     private int resolveMustVisitDayIndex(TouristSpot mustVisitSpot, List<LocalDate> dates) {
         for (int i = 0; i < dates.size(); i++) {
             String weekdayLabel = WEEKDAY_LABELS.get(dates.get(i).getDayOfWeek());
@@ -171,6 +169,7 @@ public class CourseRecommendationService {
                 return i;
             }
         }
+        // 모든 여행일자가 휴무일과 겹치면 에러처리
         throw new GeneralException(CourseErrorCode._MUST_VISIT_SPOT_ALWAYS_CLOSED);
     }
 
@@ -231,6 +230,7 @@ public class CourseRecommendationService {
     private List<TouristSpot> pickForDay(List<TouristSpot> pool, Set<Long> usedContentIds, String weekdayLabel, RequiredSlotGroup satisfiedGroup) {
 
         Set<Long> excluded = new HashSet<>(usedContentIds);
+
         List<TouristSpot> picked = new ArrayList<>();
 
         for (RequiredSlotGroup group : RequiredSlotGroup.values()) {
@@ -323,9 +323,13 @@ public class CourseRecommendationService {
 
     /** 필수 슬롯 그룹: 식당(1), 카페(2), 관광/자연/액티비티/쇼핑(3~6). 숙박(7)은 어느 그룹에도 속하지 않는다. */
     private enum RequiredSlotGroup {
-        RESTAURANT("식당", List.of(1)),
-        CAFE("카페", List.of(2)),
-        EXPERIENCE("관광/자연/액티비티/쇼핑", List.of(3, 4, 5, 6));
+        RESTAURANT("식당", List.of(TravelStyle.RESTAURANT.categoryCode())),
+        CAFE("카페", List.of(TravelStyle.CAFE.categoryCode())),
+        EXPERIENCE("관광/자연/액티비티/쇼핑", List.of(
+                TravelStyle.TOURIST_SPOT.categoryCode(),
+                TravelStyle.NATURE.categoryCode(),
+                TravelStyle.ACTIVITY.categoryCode(),
+                TravelStyle.SHOPPING.categoryCode()));
 
         private final String displayName;
         private final List<Integer> categoryCodes;
@@ -344,6 +348,7 @@ public class CourseRecommendationService {
         }
     }
 
+    /** 휴무일이 겹치면 true */
     private boolean isClosedOn(TouristSpot spot, String weekdayLabel) {
         String restdate = spot.getRestdate();
         return restdate != null && restdate.contains(weekdayLabel);
