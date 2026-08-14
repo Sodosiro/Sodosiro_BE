@@ -165,7 +165,7 @@ public class CourseRecommendationService {
     private int resolveMustVisitDayIndex(TouristSpot mustVisitSpot, List<LocalDate> dates) {
         for (int i = 0; i < dates.size(); i++) {
             String weekdayLabel = WEEKDAY_LABELS.get(dates.get(i).getDayOfWeek());
-            if (!isClosedOn(mustVisitSpot, weekdayLabel)) {
+            if (isOpenOn(mustVisitSpot, weekdayLabel)) {
                 return i;
             }
         }
@@ -254,7 +254,7 @@ public class CourseRecommendationService {
         List<TouristSpot> eligible = pool.stream()
                 .filter(spot -> group.matches(spot.getCategory())
                         && !excluded.contains(spot.getContentId())
-                        && !isClosedOn(spot, weekdayLabel))
+                        && isOpenOn(spot, weekdayLabel))
                 .toList();
         if (!eligible.isEmpty()) {
             return pickWeighted(eligible);
@@ -263,7 +263,7 @@ public class CourseRecommendationService {
         List<TouristSpot> broaderCandidates = touristSpotRepository
                 .findTop200ByCategoryInOrderByAvgRatingDesc(group.categoryCodes);
         List<TouristSpot> broaderEligible = broaderCandidates.stream()
-                .filter(spot -> !excluded.contains(spot.getContentId()) && !isClosedOn(spot, weekdayLabel))
+                .filter(spot -> !excluded.contains(spot.getContentId()) && isOpenOn(spot, weekdayLabel))
                 .toList();
         return pickWeighted(broaderEligible);
     }
@@ -274,7 +274,7 @@ public class CourseRecommendationService {
         List<TouristSpot> picked = new ArrayList<>(quota);
         for (int i = 0; i < quota; i++) {
             List<TouristSpot> eligible = pool.stream()
-                    .filter(spot -> !picking.contains(spot.getContentId()) && !isClosedOn(spot, weekdayLabel))
+                    .filter(spot -> !picking.contains(spot.getContentId()) && isOpenOn(spot, weekdayLabel))
                     .toList();
             Optional<TouristSpot> chosen = pickWeighted(eligible);
             if (chosen.isEmpty()) {
@@ -348,16 +348,16 @@ public class CourseRecommendationService {
         }
     }
 
-    /** 휴무일이 겹치면 true */
-    private boolean isClosedOn(TouristSpot spot, String weekdayLabel) {
+    /** 휴무일이 아니면 true */
+    private boolean isOpenOn(TouristSpot spot, String weekdayLabel) {
         String restdate = spot.getRestdate();
-        return restdate != null && restdate.contains(weekdayLabel);
+        return restdate == null || !restdate.contains(weekdayLabel);
     }
 
     /** anchor(있으면 mustVisit)에서 시작해 가장 가까운 지점을 그리디하게 이어 붙인 동선 순서를 만든다. */
     private List<TouristSpot> orderByProximity(List<TouristSpot> spots, TouristSpot anchor) {
         List<TouristSpot> remaining = new ArrayList<>(spots);
-        TouristSpot current = anchor != null ? anchor : remaining.remove(0);
+        TouristSpot current = anchor != null ? anchor : remaining.removeFirst();
         if (anchor != null) {
             remaining.remove(anchor);
         }
