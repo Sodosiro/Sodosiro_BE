@@ -5,11 +5,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface ReviewImageRepository extends JpaRepository<ReviewImage, Long> {
+public interface ReviewImageRepository extends JpaRepository<ReviewImage, Long>, ReviewImageQueryRepository {
 
     List<ReviewImage> findAllByReviewIdOrderByDisplayOrderAsc(Long reviewId);
 
     List<ReviewImage> findAllByReviewIdInOrderByReviewIdAscDisplayOrderAsc(List<Long> reviewIds);
-
-    void deleteAllByReviewId(Long reviewId);
 }

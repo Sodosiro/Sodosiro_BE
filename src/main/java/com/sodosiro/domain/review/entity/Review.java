@@ -15,7 +15,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,10 +27,6 @@ import java.time.LocalDateTime;
 @Getter
 @Table(
         name = "review",
-        uniqueConstraints = @UniqueConstraint(
-                name = "uk_review_user_spot",
-                columnNames = {"content_id", "user_id"}
-        ),
         indexes = {
                 @Index(name = "idx_review_content", columnList = "content_id"),
                 @Index(name = "idx_review_user",    columnList = "user_id")
