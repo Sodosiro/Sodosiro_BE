@@ -8,7 +8,6 @@ import com.sodosiro.domain.like.controller.specification.SpotLikeSpecification;
 import com.sodosiro.domain.like.service.SpotLikeService;
 import com.sodosiro.domain.review.constants.ReviewSort;
 import com.sodosiro.global.resolver.LoginUser;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -39,7 +38,7 @@ public class SpotLikeController implements SpotLikeSpecification {
     @PostMapping("/spots/likes/toggle")
     public ResponseEntity<SpotLikeBatchToggleResponse> toggleTouristSpotLikes(
             @LoginUser Long userId,
-            @RequestBody @Valid SpotLikeToggleRequest request) {
+            @RequestBody SpotLikeToggleRequest request) {
         return ResponseEntity.ok(spotLikeService.toggleTouristSpotLikes(userId, request.contentIds()));
     }
 
