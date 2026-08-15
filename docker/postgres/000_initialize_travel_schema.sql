@@ -130,6 +130,14 @@ CREATE TABLE IF NOT EXISTS spot_ai_recommendation (
     expires_at      TIMESTAMP(6) NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS spot_related_recommendation (
+    content_id          BIGINT       PRIMARY KEY REFERENCES tourist_spot(content_id) ON DELETE CASCADE,
+    related_content_ids TEXT         NOT NULL,
+    scoring_version     VARCHAR(30)  NOT NULL,
+    generated_at        TIMESTAMP(6) NOT NULL,
+    expires_at          TIMESTAMP(6) NOT NULL
+);
+
 -- ── 인기도 / 통계 ─────────────────────────────────────────────────────────────
 
 CREATE TABLE IF NOT EXISTS spot_popularity (
@@ -286,6 +294,9 @@ CREATE INDEX IF NOT EXISTS idx_state_image_recovery            ON etl_spot_state
 CREATE INDEX IF NOT EXISTS idx_spot_popularity_score           ON spot_popularity (popularity_score DESC);
 CREATE INDEX IF NOT EXISTS idx_spot_popularity_rank            ON spot_popularity (category_rank) WHERE category_rank IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_spot_ai_recommendation_expires  ON spot_ai_recommendation (expires_at);
+CREATE INDEX IF NOT EXISTS idx_spot_related_recommendation_expires ON spot_related_recommendation (expires_at);
+CREATE INDEX IF NOT EXISTS idx_spot_embedding_cosine ON spot_embedding
+    USING hnsw (embedding vector_cosine_ops) WHERE embedding IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_review_content                  ON review (content_id) WHERE is_deleted = FALSE;
 CREATE INDEX IF NOT EXISTS idx_review_user                     ON review (user_id)    WHERE is_deleted = FALSE;
 CREATE INDEX IF NOT EXISTS idx_review_image_review             ON review_image (review_id);

@@ -44,6 +44,7 @@ public class TravelSpotService {
     private final UserRepository userRepository;
     private final SpotPopularityRepository spotPopularityRepository;
     private final SpotAiRecommendationService spotAiRecommendationService;
+    private final SpotRelatedRecommendationService spotRelatedRecommendationService;
 
     public CursorPageResponse<TouristSpotSummaryResponse> getTouristSpots(
             String cursor, Integer size, List<Integer> categories, String keyword,
@@ -77,8 +78,11 @@ public class TravelSpotService {
                 .orElse(null);
         boolean liked = loginUserId != null
                 && spotLikeRepository.findByUserIdAndContentId(loginUserId, contentId).isPresent();
+        List<TouristSpotSummaryResponse> relatedSpots = spotRelatedRecommendationService
+                .getRecommendations(spot, loginUserId);
         return TouristSpotDetailResponse.from(
-                spot, popularity, aiRecommendation, toLatestReviewResponses(spot, latestReviews, loginUserId), liked);
+                spot, popularity, aiRecommendation, relatedSpots,
+                toLatestReviewResponses(spot, latestReviews, loginUserId), liked);
     }
 
     @Transactional
