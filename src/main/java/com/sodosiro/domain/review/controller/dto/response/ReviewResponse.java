@@ -16,7 +16,7 @@ public record ReviewResponse(
         Long reviewId,
         AuthorInfo author,
         SpotSummary spot,
-        @Schema(description = "별점 (1.0~5.0, 소수점 한 자리)", example = "4.5")
+        @Schema(description = "별점 (0.1~5.0, 소수점 한 자리)", example = "4.5")
         BigDecimal rating,
         String body,
         List<ReviewImageResponse> images,

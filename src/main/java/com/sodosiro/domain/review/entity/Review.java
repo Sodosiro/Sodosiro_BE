@@ -61,7 +61,7 @@ public class Review {
     private User user;
 
     @Column(name = "rating", nullable = false, precision = 3, scale = 1)
-    @Comment("별점 (1.0~5.0, 소수점 한 자리)")
+    @Comment("별점 (0.1~5.0, 소수점 한 자리)")
     private BigDecimal rating;
 
     @Column(name = "body", columnDefinition = "text")
