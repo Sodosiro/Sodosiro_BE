@@ -4,6 +4,7 @@ import com.sodosiro.domain.like.controller.dto.request.SpotLikeToggleRequest;
 import com.sodosiro.domain.like.controller.dto.response.LikeToggleResponse;
 import com.sodosiro.domain.like.controller.dto.response.MyLikedSpotListResponse;
 import com.sodosiro.domain.like.controller.dto.response.SpotLikeBatchToggleResponse;
+import com.sodosiro.domain.review.constants.ReviewSort;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Max;
@@ -23,10 +24,11 @@ public interface SpotLikeSpecification {
             Long userId, SpotLikeToggleRequest request);
 
     @Operation(summary = "내가 좋아요한 관광지 목록 (지역별)",
-               description = "sigunguCode에 해당하는 지역의 좋아요 목록만 조회합니다(NULL 시 전체조회). 커서 기반 무한스크롤. 첫 요청은 cursor 생략, 이후 응답의 nextCursor 값을 사용하세요.")
+               description = "GET /api/v1/travel-spots/likes. sigunguCode에 해당하는 지역의 좋아요 목록만 조회합니다(NULL 시 전체조회). RECENT, HIGH_RATING, LOW_RATING 정렬과 커서 기반 무한스크롤을 지원합니다. 첫 요청은 cursor 생략, 이후 응답의 nextCursor 값을 사용하세요.")
     ResponseEntity<MyLikedSpotListResponse> getMyLikedSpots(
             Long userId,
             String sigunguCode,
-            Long cursor,
-            @Min(1) @Max(100) int size);
+            String cursor,
+            @Min(1) @Max(100) int size,
+            ReviewSort sort);
 }

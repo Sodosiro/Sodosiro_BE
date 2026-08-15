@@ -6,6 +6,7 @@ import com.sodosiro.domain.like.controller.dto.response.MyLikedSpotListResponse;
 import com.sodosiro.domain.like.controller.dto.response.SpotLikeBatchToggleResponse;
 import com.sodosiro.domain.like.controller.specification.SpotLikeSpecification;
 import com.sodosiro.domain.like.service.SpotLikeService;
+import com.sodosiro.domain.review.constants.ReviewSort;
 import com.sodosiro.global.resolver.LoginUser;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -42,13 +43,14 @@ public class SpotLikeController implements SpotLikeSpecification {
         return ResponseEntity.ok(spotLikeService.toggleTouristSpotLikes(userId, request.contentIds()));
     }
 
-    @GetMapping("/likes")
+    @GetMapping("/spots/likes")
     public ResponseEntity<MyLikedSpotListResponse> getMyLikedSpots(
             @LoginUser Long userId,
             @RequestParam(required = false) String sigunguCode,
-            @RequestParam(required = false) Long cursor,
-            @RequestParam(defaultValue = "5") int size) {
+            @RequestParam(required = false) String cursor,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "RECENT") ReviewSort sort) {
 
-        return ResponseEntity.ok(spotLikeService.getMyLikedSpots(userId, sigunguCode, cursor, size));
+        return ResponseEntity.ok(spotLikeService.getMyLikedSpots(userId, sigunguCode, cursor, size, sort));
     }
 }
