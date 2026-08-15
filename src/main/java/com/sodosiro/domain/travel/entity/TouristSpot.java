@@ -11,6 +11,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Comment;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -134,7 +135,8 @@ public class TouristSpot {
     @Comment("수집시각")
     private LocalDateTime collectedAt;
 
-    @Column(name = "avg_rating", precision = 3, scale = 1, nullable = false, columnDefinition = "numeric(3,1) default 0.0")
+    @Column(name = "avg_rating", precision = 3, scale = 1, nullable = false)
+    @ColumnDefault("0.0")
     @Comment("리뷰 평균 별점 (캐시)")
     private BigDecimal avgRating = BigDecimal.ZERO;
 
