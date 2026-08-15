@@ -8,7 +8,9 @@ import java.time.LocalDateTime;
 public record MyLikedSpotItem(
         Long contentId,
         String title,
+        Integer category,
         String addr1,
+        String overview,
         String firstImage,
         Integer likeCount,
         LocalDateTime likedAt
@@ -17,7 +19,9 @@ public record MyLikedSpotItem(
         return new MyLikedSpotItem(
                 spot.getContentId(),
                 spot.getTitle(),
+                spot.getCategory(),
                 spot.getAddr1(),
+                spot.getOverview(),
                 spot.getFirstImage(),
                 spot.getLikeCount(),
                 like.getCreatedAt()

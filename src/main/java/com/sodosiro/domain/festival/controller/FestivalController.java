@@ -1,0 +1,31 @@
+package com.sodosiro.domain.festival.controller;
+
+import com.sodosiro.domain.festival.controller.dto.FestivalStatus;
+import com.sodosiro.domain.festival.controller.dto.FestivalSummaryResponse;
+import com.sodosiro.domain.festival.docs.FestivalSpecification;
+import com.sodosiro.domain.festival.service.FestivalService;
+import com.sodosiro.domain.travel.controller.dto.CursorPageResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/api/v1/festivals")
+public class FestivalController implements FestivalSpecification {
+
+    private final FestivalService festivalService;
+
+    @GetMapping
+    @Override
+    public ResponseEntity<CursorPageResponse<FestivalSummaryResponse>> getFestivals(
+            @RequestParam(required = false) String areaCode,
+            @RequestParam(defaultValue = "ALL") FestivalStatus status,
+            @RequestParam(required = false) String cursor,
+            @RequestParam(required = false) Integer size) {
+        return ResponseEntity.ok(festivalService.getFestivals(areaCode, status, cursor, size));
+    }
+}
