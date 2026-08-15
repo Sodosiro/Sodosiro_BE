@@ -47,7 +47,8 @@ public class SecurityConfig {
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/", "/login/**", "/oauth2/**", "/error",
                                 "/v1/auth/reissue", "/v1/auth/social", "/v1/travel/**",
-                                "/api/v1/travel/**", "/api/v1/regions/**", "/internal/etl/**").permitAll()
+                                "/api/v1/travel/**", "/api/v1/regions/**", "/api/v1/festivals/**",
+                                "/internal/etl/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(exception -> exception
