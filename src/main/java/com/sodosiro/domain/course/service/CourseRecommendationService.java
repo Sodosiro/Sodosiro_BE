@@ -31,10 +31,8 @@ import java.util.stream.LongStream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.embedding.EmbeddingModel;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 /**
  * 여행스타일 카테고리 필터 + AI 한마디 임베딩 유사도를 섞은 후보군에서 하루 일정을 채운다.
@@ -146,7 +144,7 @@ public class CourseRecommendationService {
 
     private void validateDateRange(LocalDate startDate, LocalDate endDate) {
         if (endDate.isBefore(startDate)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "종료일은 시작일보다 빠를 수 없습니다.");
+            throw new GeneralException(CourseErrorCode._INVALID_DATE_RANGE);
         }
     }
 
@@ -157,7 +155,7 @@ public class CourseRecommendationService {
 
     private TouristSpot findTouristSpot(Long contentId) {
         return touristSpotRepository.findById(contentId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "여행지를 찾을 수 없습니다."));
+                .orElseThrow(() -> new GeneralException(CourseErrorCode._TOURIST_SPOT_NOT_FOUND));
     }
 
     /** mustVisit이 휴무가 아닌 첫 날짜에 배치한다. 여행 기간 내내 휴무면 예외를 던진다.*/
@@ -239,8 +237,7 @@ public class CourseRecommendationService {
                 continue;
             }
             TouristSpot spot = pickForGroup(pool, excluded, weekdayLabel, group)
-                    .orElseThrow(() -> new ResponseStatusException(
-                            HttpStatus.BAD_REQUEST, group.displayName + " 카테고리에 해당하는 관광지가 부족합니다."));
+                    .orElseThrow(() -> new GeneralException(CourseErrorCode._REQUIRED_SLOT_INSUFFICIENT));
             picked.add(spot);
             excluded.add(spot.getContentId());
         }
@@ -285,7 +282,7 @@ public class CourseRecommendationService {
             picking.add(chosen.get().getContentId());
         }
         if (picked.size() < quota) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "조건에 맞는 관광지가 부족합니다.");
+            throw new GeneralException(CourseErrorCode._FREE_SLOT_INSUFFICIENT);
         }
         return picked;
     }
@@ -324,19 +321,17 @@ public class CourseRecommendationService {
 
     /** 필수 슬롯 그룹: 식당(1), 카페(2), 관광/자연/액티비티/쇼핑(3~6). 숙박(7)은 어느 그룹에도 속하지 않는다. */
     private enum RequiredSlotGroup {
-        RESTAURANT("식당", List.of(TravelStyle.RESTAURANT.categoryCode())),
-        CAFE("카페", List.of(TravelStyle.CAFE.categoryCode())),
-        EXPERIENCE("관광/자연/액티비티/쇼핑", List.of(
+        RESTAURANT(List.of(TravelStyle.RESTAURANT.categoryCode())),
+        CAFE(List.of(TravelStyle.CAFE.categoryCode())),
+        EXPERIENCE(List.of(
                 TravelStyle.TOURIST_SPOT.categoryCode(),
                 TravelStyle.NATURE.categoryCode(),
                 TravelStyle.ACTIVITY.categoryCode(),
                 TravelStyle.SHOPPING.categoryCode()));
 
-        private final String displayName;
         private final List<Integer> categoryCodes;
 
-        RequiredSlotGroup(String displayName, List<Integer> categoryCodes) {
-            this.displayName = displayName;
+        RequiredSlotGroup(List<Integer> categoryCodes) {
             this.categoryCodes = categoryCodes;
         }
 
