@@ -22,6 +22,7 @@ public class FestivalQueryRepository {
     public List<Festival> findFestivals(
             String areaCode,
             FestivalStatus status,
+            Integer year,
             LocalDate today,
             LocalDate startDateCursor,
             Long festivalIdCursor,
@@ -30,6 +31,7 @@ public class FestivalQueryRepository {
         if (areaCode != null && !areaCode.isBlank()) {
             conditions.and(festival.areaCode.eq(areaCode));
         }
+        applyYear(conditions, year);
         applyStatus(conditions, status, today);
         if (startDateCursor != null && festivalIdCursor != null) {
             conditions.and(festival.startDate.gt(startDateCursor)
@@ -43,10 +45,20 @@ public class FestivalQueryRepository {
                 .fetch();
     }
 
+    private void applyYear(BooleanBuilder conditions, Integer year) {
+        if (year == null) {
+            return;
+        }
+        LocalDate yearStart = LocalDate.of(year, 1, 1);
+        LocalDate yearEnd = LocalDate.of(year, 12, 31);
+        conditions.and(festival.startDate.loe(yearEnd).and(festival.endDate.goe(yearStart)));
+    }
+
     private void applyStatus(BooleanBuilder conditions, FestivalStatus status, LocalDate today) {
         switch (status) {
             case ONGOING -> conditions.and(festival.startDate.loe(today)).and(festival.endDate.goe(today));
             case UPCOMING -> conditions.and(festival.startDate.gt(today));
+            case ACTIVE -> conditions.and(festival.endDate.goe(today));
             case ENDED -> conditions.and(festival.endDate.lt(today));
             case ALL -> { /* 조건 없음 */ }
         }

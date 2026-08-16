@@ -103,9 +103,9 @@ public class SpotLikeService {
 
     @Transactional(readOnly = true)
     public MyLikedSpotListResponse getMyLikedSpots(
-            Long userId, String sigunguCode, String cursor, int size, ReviewSort sort) {
+            Long userId, String sigunguCode, List<Integer> categories, String cursor, int size, ReviewSort sort) {
         LikeCursor parsedCursor = parseCursor(cursor, sort);
-        List<SpotLike> fetched = spotLikeRepository.findByUserIdAndFilters(userId, sigunguCode,
+        List<SpotLike> fetched = spotLikeRepository.findByUserIdAndFilters(userId, sigunguCode, categories,
                 parsedCursor.likeId(), parsedCursor.rating(), sort, size + 1);
 
         boolean hasNext = fetched.size() > size;

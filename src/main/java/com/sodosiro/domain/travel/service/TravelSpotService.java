@@ -5,6 +5,7 @@ import com.sodosiro.domain.travel.controller.dto.TouristSpotDetailResponse;
 import com.sodosiro.domain.travel.controller.dto.TouristSpotSummaryResponse;
 import com.sodosiro.domain.travel.controller.dto.TravelSpotSort;
 import com.sodosiro.domain.like.repository.SpotLikeRepository;
+import com.sodosiro.domain.region.service.RegionNameResolver;
 import com.sodosiro.domain.review.controller.dto.response.ReviewResponse;
 import com.sodosiro.domain.review.entity.Review;
 import com.sodosiro.domain.review.entity.ReviewImage;
@@ -45,6 +46,7 @@ public class TravelSpotService {
     private final SpotPopularityRepository spotPopularityRepository;
     private final SpotAiRecommendationService spotAiRecommendationService;
     private final SpotRelatedRecommendationService spotRelatedRecommendationService;
+    private final RegionNameResolver regionNameResolver;
 
     public CursorPageResponse<TouristSpotSummaryResponse> getTouristSpots(
             String cursor, Integer size, List<Integer> categories, String keyword,
@@ -55,11 +57,14 @@ public class TravelSpotService {
                 sort, parsedCursor.contentId(), parsedCursor.popularityScore(), pageSize, categories, keyword);
         boolean hasNext = rows.size() > pageSize;
         Set<Long> likedContentIds = findLikedContentIds(userId, rows, pageSize);
-        List<TouristSpotSummaryResponse> items = rows.stream()
-                .limit(pageSize)
+        List<TravelSpotQueryRepository.TouristSpotWithPopularity> pageRows = rows.stream().limit(pageSize).toList();
+        Map<Long, String> regionByContentId = regionNameResolver.resolveByContentId(
+                pageRows.stream().map(TravelSpotQueryRepository.TouristSpotWithPopularity::spot).toList());
+        List<TouristSpotSummaryResponse> items = pageRows.stream()
                 .map(row -> TouristSpotSummaryResponse.from(
                         row.spot(), toPopularity(row.popularity()),
-                        likedContentIds.contains(row.spot().getContentId())))
+                        likedContentIds.contains(row.spot().getContentId()),
+                        regionByContentId.get(row.spot().getContentId())))
                 .toList();
         String nextCursor = hasNext ? encodeCursor(items.getLast(), sort) : null;
         return new CursorPageResponse<>(items, nextCursor, hasNext);

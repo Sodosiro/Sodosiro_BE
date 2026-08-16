@@ -8,6 +8,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 public record ReviewUpdateRequest(
 
@@ -19,6 +20,13 @@ public record ReviewUpdateRequest(
         BigDecimal rating,
 
         @Size(max = 1000, message = "리뷰 내용은 1000자 이하여야 합니다.")
-        String body
+        String body,
+
+        @Schema(description = "유지할 기존 이미지 URL 목록. 여기에 없는 기존 이미지는 삭제됩니다. "
+                + "생략/빈 배열이면 기존 이미지를 모두 삭제합니다. 최종 노출 순서는 이 목록 뒤에 새 이미지가 붙습니다.")
+        List<String> keepImageUrls
 ) {
+        public List<String> keepImageUrls() {
+                return keepImageUrls == null ? List.of() : keepImageUrls;
+        }
 }

@@ -12,6 +12,8 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import org.springframework.http.ResponseEntity;
 
+import java.util.List;
+
 @Tag(name = "좋아요", description = "관광지 좋아요 토글 및 내 목록 조회")
 public interface SpotLikeSpecification {
 
@@ -25,10 +27,13 @@ public interface SpotLikeSpecification {
             Long userId, @Valid SpotLikeToggleRequest request);
 
     @Operation(summary = "내가 좋아요한 관광지 목록 (지역별)",
-               description = "GET /api/v1/travel-spots/likes. sigunguCode에 해당하는 지역의 좋아요 목록만 조회합니다(NULL 시 전체조회). RECENT, HIGH_RATING, LOW_RATING 정렬과 커서 기반 무한스크롤을 지원합니다. 첫 요청은 cursor 생략, 이후 응답의 nextCursor 값을 사용하세요.")
+               description = "GET /api/v1/travel-spots/likes. sigunguCode에 해당하는 지역의 좋아요 목록만 조회합니다(NULL 시 전체조회). "
+                       + "category는 생략 시 전체, 반복 전달 시 복수 카테고리를 조회합니다(1=식당, 2=카페, 3=쇼핑, 4=관광지, 5=자연, 6=액티비티, 7=숙박). "
+                       + "RECENT, HIGH_RATING, LOW_RATING 정렬과 커서 기반 무한스크롤을 지원합니다. 첫 요청은 cursor 생략, 이후 응답의 nextCursor 값을 사용하세요.")
     ResponseEntity<MyLikedSpotListResponse> getMyLikedSpots(
             Long userId,
             String sigunguCode,
+            List<Integer> categories,
             String cursor,
             @Min(1) @Max(100) int size,
             ReviewSort sort);
