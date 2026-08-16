@@ -236,7 +236,7 @@ DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_review_rating') THEN
         ALTER TABLE review ADD CONSTRAINT chk_review_rating
-            CHECK (rating BETWEEN 1.0 AND 5.0);
+            CHECK (rating BETWEEN 0.1 AND 5.0);
     END IF;
 END $$;
 
