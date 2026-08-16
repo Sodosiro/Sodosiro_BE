@@ -36,13 +36,15 @@ public class SpotLikeQueryRepositoryImpl implements SpotLikeQueryRepository {
 
     @Override
     public List<SpotLike> findByUserIdAndFilters(
-            Long userId, String sigunguCode, Long likeIdCursor, BigDecimal ratingCursor, ReviewSort sort, int size) {
+            Long userId, String sigunguCode, List<Integer> categories,
+            Long likeIdCursor, BigDecimal ratingCursor, ReviewSort sort, int size) {
         return queryFactory
                 .selectFrom(l)
                 .join(l.touristSpot, spot).fetchJoin()
                 .where(
                         l.userId.eq(userId),
                         sigunguCodeEq(sigunguCode),
+                        categoryIn(categories),
                         cursorCondition(likeIdCursor, ratingCursor, sort)
                 )
                 .orderBy(orderBy(sort))
@@ -73,5 +75,9 @@ public class SpotLikeQueryRepositoryImpl implements SpotLikeQueryRepository {
 
     private BooleanExpression sigunguCodeEq(String sigunguCode) {
         return sigunguCode != null ? spot.sigunguCode.eq(sigunguCode) : null;
+    }
+
+    private BooleanExpression categoryIn(List<Integer> categories) {
+        return (categories != null && !categories.isEmpty()) ? spot.category.in(categories) : null;
     }
 }

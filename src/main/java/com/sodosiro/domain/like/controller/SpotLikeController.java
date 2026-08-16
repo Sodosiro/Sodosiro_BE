@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @Validated
 @RestController
 @RequestMapping("/api/v1")
@@ -46,10 +48,11 @@ public class SpotLikeController implements SpotLikeSpecification {
     public ResponseEntity<MyLikedSpotListResponse> getMyLikedSpots(
             @LoginUser Long userId,
             @RequestParam(required = false) String sigunguCode,
+            @RequestParam(name = "category", required = false) List<Integer> categories,
             @RequestParam(required = false) String cursor,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "RECENT") ReviewSort sort) {
 
-        return ResponseEntity.ok(spotLikeService.getMyLikedSpots(userId, sigunguCode, cursor, size, sort));
+        return ResponseEntity.ok(spotLikeService.getMyLikedSpots(userId, sigunguCode, categories, cursor, size, sort));
     }
 }

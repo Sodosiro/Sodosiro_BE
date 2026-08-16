@@ -11,5 +11,6 @@ public interface SpotLikeQueryRepository {
     List<SpotLike> findByUserId(Long userId, Long cursor, int size);
 
     List<SpotLike> findByUserIdAndFilters(
-            Long userId, String sigunguCode, Long likeIdCursor, BigDecimal ratingCursor, ReviewSort sort, int size);
+            Long userId, String sigunguCode, List<Integer> categories,
+            Long likeIdCursor, BigDecimal ratingCursor, ReviewSort sort, int size);
 }
