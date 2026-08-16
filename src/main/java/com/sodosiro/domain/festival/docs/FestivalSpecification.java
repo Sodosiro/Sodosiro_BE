@@ -1,5 +1,6 @@
 package com.sodosiro.domain.festival.docs;
 
+import com.sodosiro.domain.festival.controller.dto.FestivalDetailResponse;
 import com.sodosiro.domain.festival.controller.dto.FestivalStatus;
 import com.sodosiro.domain.festival.controller.dto.FestivalSummaryResponse;
 import com.sodosiro.domain.travel.controller.dto.CursorPageResponse;
@@ -35,5 +36,18 @@ public interface FestivalSpecification {
             @Parameter(in = ParameterIn.QUERY, description = "연도 필터. 해당 연도와 기간이 겹치는 축제만 조회. 생략 시 전체", example = "2026") Integer year,
             @Parameter(in = ParameterIn.QUERY, description = "직전 응답의 nextCursor") String cursor,
             @Parameter(in = ParameterIn.QUERY, description = "페이지 크기 (기본 20, 최대 100)", example = "20") Integer size
+    );
+
+    @Operation(
+            summary = "축제 상세 조회",
+            description = "festivalId로 단일 축제를 조회합니다. 목록과 달리 description·tag를 잘라내지 않고 전문을 반환합니다. "
+                    + "status는 목록과 동일하게 KST 기준 오늘 날짜로 판정합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "404", description = "존재하지 않는 축제")
+    })
+    ResponseEntity<FestivalDetailResponse> getFestival(
+            @Parameter(in = ParameterIn.PATH, description = "축제 ID", example = "1") Long festivalId
     );
 }

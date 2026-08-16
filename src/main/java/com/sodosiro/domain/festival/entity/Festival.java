@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -55,6 +57,10 @@ public class Festival {
     @Comment("축제 설명")
     private String description;
 
+    @Column(name = "tag", length = 100)
+    @Comment("축제 태그")
+    private String tag;
+
     @Column(name = "image_url", columnDefinition = "text")
     @Comment("축제 이미지")
     private String imageUrl;
@@ -68,7 +74,7 @@ public class Festival {
     private LocalDateTime collectedAt;
 
     private Festival(Long festivalId, String title, String regionName, String areaCode,
-            LocalDate startDate, LocalDate endDate, String description, String imageUrl,
+            LocalDate startDate, LocalDate endDate, String description, String tag, String imageUrl,
             String linkUrl, LocalDateTime collectedAt) {
         this.festivalId = festivalId;
         this.title = title;
@@ -77,15 +83,26 @@ public class Festival {
         this.startDate = startDate;
         this.endDate = endDate;
         this.description = description;
+        this.tag = tag;
         this.imageUrl = imageUrl;
         this.linkUrl = linkUrl;
         this.collectedAt = collectedAt;
     }
 
     public static Festival create(Long festivalId, String title, String regionName, String areaCode,
-            LocalDate startDate, LocalDate endDate, String description, String imageUrl,
+            LocalDate startDate, LocalDate endDate, String description, String tag, String imageUrl,
             String linkUrl, LocalDateTime collectedAt) {
         return new Festival(festivalId, title, regionName, areaCode, startDate, endDate,
-                description, imageUrl, linkUrl, collectedAt);
+                description, tag, imageUrl, linkUrl, collectedAt);
+    }
+
+    public List<String> getTagList() {
+        if (tag == null || tag.isBlank()) {
+            return List.of();
+        }
+        return Arrays.stream(tag.split("\\|"))
+                .map(String::trim)
+                .filter(value -> !value.isEmpty())
+                .toList();
     }
 }

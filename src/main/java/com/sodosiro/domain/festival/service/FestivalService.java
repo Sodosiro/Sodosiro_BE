@@ -1,9 +1,11 @@
 package com.sodosiro.domain.festival.service;
 
+import com.sodosiro.domain.festival.controller.dto.FestivalDetailResponse;
 import com.sodosiro.domain.festival.controller.dto.FestivalStatus;
 import com.sodosiro.domain.festival.controller.dto.FestivalSummaryResponse;
 import com.sodosiro.domain.festival.entity.Festival;
 import com.sodosiro.domain.festival.repository.FestivalQueryRepository;
+import com.sodosiro.domain.festival.repository.FestivalRepository;
 import com.sodosiro.domain.travel.controller.dto.CursorPageResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
@@ -27,6 +29,13 @@ public class FestivalService {
     private static final int MAX_PAGE_SIZE = 100;
 
     private final FestivalQueryRepository festivalQueryRepository;
+    private final FestivalRepository festivalRepository;
+
+    public FestivalDetailResponse getFestival(Long festivalId) {
+        Festival festival = festivalRepository.findById(festivalId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 축제입니다."));
+        return FestivalDetailResponse.from(festival, LocalDate.now(KST));
+    }
 
     public CursorPageResponse<FestivalSummaryResponse> getFestivals(
             String areaCode, FestivalStatus status, Integer year, String cursor, Integer size) {
