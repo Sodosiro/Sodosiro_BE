@@ -1,6 +1,7 @@
 package com.sodosiro.domain.travel.service;
 
 import com.sodosiro.domain.like.repository.SpotLikeRepository;
+import com.sodosiro.domain.region.service.RegionNameResolver;
 import com.sodosiro.domain.travel.controller.dto.TouristSpotSummaryResponse;
 import com.sodosiro.domain.travel.entity.SpotPopularity;
 import com.sodosiro.domain.travel.entity.SpotRelatedRecommendation;
@@ -43,6 +44,7 @@ public class SpotRelatedRecommendationService {
     private final SpotRelatedRecommendationSnapshotWriter snapshotWriter;
     private final SpotLikeRepository spotLikeRepository;
     private final RedisService redisService;
+    private final RegionNameResolver regionNameResolver;
 
     public List<TouristSpotSummaryResponse> getRecommendations(TouristSpot source, Long userId) {
         List<Long> cachedIds = getCachedIds(source.getContentId());
@@ -149,9 +151,10 @@ public class SpotRelatedRecommendationService {
         Map<Long, SpotPopularity> popularities = byId(spotPopularityRepository.findAllById(ids));
         Set<Long> likedIds = userId == null ? Set.of()
                 : spotLikeRepository.findLikedContentIdsByUserIdAndContentIds(userId, ids);
+        Map<Long, String> regionByContentId = regionNameResolver.resolveByContentId(spots.values());
         return ids.stream().map(spots::get).filter(java.util.Objects::nonNull)
                 .map(spot -> TouristSpotSummaryResponse.from(spot, toPopularity(popularities.get(spot.getContentId())),
-                        likedIds.contains(spot.getContentId())))
+                        likedIds.contains(spot.getContentId()), regionByContentId.get(spot.getContentId())))
                 .toList();
     }
 
