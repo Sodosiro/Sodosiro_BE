@@ -189,8 +189,7 @@ CREATE TABLE IF NOT EXISTS review (
     gps_verified_at TIMESTAMP(6),
     created_at      TIMESTAMP(6)  NOT NULL DEFAULT now(),
     updated_at      TIMESTAMP(6),
-    CONSTRAINT fk_review_spot   FOREIGN KEY (content_id) REFERENCES tourist_spot(content_id) ON DELETE CASCADE,
-    CONSTRAINT uk_review_user_spot UNIQUE (content_id, user_id)
+    CONSTRAINT fk_review_spot   FOREIGN KEY (content_id) REFERENCES tourist_spot(content_id) ON DELETE CASCADE
 );
 
 -- 기존 환경: 누락 컬럼 보강
@@ -239,6 +238,13 @@ BEGIN
             CHECK (rating BETWEEN 0.1 AND 5.0);
     END IF;
 END $$;
+
+-- 소프트 딜리트 정합성: (content_id, user_id) 전체 유니크 → 활성 리뷰(is_deleted=false)만 유니크
+-- 삭제 후 재작성 시 남아있는 soft-deleted 행 때문에 발생하던 uk_review_user_spot 위반 방지
+ALTER TABLE review DROP CONSTRAINT IF EXISTS uk_review_user_spot;
+
+CREATE UNIQUE INDEX IF NOT EXISTS uk_review_user_spot_active
+    ON review (content_id, user_id) WHERE is_deleted = FALSE;
 
 -- users FK: JPA가 앱 기동 시 users 테이블을 생성하므로 존재할 때만 추가
 DO $$

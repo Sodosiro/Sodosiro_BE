@@ -23,6 +23,7 @@ import com.sodosiro.global.payload.exception.GeneralException;
 import com.sodosiro.global.s3.constants.FileFolder;
 import com.sodosiro.global.s3.service.S3Service;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NonNull;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,11 +31,13 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -159,8 +162,6 @@ public class ReviewService {
 
     @Transactional
     public ReviewResponse updateReview(Long userId, Long reviewId, ReviewUpdateRequest request, List<MultipartFile> images) {
-        validateImageCount(images);
-
         Review review = reviewRepository.findByIdAndIsDeletedFalse(reviewId)
                 .orElseThrow(() -> new GeneralException(ReviewErrorCode._REVIEW_NOT_FOUND));
 
@@ -168,15 +169,18 @@ public class ReviewService {
             throw new GeneralException(ReviewErrorCode._REVIEW_FORBIDDEN);
         }
 
-        List<String> oldUrls = reviewImageRepository.findAllByReviewIdOrderByDisplayOrderAsc(reviewId).stream()
+        List<String> existingUrls = reviewImageRepository.findAllByReviewIdOrderByDisplayOrderAsc(reviewId).stream()
                 .map(ReviewImage::getImageUrl)
                 .toList();
 
+        Result result = getResult(request, images, existingUrls);
+
         List<String> newUrls = uploadImages(images);
-        eventPublisher.publishEvent(ReviewImageChangedEvent.replace(newUrls, oldUrls));
+        eventPublisher.publishEvent(ReviewImageChangedEvent.replace(newUrls, result.removedUrls()));
 
         reviewImageRepository.deleteAllByReviewId(reviewId);
-        List<ReviewImage> reviewImages = saveImages(reviewId, newUrls);
+        List<String> finalUrls = Stream.concat(result.keepUrls().stream(), newUrls.stream()).toList();
+        List<ReviewImage> reviewImages = saveImages(reviewId, finalUrls);
 
         review.update(request.rating(), request.body());
 
@@ -188,6 +192,26 @@ public class ReviewService {
                 .orElseThrow(() -> new GeneralException(ReviewErrorCode._SPOT_NOT_FOUND));
 
         return ReviewResponse.of(review, author, spot, reviewImages, userId);
+    }
+
+    private static @NonNull Result getResult(ReviewUpdateRequest request, List<MultipartFile> images, List<String> existingUrls) {
+        List<String> keepUrls = request.keepImageUrls();
+        if (!new HashSet<>(existingUrls).containsAll(keepUrls)) {
+            throw new GeneralException(ReviewErrorCode._REVIEW_IMAGE_NOT_FOUND);
+        }
+
+        int newCount = (images == null) ? 0 : images.size();
+        if (keepUrls.size() + newCount > MAX_IMAGE_COUNT) {
+            throw new GeneralException(ReviewErrorCode._REVIEW_IMAGE_LIMIT_EXCEEDED);
+        }
+
+        List<String> removedUrls = existingUrls.stream()
+                .filter(url -> !keepUrls.contains(url))
+                .toList();
+        return new Result(keepUrls, removedUrls);
+    }
+
+    private record Result(List<String> keepUrls, List<String> removedUrls) {
     }
 
     @Transactional
