@@ -94,7 +94,6 @@ public class CourseRecommendationService {
                 .map(TravelStyle::categoryCode)
                 .toList();
         List<TouristSpot> candidatePool = buildCandidatePool(categoryCodes, request.aiMessage());
-
         // 일자별 코스 조립
         List<CourseRecommendResponse.DayCourse> days = new ArrayList<>();
 
@@ -180,10 +179,12 @@ public class CourseRecommendationService {
      */
     private List<TouristSpot> buildCandidatePool(List<Integer> categoryCodes, String aiMessage) {
 
+        //ai 메시지 없으면 빈리스트
         List<TouristSpot> embeddingCandidates = (aiMessage == null || aiMessage.isBlank())
                 ? List.of()
                 : findEmbeddingCandidatesSafely(aiMessage, categoryCodes);
 
+        // 없으면 - 빈리스트, 있다면 - 해당 카테고리의 평접높은순 200개
         List<TouristSpot> categoryCandidates = categoryCodes.isEmpty()
                 ? List.of()
                 : touristSpotRepository.findTop200ByCategoryInOrderByAvgRatingDesc(categoryCodes);
