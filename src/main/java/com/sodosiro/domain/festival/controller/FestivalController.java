@@ -24,8 +24,9 @@ public class FestivalController implements FestivalSpecification {
     public ResponseEntity<CursorPageResponse<FestivalSummaryResponse>> getFestivals(
             @RequestParam(required = false) String areaCode,
             @RequestParam(defaultValue = "ALL") FestivalStatus status,
+            @RequestParam(required = false) Integer year,
             @RequestParam(required = false) String cursor,
             @RequestParam(required = false) Integer size) {
-        return ResponseEntity.ok(festivalService.getFestivals(areaCode, status, cursor, size));
+        return ResponseEntity.ok(festivalService.getFestivals(areaCode, status, year, cursor, size));
     }
 }

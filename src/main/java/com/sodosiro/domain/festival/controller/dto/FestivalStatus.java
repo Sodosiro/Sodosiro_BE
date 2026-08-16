@@ -13,6 +13,8 @@ public enum FestivalStatus {
     ONGOING,
     /** 예정: 시작일이 오늘 이후 */
     UPCOMING,
+    /** 진행중 + 예정: 아직 끝나지 않은 축제 (끝일이 오늘 이후). 필터 입력 전용 */
+    ACTIVE,
     /** 종료: 끝일이 오늘 이전 */
     ENDED;
 

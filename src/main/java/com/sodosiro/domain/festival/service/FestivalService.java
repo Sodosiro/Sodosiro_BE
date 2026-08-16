@@ -29,14 +29,14 @@ public class FestivalService {
     private final FestivalQueryRepository festivalQueryRepository;
 
     public CursorPageResponse<FestivalSummaryResponse> getFestivals(
-            String areaCode, FestivalStatus status, String cursor, Integer size) {
+            String areaCode, FestivalStatus status, Integer year, String cursor, Integer size) {
         int pageSize = normalizePageSize(size);
         FestivalStatus effectiveStatus = status == null ? FestivalStatus.ALL : status;
         LocalDate today = LocalDate.now(KST);
         FestivalCursor parsedCursor = parseCursor(cursor);
 
         List<Festival> rows = festivalQueryRepository.findFestivals(
-                areaCode, effectiveStatus, today,
+                areaCode, effectiveStatus, year, today,
                 parsedCursor.startDate(), parsedCursor.festivalId(), pageSize);
         boolean hasNext = rows.size() > pageSize;
 
