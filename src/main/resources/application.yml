@@ -74,6 +74,9 @@ spring:
   ai:
     openai:
       api-key: ${OPENAI_API_KEY}
+      chat:
+        options:
+          temperature: 0.4
       embedding:
         options:
           model: text-embedding-3-small

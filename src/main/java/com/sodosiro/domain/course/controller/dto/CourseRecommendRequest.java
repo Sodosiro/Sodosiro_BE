@@ -1,12 +1,16 @@
 package com.sodosiro.domain.course.controller.dto;
 
 import com.sodosiro.domain.course.constants.TravelStyle;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
 import java.util.List;
 
 public record CourseRecommendRequest(
+        @NotBlank(message = "지역(시/군)은 필수입니다.")
+        String sigunguCode,
+
         @NotNull(message = "여행 시작일은 필수입니다.")
         LocalDate startDate,
 
