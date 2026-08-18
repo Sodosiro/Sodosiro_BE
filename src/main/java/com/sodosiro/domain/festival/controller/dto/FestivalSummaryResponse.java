@@ -28,14 +28,14 @@ public record FestivalSummaryResponse(
         return new FestivalSummaryResponse(
                 festival.getFestivalId(), festival.getTitle(), festival.getRegionName(),
                 festival.getAreaCode(), festival.getStartDate(), festival.getEndDate(),
-                truncatePreview(festival.getDescription()),
+                festival.getDescription(),
                 festival.getImageUrl(), festival.getLinkUrl(),
                 festival.getTagList(),
                 FestivalStatus.resolve(festival.getStartDate(), festival.getEndDate(), today)
         );
     }
 
-    /** 목록에서는 15자까지만 노출하고 초과분은 '...'으로 대체한다. */
+    @Deprecated
     private static String truncatePreview(String value) {
         if (value == null || value.length() <= PREVIEW_LENGTH) {
             return value;

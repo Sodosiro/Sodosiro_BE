@@ -32,6 +32,7 @@ public class FestivalController implements FestivalSpecification {
         return ResponseEntity.ok(festivalService.getFestivals(areaCode, status, year, cursor, size));
     }
 
+    @Deprecated
     @GetMapping("/{festivalId}")
     @Override
     public ResponseEntity<FestivalDetailResponse> getFestival(@PathVariable Long festivalId) {
