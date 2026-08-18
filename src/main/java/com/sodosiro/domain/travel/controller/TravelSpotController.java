@@ -64,7 +64,9 @@ public class TravelSpotController implements TravelSpotSpecification {
         return ResponseEntity.ok(travelSpotService.generateAiRecommendation(contentId));
     }
 
+    /** 최근 30일 누적 기준 인기 검색어 top 10. Redis Sorted Set 에서 조회한다. */
     @GetMapping("/search/trending")
+    @Override
     public ResponseEntity<List<TrendingKeywordResponse>> getSearchTrending() {
         return ResponseEntity.ok(searchTrendingService.getTrending());
     }
