@@ -19,7 +19,7 @@ public class SearchKeywordEventListener {
     @EventListener
     public void onSearch(SearchKeywordSearchedEvent event) {
         try {
-            searchTrendingService.countKeyword(event.keyword(), event.userId());
+            searchTrendingService.countKeyword(event.keyword(), event.userId(), event.bot());
         } catch (Exception e) {
             log.warn("[SearchTrending] 검색어 집계 실패: keyword={}", event.keyword(), e);
         }

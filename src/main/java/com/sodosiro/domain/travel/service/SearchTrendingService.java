@@ -32,12 +32,14 @@ public class SearchTrendingService {
 
     private final RedisService redisService;
 
-    public void countKeyword(String rawKeyword, Long userId) {
+    public void countKeyword(String rawKeyword, Long userId, boolean bot) {
         String keyword = normalize(rawKeyword);
         if (keyword == null) {
             return;
         }
-        if (userId != null && !redisService.setIfAbsent(DEDUP_PREFIX + userId + ":" + keyword, "1", DEDUP_TTL_MILLIS)) {
+        // 내부 봇(시드 봇)은 dedup 을 건너뛰고 무조건 집계한다.
+        if (!bot && userId != null
+                && !redisService.setIfAbsent(DEDUP_PREFIX + userId + ":" + keyword, "1", DEDUP_TTL_MILLIS)) {
             return; // 단기 TTL 내 동일 사용자·동일 검색어 → 중복 카운트 차단
         }
         String bucketKey = BUCKET_PREFIX + LocalDate.now().format(BUCKET_DATE);

@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestHeader;
 
 @Tag(name = "Travel", description = "일반 여행지와 ETL 기반 인기 여행지 조회 API")
 public interface TravelSpotSpecification {
@@ -38,7 +39,8 @@ public interface TravelSpotSpecification {
             @Parameter(in = ParameterIn.QUERY, description = "여행지명 부분 검색어", example = "강릉") String keyword,
             @Parameter(in = ParameterIn.QUERY, description = "조회 정렬 기준", example = "POPULAR",
                     schema = @Schema(type = "string", allowableValues = {"ALL", "DEFAULT", "POPULAR"})) TravelSpotSort sort,
-            @Parameter(hidden = true) @LoginUser Long userId
+            @Parameter(hidden = true) @LoginUser Long userId,
+            @Parameter(hidden = true) @RequestHeader(value = "X-Internal-Bot", required = false) String requestBotToken
     );
 
     @Operation(
