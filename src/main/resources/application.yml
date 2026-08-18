@@ -75,11 +75,10 @@ spring:
     openai:
       api-key: ${OPENAI_API_KEY}
       chat:
-        options:
-          temperature: 0.4
+        model: gpt-4o-mini
+        temperature: 0.4
       embedding:
-        options:
-          model: text-embedding-3-small
+        model: text-embedding-3-small
 
 kakao:
   mobility:
