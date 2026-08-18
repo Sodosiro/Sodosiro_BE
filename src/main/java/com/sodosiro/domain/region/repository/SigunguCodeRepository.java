@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface SigunguCodeRepository extends JpaRepository<SigunguCode, Long> {
 
-    List<SigunguCode> findAllByAreaCodeOrderByNameAsc(String areaCode);
+    List<SigunguCode> findAllByAreaCode(String areaCode);
 
     @Query("select s from SigunguCode s join fetch s.area")
     List<SigunguCode> findAllWithArea();
