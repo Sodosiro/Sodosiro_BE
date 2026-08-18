@@ -81,8 +81,7 @@ spring:
         options:
           model: ${OPENAI_CHAT_MODEL:gpt-5-nano}
       embedding:
-        options:
-          model: text-embedding-3-small
+        model: text-embedding-3-small
 
 kakao:
   mobility:

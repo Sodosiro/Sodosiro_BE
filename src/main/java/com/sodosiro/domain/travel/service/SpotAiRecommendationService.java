@@ -37,7 +37,8 @@ public class SpotAiRecommendationService {
     public Recommendation getCached(TouristSpot spot) {
         String key = KEY_PREFIX + spot.getContentId();
         String cached = redisService.getValue(key);
-        if (cached != null && !cached.isBlank()) return new Recommendation(cached);
+        if (cached != null && !cached.isBlank())
+            return new Recommendation(cached);
 
         LocalDateTime now = LocalDateTime.now();
         SpotAiRecommendation snapshot = snapshotRepository
@@ -83,7 +84,8 @@ public class SpotAiRecommendationService {
     }
 
     private void cache(String key, String reason, Duration ttl) {
-        if (!ttl.isNegative() && !ttl.isZero()) redisService.save(key, reason, ttl.toMillis());
+        if (!ttl.isNegative() && !ttl.isZero())
+            redisService.save(key, reason, ttl.toMillis());
     }
 
     public record Recommendation(String reason) { }

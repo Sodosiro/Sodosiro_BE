@@ -3,7 +3,7 @@ package com.sodosiro.domain.region.controller;
 import com.sodosiro.domain.region.controller.dto.RegionIntroductionResponse;
 import com.sodosiro.domain.region.controller.dto.RegionCodeResponse;
 import com.sodosiro.domain.region.controller.dto.AreaCodeResponse;
-import com.sodosiro.domain.region.docs.RegionIntroSpecification;
+import com.sodosiro.domain.region.controller.specification.RegionIntroSpecification;
 import com.sodosiro.domain.region.service.RegionIntroService;
 import com.sodosiro.domain.region.service.RegionDirectoryService;
 import lombok.RequiredArgsConstructor;

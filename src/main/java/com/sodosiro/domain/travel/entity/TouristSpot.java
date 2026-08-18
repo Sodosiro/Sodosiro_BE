@@ -135,6 +135,7 @@ public class TouristSpot {
     @Comment("수집시각")
     private LocalDateTime collectedAt;
 
+
     @Column(name = "avg_rating", precision = 3, scale = 1, nullable = false)
     @ColumnDefault("0.0")
     @Comment("리뷰 평균 별점 (캐시)")

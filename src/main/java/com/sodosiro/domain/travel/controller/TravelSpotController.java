@@ -5,7 +5,7 @@ import com.sodosiro.domain.travel.controller.dto.TouristSpotDetailResponse;
 import com.sodosiro.domain.travel.controller.dto.TouristSpotSummaryResponse;
 import com.sodosiro.domain.travel.controller.dto.TrendingKeywordResponse;
 import com.sodosiro.domain.travel.controller.dto.TravelSpotSort;
-import com.sodosiro.domain.travel.docs.TravelSpotSpecification;
+import com.sodosiro.domain.travel.controller.specification.TravelSpotSpecification;
 import com.sodosiro.domain.travel.service.SearchTrendingService;
 import com.sodosiro.domain.travel.service.TravelSpotService;
 import com.sodosiro.domain.travel.service.event.SearchKeywordSearchedEvent;
