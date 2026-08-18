@@ -3,6 +3,7 @@ package com.sodosiro.domain.travel.repository;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sodosiro.domain.travel.controller.dto.TravelSpotSort;
+import com.sodosiro.domain.travel.entity.QSpotEmbedding;
 import com.sodosiro.domain.travel.entity.QSpotImage;
 import com.sodosiro.domain.travel.entity.QSpotPopularity;
 import com.sodosiro.domain.travel.entity.QTouristSpot;
@@ -20,6 +21,7 @@ public class TravelSpotQueryRepository {
     private static final QTouristSpot touristSpot = QTouristSpot.touristSpot;
     private static final QSpotImage spotImage = QSpotImage.spotImage;
     private static final QSpotPopularity spotPopularity = QSpotPopularity.spotPopularity;
+    private static final QSpotEmbedding spotEmbedding = QSpotEmbedding.spotEmbedding;
 
     private final JPAQueryFactory queryFactory;
 
@@ -45,30 +47,34 @@ public class TravelSpotQueryRepository {
                         .or(spotPopularity.popularityScore.eq(popularityScoreCursor)
                                 .and(touristSpot.contentId.lt(contentIdCursor))));
             }
-            return queryFactory.select(touristSpot, spotPopularity)
+            return queryFactory.select(touristSpot, spotPopularity, spotEmbedding.keywordText)
                     .from(touristSpot)
                     .join(spotPopularity).on(spotPopularity.contentId.eq(touristSpot.contentId))
+                    .leftJoin(spotEmbedding).on(spotEmbedding.contentId.eq(touristSpot.contentId))
                     .where(conditions)
                     .orderBy(spotPopularity.popularityScore.desc(), touristSpot.contentId.desc())
                     .limit(size + 1L)
                     .fetch()
                     .stream()
-                    .map(tuple -> new TouristSpotWithPopularity(tuple.get(touristSpot), tuple.get(spotPopularity)))
+                    .map(tuple -> new TouristSpotWithPopularity(
+                            tuple.get(touristSpot), tuple.get(spotPopularity), tuple.get(spotEmbedding.keywordText)))
                     .toList();
         }
 
         if (contentIdCursor != null) {
             conditions.and(touristSpot.contentId.lt(contentIdCursor));
         }
-        return queryFactory.select(touristSpot, spotPopularity)
+        return queryFactory.select(touristSpot, spotPopularity, spotEmbedding.keywordText)
                 .from(touristSpot)
                 .leftJoin(spotPopularity).on(spotPopularity.contentId.eq(touristSpot.contentId))
+                .leftJoin(spotEmbedding).on(spotEmbedding.contentId.eq(touristSpot.contentId))
                 .where(conditions)
                 .orderBy(touristSpot.contentId.desc())
                 .limit(size + 1L)
                 .fetch()
                 .stream()
-                .map(tuple -> new TouristSpotWithPopularity(tuple.get(touristSpot), tuple.get(spotPopularity)))
+                .map(tuple -> new TouristSpotWithPopularity(
+                        tuple.get(touristSpot), tuple.get(spotPopularity), tuple.get(spotEmbedding.keywordText)))
                 .toList();
     }
 
@@ -83,6 +89,6 @@ public class TravelSpotQueryRepository {
                 .findFirst();
     }
 
-    public record TouristSpotWithPopularity(TouristSpot spot, SpotPopularity popularity) {
+    public record TouristSpotWithPopularity(TouristSpot spot, SpotPopularity popularity, String keywordText) {
     }
 }

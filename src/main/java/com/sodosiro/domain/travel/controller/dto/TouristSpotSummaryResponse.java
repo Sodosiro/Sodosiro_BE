@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record TouristSpotSummaryResponse(
         Long contentId,
@@ -24,25 +25,34 @@ public record TouristSpotSummaryResponse(
         Integer reviewCount,
         boolean liked,
         boolean isPopular,
-        Popularity popularity
+        Popularity popularity,
+        @Schema(description = "keyword_text에서 대표 분류(첫 토큰)를 제외한 태그 목록",
+                example = "[\"낚시\", \"가족여행\", \"자연\", \"여가\", \"체험\"]")
+        List<String> tags
 ) {
     public static TouristSpotSummaryResponse from(TouristSpot spot) {
         return new TouristSpotSummaryResponse(
                 spot.getContentId(), spot.getTitle(), spot.getCategory(), spot.getAddr1(), null,
                 abbreviateOverview(spot.getOverview()), spot.getRestdate(),
                 spot.getFirstImage(), spot.getMapX(), spot.getMapY(),
-                spot.getLikeCount(), scale1(spot.getAvgRating()), spot.getReviewCount(), false, false, null
+                spot.getLikeCount(), scale1(spot.getAvgRating()), spot.getReviewCount(), false, false, null,
+                List.of()
         );
     }
 
     public static TouristSpotSummaryResponse from(
             TouristSpot spot, Popularity popularity, boolean liked, String region) {
+        return from(spot, popularity, liked, region, List.of());
+    }
+
+    public static TouristSpotSummaryResponse from(
+            TouristSpot spot, Popularity popularity, boolean liked, String region, List<String> tags) {
         return new TouristSpotSummaryResponse(
                 spot.getContentId(), spot.getTitle(), spot.getCategory(), spot.getAddr1(), region,
                 abbreviateOverview(spot.getOverview()), spot.getRestdate(),
                 spot.getFirstImage(), spot.getMapX(), spot.getMapY(),
                 spot.getLikeCount(), scale1(spot.getAvgRating()), spot.getReviewCount(), liked,
-                isPopular(popularity), popularity
+                isPopular(popularity), popularity, tags == null ? List.of() : tags
         );
     }
 
