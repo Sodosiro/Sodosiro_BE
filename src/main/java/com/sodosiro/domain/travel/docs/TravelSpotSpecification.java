@@ -4,6 +4,7 @@ import com.sodosiro.domain.travel.controller.dto.CursorPageResponse;
 import com.sodosiro.domain.travel.controller.dto.TouristSpotDetailResponse;
 import com.sodosiro.domain.travel.controller.dto.TouristSpotSummaryResponse;
 import com.sodosiro.domain.travel.controller.dto.TravelSpotSort;
+import com.sodosiro.domain.travel.controller.dto.TrendingKeywordResponse;
 import com.sodosiro.global.resolver.LoginUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -66,4 +67,15 @@ public interface TravelSpotSpecification {
     ResponseEntity<TouristSpotDetailResponse.AiRecommendation> generateAiRecommendation(
             @Parameter(description = "TourAPI 콘텐츠 ID", required = true, example = "126508") Long contentId
     );
+
+    @Operation(
+            summary = "인기 검색어 조회",
+            description = "최근 30일 누적 검색 횟수를 합산해 상위 10개 인기 검색어를 rank 오름차순으로 반환합니다. "
+                    + "여행지 검색(GET /spots?keyword=...) 요청 시 검색어가 Redis Sorted Set에 비동기로 집계되며, "
+                    + "조회는 Redis에서 수행됩니다. 누적된 검색어가 없으면 빈 배열을 반환합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공 (rank 오름차순, 최대 10개)")
+    })
+    ResponseEntity<List<TrendingKeywordResponse>> getSearchTrending();
 }
