@@ -38,7 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * 코스 추천 진입점. 1순위로 {@link CourseAiPlanner}에게 실제 코스 설계(스팟 구성 + 방문 순서)를 맡기고,
  * LLM 응답이 검증을 통과하지 못하면 규칙기반 알고리즘(임베딩/평점 가중치 랜덤 + 그리디 동선 정렬)으로 폴백한다.
- * 하루 5개 슬롯 = 필수 슬롯 3개(식당 1, 카페 1, 관광/자연/액티비티/쇼핑 1) + 자율 슬롯 2개(후보 풀 상위에서 가중치 랜덤)로 구성하고,
+ * 하루 6개 슬롯 = 필수 슬롯 2개(식당 2) + 자율 슬롯 4개(후보 풀 에서 LLM이 추출하여 코스만들기) + 1 숙소 슬롯 (하루 마지막 순서 배정, 복귀날 숙소 x)
  * 요일 휴무는 전 슬롯에서 제외하며, 같은 날은 동선(위경도) 근접순으로 정렬한다.
  * 필수 슬롯은 그룹별로 카테고리를 하드 필터링(WHERE)한 전용 풀에서 뽑아 카테고리 정확성을 보장하고,
  * 자율 슬롯은 카테고리 제한 없는 공용 풀에서 뽑아 선택하지 않은 카테고리도 노출될 수 있게 한다.
@@ -88,7 +88,7 @@ public class CourseRecommendationService {
         float[] queryEmbedding = embedSafely(request.aiMessage());
 
         List<CourseRecommendResponse.DayCourse> days = courseAiPlanner
-                .tryGenerate(request, dates, mustVisitSpot, queryEmbedding)
+                .tryGenerate(request, dates, mustVisitSpot, mustVisitDayIndex, queryEmbedding)
                 .orElseGet(() -> generateWithRuleBasedFallback(
                         request, dates, mustVisitSpot, mustVisitDayIndex, usedContentIds, categoryCodes, queryEmbedding));
 
