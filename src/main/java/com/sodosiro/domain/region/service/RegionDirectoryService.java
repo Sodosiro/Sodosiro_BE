@@ -30,12 +30,7 @@ public class RegionDirectoryService {
     }
 
     public List<RegionCodeResponse> getRegions(String areaCode) {
-        Set<Long> introductionSigunguIds = regionIntroRepository.findAll().stream()
-                .map(RegionIntro::getSigunguId)
-                .collect(Collectors.toUnmodifiableSet());
-        return sigunguCodeRepository.findAllByAreaCodeOrderByNameAsc(areaCode).stream()
-                .map(sigungu -> RegionCodeResponse.from(
-                        sigungu, introductionSigunguIds.contains(sigungu.getId())))
-                .toList();
+        return sigunguCodeRepository.findAllByAreaCode(areaCode).stream()
+                .map(RegionCodeResponse::from).toList();
     }
 }
