@@ -36,7 +36,7 @@ public class S3Service {
     @Value("${spring.cloud.aws.cloudfront.domain:}")
     private String cloudFrontDomain;
 
-    @Value("${image.upload.max-size:2097152}")
+    @Value("${image.upload.max-size:20971520}")
     private long maxFileSize;
 
     private static final List<String> ALLOWED_EXTENSIONS = List.of("jpg", "jpeg", "png", "webp");

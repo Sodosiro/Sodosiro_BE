@@ -6,6 +6,7 @@ import com.sodosiro.global.payload.code.error.S3ErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.tomcat.util.http.InvalidParameterException;
 import org.jspecify.annotations.Nullable;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
@@ -70,6 +71,16 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
         return super.handleExceptionInternal(e, body, headers, status, request);
     }
 
+
+    /**
+     * 잘못된 인코딩의 쿼리 파라미터(예: UTF-8 이 아닌 바이트)로 톰캣 파라미터 파싱이 실패한 경우.
+     * 클라이언트(봇·크롤러 포함) 오류이므로 500 대신 400 으로 응답하고 WARN 으로만 남긴다.
+     */
+    @ExceptionHandler(InvalidParameterException.class)
+    public ResponseEntity<ReasonDTO> onInvalidParameter(InvalidParameterException e, HttpServletRequest request) {
+        log.warn("[{}] {} - 잘못된 요청 파라미터 인코딩", request.getMethod(), request.getRequestURI());
+        return ResponseEntity.badRequest().body(CommonErrorCode._BAD_REQUEST.getReasonHttpStatus());
+    }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ReasonDTO> onDataIntegrityViolation(DataIntegrityViolationException e) {

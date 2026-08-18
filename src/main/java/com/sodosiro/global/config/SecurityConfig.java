@@ -45,9 +45,10 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/", "/login/**", "/oauth2/**", "/error","/v3/api-docs/**",
-                                "/swagger-ui/**","/v1/auth/reissue", "/v1/auth/social", "/v1/travel/**",
-                                "/api/v1/travel/**", "/api/v1/regions/**", "/internal/etl/**").permitAll()
+                        .requestMatchers("/", "/login/**", "/oauth2/**", "/error",
+                                "/v1/auth/reissue", "/v1/auth/social", "/v1/travel/**",
+                                "/api/v1/travel/**", "/api/v1/regions/**", "/api/v1/festivals/**",
+                                "/internal/etl/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(exception -> exception

@@ -4,7 +4,7 @@ import java.util.List;
 
 public record MyLikedSpotListResponse(
         List<MyLikedSpotItem> content,
-        Long nextCursor,
+        String nextCursor,
         boolean hasNext
 ) {
 }

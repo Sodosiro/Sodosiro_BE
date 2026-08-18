@@ -130,6 +130,14 @@ CREATE TABLE IF NOT EXISTS spot_ai_recommendation (
     expires_at      TIMESTAMP(6) NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS spot_related_recommendation (
+    content_id          BIGINT       PRIMARY KEY REFERENCES tourist_spot(content_id) ON DELETE CASCADE,
+    related_content_ids TEXT         NOT NULL,
+    scoring_version     VARCHAR(30)  NOT NULL,
+    generated_at        TIMESTAMP(6) NOT NULL,
+    expires_at          TIMESTAMP(6) NOT NULL
+);
+
 -- ── 인기도 / 통계 ─────────────────────────────────────────────────────────────
 
 CREATE TABLE IF NOT EXISTS spot_popularity (
@@ -181,8 +189,7 @@ CREATE TABLE IF NOT EXISTS review (
     gps_verified_at TIMESTAMP(6),
     created_at      TIMESTAMP(6)  NOT NULL DEFAULT now(),
     updated_at      TIMESTAMP(6),
-    CONSTRAINT fk_review_spot   FOREIGN KEY (content_id) REFERENCES tourist_spot(content_id) ON DELETE CASCADE,
-    CONSTRAINT uk_review_user_spot UNIQUE (content_id, user_id)
+    CONSTRAINT fk_review_spot   FOREIGN KEY (content_id) REFERENCES tourist_spot(content_id) ON DELETE CASCADE
 );
 
 -- 기존 환경: 누락 컬럼 보강
@@ -228,9 +235,16 @@ DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_review_rating') THEN
         ALTER TABLE review ADD CONSTRAINT chk_review_rating
-            CHECK (rating BETWEEN 1.0 AND 5.0);
+            CHECK (rating BETWEEN 0.1 AND 5.0);
     END IF;
 END $$;
+
+-- 소프트 딜리트 정합성: (content_id, user_id) 전체 유니크 → 활성 리뷰(is_deleted=false)만 유니크
+-- 삭제 후 재작성 시 남아있는 soft-deleted 행 때문에 발생하던 uk_review_user_spot 위반 방지
+ALTER TABLE review DROP CONSTRAINT IF EXISTS uk_review_user_spot;
+
+CREATE UNIQUE INDEX IF NOT EXISTS uk_review_user_spot_active
+    ON review (content_id, user_id) WHERE is_deleted = FALSE;
 
 -- users FK: JPA가 앱 기동 시 users 테이블을 생성하므로 존재할 때만 추가
 DO $$
@@ -286,6 +300,9 @@ CREATE INDEX IF NOT EXISTS idx_state_image_recovery            ON etl_spot_state
 CREATE INDEX IF NOT EXISTS idx_spot_popularity_score           ON spot_popularity (popularity_score DESC);
 CREATE INDEX IF NOT EXISTS idx_spot_popularity_rank            ON spot_popularity (category_rank) WHERE category_rank IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_spot_ai_recommendation_expires  ON spot_ai_recommendation (expires_at);
+CREATE INDEX IF NOT EXISTS idx_spot_related_recommendation_expires ON spot_related_recommendation (expires_at);
+CREATE INDEX IF NOT EXISTS idx_spot_embedding_cosine ON spot_embedding
+    USING hnsw (embedding vector_cosine_ops) WHERE embedding IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_review_content                  ON review (content_id) WHERE is_deleted = FALSE;
 CREATE INDEX IF NOT EXISTS idx_review_user                     ON review (user_id)    WHERE is_deleted = FALSE;
 CREATE INDEX IF NOT EXISTS idx_review_image_review             ON review_image (review_id);

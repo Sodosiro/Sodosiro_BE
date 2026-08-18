@@ -5,6 +5,7 @@ import com.sodosiro.domain.travel.controller.dto.TouristSpotDetailResponse;
 import com.sodosiro.domain.travel.controller.dto.TouristSpotSummaryResponse;
 import com.sodosiro.domain.travel.controller.dto.TravelSpotSort;
 import com.sodosiro.domain.like.repository.SpotLikeRepository;
+import com.sodosiro.domain.region.service.RegionNameResolver;
 import com.sodosiro.domain.review.controller.dto.response.ReviewResponse;
 import com.sodosiro.domain.review.entity.Review;
 import com.sodosiro.domain.review.entity.ReviewImage;
@@ -18,6 +19,7 @@ import com.sodosiro.domain.user.entity.User;
 import com.sodosiro.domain.user.repository.UserRepository;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -44,6 +46,8 @@ public class TravelSpotService {
     private final UserRepository userRepository;
     private final SpotPopularityRepository spotPopularityRepository;
     private final SpotAiRecommendationService spotAiRecommendationService;
+    private final SpotRelatedRecommendationService spotRelatedRecommendationService;
+    private final RegionNameResolver regionNameResolver;
 
     public CursorPageResponse<TouristSpotSummaryResponse> getTouristSpots(
             String cursor, Integer size, List<Integer> categories, String keyword,
@@ -54,11 +58,15 @@ public class TravelSpotService {
                 sort, parsedCursor.contentId(), parsedCursor.popularityScore(), pageSize, categories, keyword);
         boolean hasNext = rows.size() > pageSize;
         Set<Long> likedContentIds = findLikedContentIds(userId, rows, pageSize);
-        List<TouristSpotSummaryResponse> items = rows.stream()
-                .limit(pageSize)
+        List<TravelSpotQueryRepository.TouristSpotWithPopularity> pageRows = rows.stream().limit(pageSize).toList();
+        Map<Long, String> regionByContentId = regionNameResolver.resolveByContentId(
+                pageRows.stream().map(TravelSpotQueryRepository.TouristSpotWithPopularity::spot).toList());
+        List<TouristSpotSummaryResponse> items = pageRows.stream()
                 .map(row -> TouristSpotSummaryResponse.from(
                         row.spot(), toPopularity(row.popularity()),
-                        likedContentIds.contains(row.spot().getContentId())))
+                        likedContentIds.contains(row.spot().getContentId()),
+                        regionByContentId.get(row.spot().getContentId()),
+                        parseTags(row.keywordText())))
                 .toList();
         String nextCursor = hasNext ? encodeCursor(items.getLast(), sort) : null;
         return new CursorPageResponse<>(items, nextCursor, hasNext);
@@ -77,8 +85,11 @@ public class TravelSpotService {
                 .orElse(null);
         boolean liked = loginUserId != null
                 && spotLikeRepository.findByUserIdAndContentId(loginUserId, contentId).isPresent();
+        List<TouristSpotSummaryResponse> relatedSpots = spotRelatedRecommendationService
+                .getRecommendations(spot, loginUserId);
         return TouristSpotDetailResponse.from(
-                spot, popularity, aiRecommendation, toLatestReviewResponses(spot, latestReviews, loginUserId), liked);
+                spot, popularity, aiRecommendation, relatedSpots,
+                toLatestReviewResponses(spot, latestReviews, loginUserId), liked);
     }
 
     @Transactional
@@ -180,6 +191,20 @@ public class TravelSpotService {
                 .map(row -> row.spot().getContentId())
                 .toList();
         return spotLikeRepository.findLikedContentIdsByUserIdAndContentIds(userId, contentIds);
+    }
+
+    /**
+     * keyword_text 를 ',' 로 분리해 첫 토큰(대표 분류)을 제외한 나머지 태그 목록을 반환한다.
+     */
+    private List<String> parseTags(String keywordText) {
+        if (keywordText == null || keywordText.isBlank()) {
+            return List.of();
+        }
+        return Arrays.stream(keywordText.split(","))
+                .map(String::trim)
+                .filter(token -> !token.isEmpty())
+                .skip(1)
+                .toList();
     }
 
     private record TouristSpotCursor(Long contentId, Double popularityScore) {

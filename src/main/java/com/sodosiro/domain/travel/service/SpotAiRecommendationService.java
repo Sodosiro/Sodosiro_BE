@@ -15,7 +15,8 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class SpotAiRecommendationService {
-    private static final Duration TTL = Duration.ofDays(1);
+    // TODO 실제 서비스 진행시에는 캐싱데는 일자를 하루로 설정 해야한다.
+    private static final Duration TTL = Duration.ofDays(92);
     private static final String KEY_PREFIX = "ai:spot-reason:v1:";
     private final SpotAiRecommendationRepository snapshotRepository;
     private final ReviewRepository reviewRepository;

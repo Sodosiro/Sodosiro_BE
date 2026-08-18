@@ -57,4 +57,20 @@ public class AsyncConfig {
         executor.initialize();
         return executor;
     }
+
+    @Bean(name = "searchTrendingExecutor")
+    public Executor searchTrendingExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(2);
+        executor.setMaxPoolSize(5);
+        executor.setQueueCapacity(500);
+        executor.setThreadNamePrefix("search-trend-");
+
+        // 인기 검색어 카운팅은 유실돼도 치명적이지 않으므로 큐가 넘치면 조용히 버린다.
+        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.DiscardPolicy());
+        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.setAwaitTerminationSeconds(10);
+        executor.initialize();
+        return executor;
+    }
 }

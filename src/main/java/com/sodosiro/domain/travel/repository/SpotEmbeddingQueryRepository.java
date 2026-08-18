@@ -15,4 +15,7 @@ public interface SpotEmbeddingQueryRepository {
      * boostCategoryCodes가 비어있지 않으면 필터링된 결과 안에서 해당 카테고리를 우선순위로 앞쪽에 배치한다(가중치).
      */
     List<Long> findNearestContentIdsInCategories(float[] queryEmbedding, List<Integer> requiredCategoryCodes, List<Integer> boostCategoryCodes, String sigunguCode, int limit);
+    List<RelatedEmbeddingCandidate> findRelatedCandidates(Long contentId, int limit);
+
+    record RelatedEmbeddingCandidate(Long contentId, Double distance) { }
 }

@@ -45,15 +45,16 @@ public class ReviewQueryRepositoryImpl implements ReviewQueryRepository {
     }
 
     @Override
-    public List<Review> findByUserId(Long userId, Long cursor, int size) {
+    public List<Review> findByUserId(Long userId, Long cursor, int size, ReviewSort sort, boolean hasImage) {
         return queryFactory
                 .selectFrom(r)
                 .where(
                         r.userId.eq(userId),
                         r.isDeleted.isFalse(),
-                        r.id.lt(cursor)
+                        r.id.lt(cursor),
+                        hasImageFilter(hasImage)
                 )
-                .orderBy(r.createdAt.desc(), r.id.desc())
+                .orderBy(orderBy(sort))
                 .limit(size)
                 .fetch();
     }

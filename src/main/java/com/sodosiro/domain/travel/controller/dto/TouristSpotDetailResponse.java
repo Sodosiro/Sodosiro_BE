@@ -33,17 +33,20 @@ public record TouristSpotDetailResponse(
         Popularity popularity,
         AiRecommendation aiRecommendation,
         @JsonInclude(JsonInclude.Include.NON_EMPTY)
+        List<TouristSpotSummaryResponse> relatedSpots,
+        @JsonInclude(JsonInclude.Include.NON_EMPTY)
         List<ReviewResponse> latestReviews,
         List<String> images
 ) {
     public static TouristSpotDetailResponse from(
             TouristSpot spot, Popularity popularity, AiRecommendation aiRecommendation,
-            List<ReviewResponse> latestReviews, boolean liked) {
+            List<TouristSpotSummaryResponse> relatedSpots, List<ReviewResponse> latestReviews, boolean liked) {
         return new TouristSpotDetailResponse(
                 spot.getContentId(), spot.getTitle(), spot.getCategory(), spot.getAddr1(), spot.getAddr2(),
                 spot.getFirstImage(), spot.getMapX(), spot.getMapY(), spot.getHomepage(), spot.getOverview(),
                 InfoCenterPhoneParser.extract(spot.getInfocenter()), spot.getUsetime(), spot.getRestdate(), spot.getParking(),
                 spot.getLikeCount(), liked, spot.getAvgRating().setScale(1, RoundingMode.HALF_UP), spot.getReviewCount(), popularity, aiRecommendation,
+                relatedSpots.isEmpty() ? null : relatedSpots,
                 latestReviews.isEmpty() ? null : latestReviews,
                 spot.getImages().stream().map(SpotImage::getImageUrl).toList()
         );

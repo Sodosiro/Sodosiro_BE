@@ -15,7 +15,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,10 +27,6 @@ import java.time.LocalDateTime;
 @Getter
 @Table(
         name = "review",
-        uniqueConstraints = @UniqueConstraint(
-                name = "uk_review_user_spot",
-                columnNames = {"content_id", "user_id"}
-        ),
         indexes = {
                 @Index(name = "idx_review_content", columnList = "content_id"),
                 @Index(name = "idx_review_user",    columnList = "user_id")
@@ -66,7 +61,7 @@ public class Review {
     private User user;
 
     @Column(name = "rating", nullable = false, precision = 3, scale = 1)
-    @Comment("별점 (1.0~5.0, 소수점 한 자리)")
+    @Comment("별점 (0.1~5.0, 소수점 한 자리)")
     private BigDecimal rating;
 
     @Column(name = "body", columnDefinition = "text")

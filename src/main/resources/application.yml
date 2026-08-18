@@ -3,9 +3,12 @@ spring:
     name: sodosiro
   servlet:
     multipart:
-      max-file-size: 2MB
-      max-request-size: 20MB
-
+      max-file-size: 20MB
+      max-request-size: 100MB
+#  security:
+#    user:
+#      name: admin
+#      password: 1234
   security:
     oauth2:
       client:
@@ -58,7 +61,7 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
         default_batch_fetch_size: 100
-    show-sql: true
+    show-sql: false
 
   data:
     redis:
@@ -75,8 +78,8 @@ spring:
     openai:
       api-key: ${OPENAI_API_KEY}
       chat:
-        model: gpt-4o-mini
-        temperature: 0.4
+        options:
+          model: ${OPENAI_CHAT_MODEL:gpt-5-nano}
       embedding:
         model: text-embedding-3-small
 
@@ -87,6 +90,20 @@ kakao:
 odsay:
   api:
     key: ${ODSAY_API_KEY}
+
+swagger:
+  username: ${SWAGGER_USERNAME:admin}
+  password: ${SWAGGER_PASSWORD:admin}
+
+image:
+  upload:
+    max-size: 20971520
+
+# 인기 검색어 시드 봇 인증. 이 토큰과 같은 X-Internal-Bot 헤더로 온 검색은
+# dedup/제한을 무시하고 무조건 집계한다. 비어 있으면 봇 예외 처리 비활성.
+search:
+  bot:
+    token: ${SEARCH_BOT_TOKEN:}
 
 server:
   port: ${SERVER_PORT:8081}
