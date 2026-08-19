@@ -7,6 +7,7 @@ import com.sodosiro.domain.travel.controller.dto.TrendingKeywordResponse;
 import com.sodosiro.domain.travel.controller.dto.TravelSpotSort;
 import com.sodosiro.domain.travel.controller.specification.TravelSpotSpecification;
 import com.sodosiro.domain.travel.service.SearchTrendingService;
+import com.sodosiro.domain.travel.service.SpotAlternativeService;
 import com.sodosiro.domain.travel.service.TravelSpotService;
 import com.sodosiro.domain.travel.service.event.SearchKeywordSearchedEvent;
 import com.sodosiro.global.resolver.LoginUser;
@@ -31,6 +32,7 @@ public class TravelSpotController implements TravelSpotSpecification {
 
     private final TravelSpotService travelSpotService;
     private final SearchTrendingService searchTrendingService;
+    private final SpotAlternativeService spotAlternativeService;
     private final ApplicationEventPublisher eventPublisher;
 
     @Value("${search.bot.token:}")
@@ -71,6 +73,17 @@ public class TravelSpotController implements TravelSpotSpecification {
     public ResponseEntity<TouristSpotDetailResponse.AiRecommendation> generateAiRecommendation(
             @PathVariable Long contentId) {
         return ResponseEntity.ok(travelSpotService.generateAiRecommendation(contentId));
+    }
+
+    /**
+     * 대상 장소와 같은 카테고리 안에서 반경(3km -> 5km -> 10km)을 넓혀가며 후보가 3개 모일 때까지 검색하고,
+     * 임베딩 코사인 유사도가 가장 높은 상위 3개를 반환한다.
+     */
+    @GetMapping("/spots/alternatives")
+    @Override
+    public ResponseEntity<List<TouristSpotSummaryResponse>> getSpotAlternatives(
+            @RequestParam Long contentId, @LoginUser Long userId) {
+        return ResponseEntity.ok(spotAlternativeService.getAlternatives(contentId, userId));
     }
 
     /** 최근 30일 누적 기준 인기 검색어 top 10. Redis Sorted Set 에서 조회한다. */

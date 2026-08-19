@@ -8,6 +8,7 @@ import com.sodosiro.domain.course.controller.dto.CourseRecommendRequest;
 import com.sodosiro.domain.course.controller.dto.CourseRecommendResponse;
 import com.sodosiro.domain.course.service.CourseConfirmationService;
 import com.sodosiro.domain.course.service.CourseRecommendationService;
+import com.sodosiro.domain.course.specification.CourseSpecification;
 import com.sodosiro.global.resolver.LoginUser;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/courses")
-public class CourseController {
+public class CourseController implements CourseSpecification {
 
     private final CourseRecommendationService courseRecommendationService;
     private final CourseConfirmationService courseConfirmationService;

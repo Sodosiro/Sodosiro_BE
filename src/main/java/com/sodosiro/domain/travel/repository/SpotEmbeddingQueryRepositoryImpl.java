@@ -8,6 +8,7 @@ import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sodosiro.domain.travel.entity.QSpotEmbedding;
 import com.sodosiro.domain.travel.entity.QTouristSpot;
+import java.math.BigDecimal;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -104,6 +105,42 @@ public class SpotEmbeddingQueryRepositoryImpl implements SpotEmbeddingQueryRepos
                 .orderBy(distance.asc(), candidate.contentId.asc())
                 .limit(limit)
                 .fetch();
+    }
+
+    /**
+     * 카테고리 + 반경(haversine, km) 하드 필터(WHERE)를 SQL에서 직접 계산한 뒤,
+     * 그 안에서 코사인 거리(embedding <=> queryVector) 기준 유사도순으로 상위 limit개를 뽑는다.
+     * 좌표는 정확한 대권거리(great-circle distance) 공식을 SQL로 그대로 옮긴 것이라 bbox 근사보다 정확하다.
+     */
+    @Override
+    public List<RelatedEmbeddingCandidate> findAlternativeCandidates(Long targetContentId, Integer category, BigDecimal centerLat, BigDecimal centerLon, float[] queryEmbedding, double radiusKm, int limit) {
+
+        String sql = "SELECT e.content_id, e.embedding <=> CAST(:queryVector AS vector) AS distance "
+                + "FROM spot_embedding e JOIN tourist_spot s ON s.content_id = e.content_id "
+                + "WHERE s.category = :category AND s.content_id <> :targetContentId "
+                + "AND s.map_x IS NOT NULL AND s.map_y IS NOT NULL AND e.embedding IS NOT NULL "
+                + "AND (6371 * acos(LEAST(1, GREATEST(-1, "
+                + "cos(radians(:centerLat)) * cos(radians(s.map_y)) * cos(radians(s.map_x) - radians(:centerLon)) "
+                + "+ sin(radians(:centerLat)) * sin(radians(s.map_y)))))) <= :radiusKm "
+                + "ORDER BY e.embedding <=> CAST(:queryVector AS vector) LIMIT :limit";
+
+        List<?> rows = entityManager.createNativeQuery(sql)
+                .setParameter("queryVector", toVectorLiteral(queryEmbedding))
+                .setParameter("category", category)
+                .setParameter("targetContentId", targetContentId)
+                .setParameter("centerLat", centerLat)
+                .setParameter("centerLon", centerLon)
+                .setParameter("radiusKm", radiusKm)
+                .setParameter("limit", limit)
+                .getResultList();
+
+        return rows.stream()
+                .map(row -> {
+                    Object[] columns = (Object[]) row;
+                    return new RelatedEmbeddingCandidate(
+                            ((Number) columns[0]).longValue(), ((Number) columns[1]).doubleValue());
+                })
+                .toList();
     }
 
     private static String toVectorLiteral(float[] embedding) {
