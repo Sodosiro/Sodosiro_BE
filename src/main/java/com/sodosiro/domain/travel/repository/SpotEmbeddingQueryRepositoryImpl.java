@@ -147,6 +147,7 @@ public class SpotEmbeddingQueryRepositoryImpl implements SpotEmbeddingQueryRepos
                 .toList();
     }
 
+    //float[] 배열(임베딩 벡터)을 PostgreSQL의 pgvector가 인식할 수 있는 텍스트 포맷으로 변환
     private static String toVectorLiteral(float[] embedding) {
         StringBuilder builder = new StringBuilder(embedding.length * 8).append('[');
         for (int i = 0; i < embedding.length; i++) {
