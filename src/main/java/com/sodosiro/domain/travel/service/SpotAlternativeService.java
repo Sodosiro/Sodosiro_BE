@@ -10,6 +10,8 @@ import com.sodosiro.domain.travel.repository.SpotEmbeddingRepository;
 import com.sodosiro.domain.travel.repository.TouristSpotRepository;
 import com.sodosiro.global.payload.code.error.TravelErrorCode;
 import com.sodosiro.global.payload.exception.GeneralException;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -50,10 +52,21 @@ public class SpotAlternativeService {
             throw new GeneralException(TravelErrorCode._SPOT_COORDINATE_MISSING);
         }
 
-        List<RelatedEmbeddingCandidate> candidates = List.of();
+        Set<Long> excludedIds = new LinkedHashSet<>();
+        excludedIds.add(targetContentId);
+        List<RelatedEmbeddingCandidate> candidates = new ArrayList<>();
 
         for (double radiusKm : RADIUS_STEPS_KM) {
-            candidates = spotEmbeddingRepository.findAlternativeCandidates(targetContentId, target.getCategory(), target.getMapY(), target.getMapX(), targetEmbedding.getEmbedding(), radiusKm, ALTERNATIVE_SIZE);
+            int needCount = ALTERNATIVE_SIZE - candidates.size();
+
+            List<RelatedEmbeddingCandidate> stepCandidates = spotEmbeddingRepository.findAlternativeCandidates(
+                    target.getCategory(), target.getMapY(), target.getMapX(),
+                    targetEmbedding.getEmbedding(), radiusKm, needCount, excludedIds);
+
+            for (RelatedEmbeddingCandidate candidate : stepCandidates) {
+                excludedIds.add(candidate.contentId());
+                candidates.add(candidate);
+            }
 
             if (candidates.size() >= ALTERNATIVE_SIZE) {
                 break;
@@ -65,14 +78,19 @@ public class SpotAlternativeService {
     }
 
     private List<TouristSpotSummaryResponse> toResponses(List<Long> ids, Long userId) {
+
         if (ids.isEmpty()) {
             return List.of();
         }
+
         Map<Long, TouristSpot> spots = touristSpotRepository.findAllById(ids).stream()
                 .collect(Collectors.toMap(TouristSpot::getContentId, Function.identity()));
+
         Set<Long> likedIds = userId == null ? Set.of()
                 : spotLikeRepository.findLikedContentIdsByUserIdAndContentIds(userId, ids);
+
         Map<Long, String> regionByContentId = regionNameResolver.resolveByContentId(spots.values());
+
         return ids.stream()
                 .map(spots::get)
                 .filter(Objects::nonNull)

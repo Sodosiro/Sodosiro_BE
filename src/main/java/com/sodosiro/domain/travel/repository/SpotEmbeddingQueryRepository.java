@@ -2,6 +2,7 @@ package com.sodosiro.domain.travel.repository;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Set;
 
 public interface SpotEmbeddingQueryRepository {
 
@@ -19,10 +20,14 @@ public interface SpotEmbeddingQueryRepository {
     List<RelatedEmbeddingCandidate> findRelatedCandidates(Long contentId, int limit);
 
     /**
-     * targetContentId와 같은 카테고리이면서 (centerLat, centerLon)으로부터 radiusKm 이내인 후보를,
+     * category가 같고 (centerLat, centerLon)으로부터 radiusKm 이내이며 excludeContentIds에 없는 후보를,
      * 코사인 거리(embedding <=> queryVector) 기준 유사도순으로 상위 limit개 반환한다.
+     * 반경을 넓혀가며 여러 번 호출할 때 이미 채택한 후보(더 가까운 반경에서 찾은 것)를 다시 뽑지 않도록
+     * 호출부가 excludeContentIds를 누적해서 넘긴다.
      */
-    List<RelatedEmbeddingCandidate> findAlternativeCandidates(Long targetContentId, Integer category, BigDecimal centerLat, BigDecimal centerLon, float[] queryEmbedding, double radiusKm, int limit);
+    List<RelatedEmbeddingCandidate> findAlternativeCandidates(
+            Integer category, BigDecimal centerLat, BigDecimal centerLon, float[] queryEmbedding,
+            double radiusKm, int limit, Set<Long> excludeContentIds);
 
     record RelatedEmbeddingCandidate(Long contentId, Double distance) { }
 }
