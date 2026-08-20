@@ -67,6 +67,7 @@ public class CourseConfirmationService {
         Map<Long, TouristSpot> spotsById = findSpotsByContentId(days);
         Map<Integer, LocalDate> datesByDay = course.getDays().stream()
                 .collect(Collectors.toMap(Course.DaySnapshot::day, Course.DaySnapshot::date));
+
         List<Course.DaySnapshot> rebuiltDays = days.stream()
                 .map(dayConfirm -> toSnapshot(dayConfirm, spotsById, course.getMustVisitContentId(), datesByDay))
                 .toList();
@@ -106,10 +107,12 @@ public class CourseConfirmationService {
     }
 
     private Map<Long, TouristSpot> findSpotsByContentId(List<DayConfirm> days) {
+
         List<Long> contentIds = days.stream()
                 .flatMap(day -> day.contentIds().stream())
                 .distinct()
                 .toList();
+
         List<TouristSpot> spots = touristSpotRepository.findAllById(contentIds);
         if (spots.size() != contentIds.size()) {
             throw new GeneralException(CourseErrorCode._CONTENT_NOT_FOUND);

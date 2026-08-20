@@ -135,8 +135,18 @@ public class Course {
     public void confirm(TransportMode transportMode, List<DaySnapshot> days) {
         this.transportMode = transportMode;
         this.days = days;
+        if (mustVisitContentId != null && !containsMustVisitSpot(days)) {
+            this.mustVisitContentId = null;
+        }
         this.isConfirmed = true;
         this.updatedAt = LocalDateTime.now();
+    }
+
+    /** 확정 과정에서 필수 방문지가 목록에서 빠졌다면 mustVisitContentId도 함께 정리해 스냅샷과 어긋나지 않게 한다 */
+    private static boolean containsMustVisitSpot(List<DaySnapshot> days) {
+        return days.stream()
+                .flatMap(day -> day.spots().stream())
+                .anyMatch(SpotSnapshot::mustVisit);
     }
 
     public List<TravelStyle> travelStylesOrEmpty() {
