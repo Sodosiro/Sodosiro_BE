@@ -40,8 +40,7 @@ public record TouristSpotSummaryResponse(
         );
     }
 
-    public static TouristSpotSummaryResponse from(
-            TouristSpot spot, Popularity popularity, boolean liked, String region) {
+    public static TouristSpotSummaryResponse from(TouristSpot spot, Popularity popularity, boolean liked, String region) {
         return from(spot, popularity, liked, region, List.of());
     }
 

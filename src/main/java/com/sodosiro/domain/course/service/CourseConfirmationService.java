@@ -50,6 +50,7 @@ public class CourseConfirmationService {
     public CourseConfirmPublicTransportResponse confirmPublicTransport(Long userId, CourseConfirmPublicTransportRequest request) {
 
         Map<Long, TouristSpot> spotsById = confirmCourse(userId, request.courseId(), request.days(), TransportMode.PUBLIC_TRANSPORT);
+
         List<CourseConfirmPublicTransportResponse.DayPublicTransportRoute> days = request.days().stream()
                 .map(dayConfirm -> new CourseConfirmPublicTransportResponse.DayPublicTransportRoute(
                         dayConfirm.day(), calculatePublicTransportDetails(toWaypoints(dayConfirm, spotsById))))
@@ -64,7 +65,6 @@ public class CourseConfirmationService {
                 .orElseThrow(() -> new GeneralException(CourseErrorCode._COURSE_NOT_FOUND));
 
         Map<Long, TouristSpot> spotsById = findSpotsByContentId(days);
-
         Map<Integer, LocalDate> datesByDay = course.getDays().stream()
                 .collect(Collectors.toMap(Course.DaySnapshot::day, Course.DaySnapshot::date));
 
@@ -76,8 +76,7 @@ public class CourseConfirmationService {
         return spotsById;
     }
 
-    private Course.DaySnapshot toSnapshot(DayConfirm dayConfirm, Map<Long, TouristSpot> spotsById, Long mustVisitContentId,
-            Map<Integer, LocalDate> datesByDay) {
+    private Course.DaySnapshot toSnapshot(DayConfirm dayConfirm, Map<Long, TouristSpot> spotsById, Long mustVisitContentId, Map<Integer, LocalDate> datesByDay) {
 
         List<Course.SpotSnapshot> spots = dayConfirm.contentIds().stream()
                 .map(spotsById::get)
@@ -86,7 +85,6 @@ public class CourseConfirmationService {
                         spot.getMapX(), spot.getMapY(), spot.getCategory(),
                         spot.getContentId().equals(mustVisitContentId)))
                 .toList();
-
         return new Course.DaySnapshot(dayConfirm.day(), datesByDay.get(dayConfirm.day()), spots);
     }
 
@@ -98,7 +96,7 @@ public class CourseConfirmationService {
         throw new IllegalStateException("예상하지 못한 경로 계산 결과 타입입니다.");
     }
 
-    private List<com.sodosiro.domain.route.odsay.dto.OdsayRouteDetailResponse> calculatePublicTransportDetails(
+    private List<com.sodosiro.domain.route.kakao.dto.KakaoTransitRouteResult> calculatePublicTransportDetails(
             List<RouteWaypoint> waypoints) {
         AdjacentRouteResult result = routeCalculationService
                 .calculateAdjacentRoutes(waypoints, TransportMode.PUBLIC_TRANSPORT);
@@ -109,10 +107,12 @@ public class CourseConfirmationService {
     }
 
     private Map<Long, TouristSpot> findSpotsByContentId(List<DayConfirm> days) {
+
         List<Long> contentIds = days.stream()
                 .flatMap(day -> day.contentIds().stream())
                 .distinct()
                 .toList();
+
         List<TouristSpot> spots = touristSpotRepository.findAllById(contentIds);
         if (spots.size() != contentIds.size()) {
             throw new GeneralException(CourseErrorCode._CONTENT_NOT_FOUND);

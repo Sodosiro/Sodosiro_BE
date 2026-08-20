@@ -1,5 +1,9 @@
 package com.sodosiro.domain.course.specification;
 
+import com.sodosiro.domain.course.controller.dto.CourseConfirmCarRequest;
+import com.sodosiro.domain.course.controller.dto.CourseConfirmCarResponse;
+import com.sodosiro.domain.course.controller.dto.CourseConfirmPublicTransportRequest;
+import com.sodosiro.domain.course.controller.dto.CourseConfirmPublicTransportResponse;
 import com.sodosiro.domain.course.controller.dto.CourseRecommendRequest;
 import com.sodosiro.domain.course.controller.dto.CourseRecommendResponse;
 import com.sodosiro.global.resolver.LoginUser;
@@ -32,5 +36,45 @@ public interface CourseSpecification {
                     required = true
             )
             @RequestBody @Valid CourseRecommendRequest request
+    );
+
+    @Operation(
+            summary = "코스 확정 (자차)",
+            description = "프론트에서 최종 확정한 일자별 관광지 순서를 받아 코스를 확정 상태(is_confirmed=true)로 전환하고, "
+                    + "카카오 자동차 길찾기 API로 계산한 구간별 소요시간/거리와 지도 표시용 경로 좌표(코너 좌표)를 함께 반환합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "코스 확정 및 자차 경로 계산 성공"),
+            @ApiResponse(responseCode = "400", description = "요청 파라미터 유효성 검증 실패 (예: 일자별 관광지 목록 누락)"),
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자"),
+            @ApiResponse(responseCode = "404", description = "코스 또는 관광지를 찾을 수 없음")
+    })
+    public ResponseEntity<CourseConfirmCarResponse> confirmCar(
+            @Parameter(hidden = true) @LoginUser Long userId,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "확정할 코스 ID와 일자별 최종 관광지 순서",
+                    required = true
+            )
+            @RequestBody @Valid CourseConfirmCarRequest request
+    );
+
+    @Operation(
+            summary = "코스 확정 (대중교통)",
+            description = "프론트에서 최종 확정한 일자별 관광지 순서를 받아 코스를 확정 상태(is_confirmed=true)로 전환하고, "
+                    + "카카오 대중교통 길찾기 API로 계산한 구간별 소요시간/거리/환승/요금과 지도 표시용 경로 좌표(단계별 좌표 포함)를 함께 반환합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "코스 확정 및 대중교통 경로 계산 성공"),
+            @ApiResponse(responseCode = "400", description = "요청 파라미터 유효성 검증 실패 (예: 일자별 관광지 목록 누락)"),
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자"),
+            @ApiResponse(responseCode = "404", description = "코스 또는 관광지를 찾을 수 없음")
+    })
+    public ResponseEntity<CourseConfirmPublicTransportResponse> confirmPublicTransport(
+            @Parameter(hidden = true) @LoginUser Long userId,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "확정할 코스 ID와 일자별 최종 관광지 순서",
+                    required = true
+            )
+            @RequestBody @Valid CourseConfirmPublicTransportRequest request
     );
 }

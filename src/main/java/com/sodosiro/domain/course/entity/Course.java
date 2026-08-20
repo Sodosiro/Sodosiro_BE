@@ -1,5 +1,6 @@
 package com.sodosiro.domain.course.entity;
 
+import com.sodosiro.domain.course.constants.CourseStatus;
 import com.sodosiro.domain.course.constants.TravelStyle;
 import com.sodosiro.domain.route.dto.TransportMode;
 import com.sodosiro.domain.user.entity.User;
@@ -100,6 +101,11 @@ public class Course {
     @Comment("수정 일시")
     private LocalDateTime updatedAt;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", length = 20, nullable = false)
+    @Comment("여행 상태 (UPCOMING: 예정, IN_PROGRESS: 진행 중, FINISHED: 종료)")
+    private CourseStatus status;
+
     @PrePersist
     private void prePersist() {
         this.createdAt = LocalDateTime.now();
@@ -122,14 +128,25 @@ public class Course {
         course.aiMessage = aiMessage;
         course.days = days;
         course.isConfirmed = false;
+        course.status = CourseStatus.UPCOMING;
         return course;
     }
 
     public void confirm(TransportMode transportMode, List<DaySnapshot> days) {
         this.transportMode = transportMode;
         this.days = days;
+        if (mustVisitContentId != null && !containsMustVisitSpot(days)) {
+            this.mustVisitContentId = null;
+        }
         this.isConfirmed = true;
         this.updatedAt = LocalDateTime.now();
+    }
+
+    /** 확정 과정에서 필수 방문지가 목록에서 빠졌다면 mustVisitContentId도 함께 정리해 스냅샷과 어긋나지 않게 한다 */
+    private static boolean containsMustVisitSpot(List<DaySnapshot> days) {
+        return days.stream()
+                .flatMap(day -> day.spots().stream())
+                .anyMatch(SpotSnapshot::mustVisit);
     }
 
     public List<TravelStyle> travelStylesOrEmpty() {
