@@ -86,6 +86,8 @@ spring:
 kakao:
   mobility:
     rest-api-key: ${KAKAO_CLIENT_ID}
+  map:
+    rest-api-key: ${KAKAO_CLIENT_ID}
 
 odsay:
   api:

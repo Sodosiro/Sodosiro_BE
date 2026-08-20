@@ -38,18 +38,19 @@ public class CourseConfirmationService {
     private final CourseRepository courseRepository;
 
     public CourseConfirmCarResponse confirmCar(Long userId, CourseConfirmCarRequest request) {
+
         Map<Long, TouristSpot> spotsById = confirmCourse(userId, request.courseId(), request.days(), TransportMode.CAR);
+
         List<CourseConfirmCarResponse.DayCarRoute> days = request.days().stream()
-                .map(dayConfirm -> new CourseConfirmCarResponse.DayCarRoute(
-                        dayConfirm.day(), calculateCarLegs(toWaypoints(dayConfirm, spotsById))))
+                .map(dayConfirm -> new CourseConfirmCarResponse.DayCarRoute(dayConfirm.day(), calculateCarLegs(toWaypoints(dayConfirm, spotsById))))
                 .toList();
         return new CourseConfirmCarResponse(days);
     }
 
-    public CourseConfirmPublicTransportResponse confirmPublicTransport(
-            Long userId, CourseConfirmPublicTransportRequest request) {
-        Map<Long, TouristSpot> spotsById =
-                confirmCourse(userId, request.courseId(), request.days(), TransportMode.PUBLIC_TRANSPORT);
+    public CourseConfirmPublicTransportResponse confirmPublicTransport(Long userId, CourseConfirmPublicTransportRequest request) {
+
+        Map<Long, TouristSpot> spotsById = confirmCourse(userId, request.courseId(), request.days(), TransportMode.PUBLIC_TRANSPORT);
+
         List<CourseConfirmPublicTransportResponse.DayPublicTransportRoute> days = request.days().stream()
                 .map(dayConfirm -> new CourseConfirmPublicTransportResponse.DayPublicTransportRoute(
                         dayConfirm.day(), calculatePublicTransportDetails(toWaypoints(dayConfirm, spotsById))))
@@ -58,8 +59,8 @@ public class CourseConfirmationService {
     }
 
     /** draft 소유자 검증 후 제출된 최종 장소/순서로 draft를 확정 상태로 덮어쓴다. */
-    private Map<Long, TouristSpot> confirmCourse(
-            Long userId, Long courseId, List<DayConfirm> days, TransportMode transportMode) {
+    private Map<Long, TouristSpot> confirmCourse(Long userId, Long courseId, List<DayConfirm> days, TransportMode transportMode) {
+
         Course course = courseRepository.findByIdAndUserId(courseId, userId)
                 .orElseThrow(() -> new GeneralException(CourseErrorCode._COURSE_NOT_FOUND));
 
@@ -74,9 +75,8 @@ public class CourseConfirmationService {
         return spotsById;
     }
 
-    private Course.DaySnapshot toSnapshot(
-            DayConfirm dayConfirm, Map<Long, TouristSpot> spotsById, Long mustVisitContentId,
-            Map<Integer, LocalDate> datesByDay) {
+    private Course.DaySnapshot toSnapshot(DayConfirm dayConfirm, Map<Long, TouristSpot> spotsById, Long mustVisitContentId, Map<Integer, LocalDate> datesByDay) {
+
         List<Course.SpotSnapshot> spots = dayConfirm.contentIds().stream()
                 .map(spotsById::get)
                 .map(spot -> new Course.SpotSnapshot(
@@ -95,7 +95,7 @@ public class CourseConfirmationService {
         throw new IllegalStateException("예상하지 못한 경로 계산 결과 타입입니다.");
     }
 
-    private List<com.sodosiro.domain.route.odsay.dto.OdsayRouteDetailResponse> calculatePublicTransportDetails(
+    private List<com.sodosiro.domain.route.kakao.dto.KakaoTransitRouteResult> calculatePublicTransportDetails(
             List<RouteWaypoint> waypoints) {
         AdjacentRouteResult result = routeCalculationService
                 .calculateAdjacentRoutes(waypoints, TransportMode.PUBLIC_TRANSPORT);

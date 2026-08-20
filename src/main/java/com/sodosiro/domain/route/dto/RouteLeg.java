@@ -1,12 +1,15 @@
 package com.sodosiro.domain.route.dto;
 
-public record RouteLeg(Long fromId, Long toId, Long durationSeconds, Long distanceMeters, boolean success) {
+import java.util.List;
 
-    public static RouteLeg success(Long fromId, Long toId, Long durationSeconds, Long distanceMeters) {
-        return new RouteLeg(fromId, toId, durationSeconds, distanceMeters, true);
+public record RouteLeg(Long fromId, Long toId, Long durationSeconds, Long distanceMeters, List<RouteCoordinate> path, boolean success) {
+
+    public static RouteLeg success(
+            Long fromId, Long toId, Long durationSeconds, Long distanceMeters, List<RouteCoordinate> path) {
+        return new RouteLeg(fromId, toId, durationSeconds, distanceMeters, path, true);
     }
 
     public static RouteLeg failure(Long fromId, Long toId) {
-        return new RouteLeg(fromId, toId, null, null, false);
+        return new RouteLeg(fromId, toId, null, null, List.of(), false);
     }
 }
