@@ -62,15 +62,12 @@ public class KakaoTransitDirectionsClient {
                 ? List.of()
                 : route.steps().stream().filter(Objects::nonNull).map(KakaoTransitDirectionsClient::toStepResult).toList();
 
-        List<RouteCoordinate> path = steps.stream().flatMap(step -> step.path().stream()).toList();
-
         return KakaoTransitRouteResult.success(
                 route.properties().type(),
                 route.properties().totalTime(),
                 route.properties().totalDistance(),
                 route.properties().transfers(),
                 fareValue(route.properties().fare()),
-                path,
                 steps
         );
     }
@@ -103,7 +100,7 @@ public class KakaoTransitDirectionsClient {
         return properties.vehicles().stream().filter(Objects::nonNull).map(KakaoTransitVehicle::name).toList();
     }
 
-    private static List<RouteCoordinate> toCoordinates(KakaoTransitPath path) {
+    static List<RouteCoordinate> toCoordinates(KakaoTransitPath path) {
         if (path == null || path.points() == null) {
             return List.of();
         }
