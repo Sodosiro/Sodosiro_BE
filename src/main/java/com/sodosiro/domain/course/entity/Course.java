@@ -1,5 +1,6 @@
 package com.sodosiro.domain.course.entity;
 
+import com.sodosiro.domain.course.constants.CourseStatus;
 import com.sodosiro.domain.course.constants.TravelStyle;
 import com.sodosiro.domain.route.dto.TransportMode;
 import com.sodosiro.domain.user.entity.User;
@@ -100,6 +101,11 @@ public class Course {
     @Comment("수정 일시")
     private LocalDateTime updatedAt;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", length = 20, nullable = false)
+    @Comment("여행 상태 (UPCOMING: 예정, IN_PROGRESS: 진행 중, FINISHED: 종료)")
+    private CourseStatus status;
+
     @PrePersist
     private void prePersist() {
         this.createdAt = LocalDateTime.now();
@@ -122,6 +128,7 @@ public class Course {
         course.aiMessage = aiMessage;
         course.days = days;
         course.isConfirmed = false;
+        course.status = CourseStatus.UPCOMING;
         return course;
     }
 
