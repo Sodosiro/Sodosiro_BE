@@ -81,8 +81,7 @@ public class TravelSpotController implements TravelSpotSpecification {
      */
     @GetMapping("/spots/alternatives")
     @Override
-    public ResponseEntity<List<TouristSpotSummaryResponse>> getSpotAlternatives(
-            @RequestParam Long contentId, @LoginUser Long userId) {
+    public ResponseEntity<List<TouristSpotSummaryResponse>> getSpotAlternatives(@RequestParam Long contentId, @LoginUser Long userId) {
         return ResponseEntity.ok(spotAlternativeService.getAlternatives(contentId, userId));
     }
 
