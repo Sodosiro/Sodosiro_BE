@@ -20,7 +20,7 @@ public class NotificationFacadeImpl implements NotificationFacade {
 
     @Override
     @Transactional
-    public void create(NotificationCommand command) {
+    public boolean create(NotificationCommand command) {
         LocalDateTime now = LocalDateTime.now();
         if (command.dedupeKey() != null
                 && command.cooldownUntil() != null
@@ -31,7 +31,7 @@ public class NotificationFacadeImpl implements NotificationFacade {
                         now,
                         command.cooldownUntil()
                 ) == 0) {
-            return;
+            return false;
         }
 
         Notification notification = notificationRepository.save(Notification.create(
@@ -42,5 +42,6 @@ public class NotificationFacadeImpl implements NotificationFacade {
                 command.payload()
         ));
         eventPublisher.publishEvent(new NotificationCreatedEvent(notification.getId(), notification.getUserId()));
+        return true;
     }
 }
