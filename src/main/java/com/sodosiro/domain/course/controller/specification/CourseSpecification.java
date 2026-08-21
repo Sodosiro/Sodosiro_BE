@@ -5,6 +5,7 @@ import com.sodosiro.domain.course.controller.dto.CourseConfirmCarRequest;
 import com.sodosiro.domain.course.controller.dto.CourseConfirmCarResponse;
 import com.sodosiro.domain.course.controller.dto.CourseConfirmPublicTransportRequest;
 import com.sodosiro.domain.course.controller.dto.CourseConfirmPublicTransportResponse;
+import com.sodosiro.domain.course.controller.dto.CourseDetailResponse;
 import com.sodosiro.domain.course.controller.dto.CourseRecommendRequest;
 import com.sodosiro.domain.course.controller.dto.CourseRecommendResponse;
 import com.sodosiro.global.resolver.LoginUser;
@@ -25,6 +26,18 @@ public interface CourseSpecification {
                     + "코스에는 이름 필드가 없으므로 displayName 은 대표 스팟명으로 합성되고(예: \"영진횟집 외 9곳\"), "
                     + "thumbnail 은 첫 스팟의 이미지입니다.")
     ResponseEntity<MyCourseListResponse> getMyCourses(Long userId, CourseStatus status);
+
+    @Operation(summary = "코스 상세(일자별 스팟) 조회",
+            description = "코스의 일자별 스팟 목록을 방문 순서대로 반환합니다. 각 스팟의 gpsVerified 는 해당 코스·일자에서 "
+                    + "이미 GPS 인증(POST /api/v1/gps)을 마쳤는지를 나타냅니다. 현장 GPS 인증 화면에서 사용합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "코스 상세 조회 성공"),
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자"),
+            @ApiResponse(responseCode = "404", description = "코스를 찾을 수 없음(본인 소유가 아닌 경우 포함)")
+    })
+    ResponseEntity<CourseDetailResponse> getCourseDetail(
+            @Parameter(hidden = true) @LoginUser Long userId,
+            @Parameter(description = "조회할 코스 ID") Long courseId);
 
     @Operation(
             summary = "AI 코스 추천 생성",

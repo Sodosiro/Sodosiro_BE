@@ -5,6 +5,7 @@ import com.sodosiro.domain.course.controller.dto.CourseConfirmCarResponse;
 import com.sodosiro.domain.course.controller.dto.CourseConfirmPublicTransportRequest;
 import com.sodosiro.domain.course.controller.dto.CourseConfirmPublicTransportResponse;
 import com.sodosiro.domain.course.constants.CourseStatus;
+import com.sodosiro.domain.course.controller.dto.CourseDetailResponse;
 import com.sodosiro.domain.course.controller.dto.CourseRecommendRequest;
 import com.sodosiro.domain.course.controller.dto.CourseRecommendResponse;
 import com.sodosiro.domain.course.controller.dto.MyCourseListResponse;
@@ -18,6 +19,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -38,6 +40,12 @@ public class CourseController implements CourseSpecification {
             @LoginUser Long userId,
             @RequestParam(required = false) CourseStatus status) {
         return ResponseEntity.ok(courseQueryService.getMyCourses(userId, status));
+    }
+
+    @GetMapping("/{courseId}")
+    public ResponseEntity<CourseDetailResponse> getCourseDetail(
+            @LoginUser Long userId, @PathVariable Long courseId) {
+        return ResponseEntity.ok(courseQueryService.getCourseDetail(userId, courseId));
     }
 
     @PostMapping("/recommendations")

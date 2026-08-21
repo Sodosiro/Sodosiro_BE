@@ -18,7 +18,7 @@ public record MyCourseListResponse(List<MyCourse> courses) {
         public static MyCourse from(Course course) {
             return new MyCourse(
                     course.getId(),
-                    displayName(course),
+                    course.displayName(),
                     course.getStartDate(),
                     course.getEndDate(),
                     course.getStatus(),
@@ -26,31 +26,12 @@ public record MyCourseListResponse(List<MyCourse> courses) {
             );
         }
 
-        /** 코스에 이름 필드가 없어 대표 스팟명 + 스팟 수로 합성한다 (예: "설악산 국립공원 외 3곳"). */
-        private static String displayName(Course course) {
-            List<Course.SpotSnapshot> spots = allSpots(course);
-            if (spots.isEmpty()) {
-                return "여행 코스";
-            }
-            String first = spots.getFirst().title();
-            return spots.size() == 1 ? first : "%s 외 %d곳".formatted(first, spots.size() - 1);
-        }
-
         private static String thumbnail(Course course) {
-            return allSpots(course).stream()
+            return course.allSpots().stream()
                     .map(Course.SpotSnapshot::firstImage)
                     .filter(image -> image != null && !image.isBlank())
                     .findFirst()
                     .orElse(null);
-        }
-
-        private static List<Course.SpotSnapshot> allSpots(Course course) {
-            if (course.getDays() == null) {
-                return List.of();
-            }
-            return course.getDays().stream()
-                    .flatMap(day -> day.spots().stream())
-                    .toList();
         }
     }
 }
