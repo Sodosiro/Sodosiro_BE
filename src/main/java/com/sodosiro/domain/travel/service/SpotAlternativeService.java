@@ -63,6 +63,8 @@ public class SpotAlternativeService {
                     target.getCategory(), target.getMapY(), target.getMapX(),
                     targetEmbedding.getEmbedding(), radiusKm, needCount, excludedIds);
 
+            // 의도적 설계: 사용자 경험을 위해 유사도보다 물리적 거리(반경)를 최우선으로 추천
+            // 반경 내에서만 유사도순 정렬을 유지한 채 루프를 돌며 후보 수집
             for (RelatedEmbeddingCandidate candidate : stepCandidates) {
                 excludedIds.add(candidate.contentId());
                 candidates.add(candidate);

@@ -47,7 +47,7 @@ public class KakaoTransitRouteService {
                         .supplyAsync(() -> buildFullRouteDetail(from, to), executor)
                         .exceptionally(throwable -> {
                             log.warn("대중교통 구간 상세 계산 실패: from={}, to={}", from.id(), to.id(), throwable);
-                            return KakaoTransitRouteResult.failure();
+                            return KakaoTransitRouteResult.failure(from.id(), to.id());
                         });
 
                 futures.add(future);
@@ -79,6 +79,8 @@ public class KakaoTransitRouteService {
                 .toList();
 
         return KakaoTransitRouteResult.success(
+                transitResult.fromId(),
+                transitResult.toId(),
                 transitResult.type(),
                 sumTimeSeconds(mergedSteps),
                 sumDistanceMeters(mergedSteps),

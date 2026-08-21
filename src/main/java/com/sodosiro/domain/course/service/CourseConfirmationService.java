@@ -96,10 +96,10 @@ public class CourseConfirmationService {
         throw new IllegalStateException("예상하지 못한 경로 계산 결과 타입입니다.");
     }
 
-    private List<com.sodosiro.domain.route.kakao.dto.KakaoTransitRouteResult> calculatePublicTransportDetails(
-            List<RouteWaypoint> waypoints) {
-        AdjacentRouteResult result = routeCalculationService
-                .calculateAdjacentRoutes(waypoints, TransportMode.PUBLIC_TRANSPORT);
+    private List<com.sodosiro.domain.route.kakao.dto.KakaoTransitRouteResult> calculatePublicTransportDetails(List<RouteWaypoint> waypoints) {
+
+        AdjacentRouteResult result = routeCalculationService.calculateAdjacentRoutes(waypoints, TransportMode.PUBLIC_TRANSPORT);
+
         if (result instanceof AdjacentRouteResult.PublicTransport publicTransport) {
             return publicTransport.details();
         }

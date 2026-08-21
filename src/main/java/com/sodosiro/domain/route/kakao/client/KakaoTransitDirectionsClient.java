@@ -45,17 +45,17 @@ public class KakaoTransitDirectionsClient {
                     .retrieve()
                     .body(KakaoTransitResponse.class);
 
-            return toRouteResult(response);
+            return toRouteResult(response, origin.id(), destination.id());
         } catch (RestClientException exception) {
             log.warn("카카오 대중교통 길찾기 API 호출 실패: origin={}, destination={}", origin.id(), destination.id(), exception);
-            return KakaoTransitRouteResult.failure();
+            return KakaoTransitRouteResult.failure(origin.id(), destination.id());
         }
     }
 
-    private static KakaoTransitRouteResult toRouteResult(KakaoTransitResponse response) {
+    private static KakaoTransitRouteResult toRouteResult(KakaoTransitResponse response, Long fromId, Long toId) {
         KakaoTransitRoute route = bestRoute(response);
         if (route == null || route.properties() == null) {
-            return KakaoTransitRouteResult.failure();
+            return KakaoTransitRouteResult.failure(fromId, toId);
         }
 
         List<KakaoTransitStepResult> steps = route.steps() == null
@@ -63,6 +63,8 @@ public class KakaoTransitDirectionsClient {
                 : route.steps().stream().filter(Objects::nonNull).map(KakaoTransitDirectionsClient::toStepResult).toList();
 
         return KakaoTransitRouteResult.success(
+                fromId,
+                toId,
                 route.properties().type(),
                 route.properties().totalTime(),
                 route.properties().totalDistance(),

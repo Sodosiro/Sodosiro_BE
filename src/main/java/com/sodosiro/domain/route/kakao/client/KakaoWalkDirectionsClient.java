@@ -41,8 +41,7 @@ public class KakaoWalkDirectionsClient {
 
             return toSteps(response);
         } catch (RestClientException exception) {
-            log.warn("카카오 도보 길찾기 API 호출 실패: start=({}, {}), end=({}, {})",
-                    startX, startY, endX, endY, exception);
+            log.warn("카카오 도보 길찾기 API 호출 실패: start=({}, {}), end=({}, {})", startX, startY, endX, endY, exception);
             return List.of();
         }
     }
