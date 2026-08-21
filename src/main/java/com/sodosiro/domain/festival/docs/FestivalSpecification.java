@@ -13,7 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 
-@Tag(name = "Festival", description = "지역별 축제 조회 API")
+@Tag(name = "축제", description = "지역별 축제 조회 API")
 public interface FestivalSpecification {
 
     @Operation(

@@ -17,7 +17,7 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestHeader;
 
-@Tag(name = "Travel", description = "일반 여행지와 ETL 기반 인기 여행지 조회 API")
+@Tag(name = "여행지", description = "일반 여행지와 ETL 기반 인기 여행지 조회 API")
 public interface TravelSpotSpecification {
 
     @Operation(
