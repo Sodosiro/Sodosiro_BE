@@ -1,6 +1,7 @@
 package com.sodosiro.domain.review.repository;
 
 import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -11,7 +12,10 @@ import com.sodosiro.domain.review.entity.Review;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -82,6 +86,24 @@ public class ReviewQueryRepositoryImpl implements ReviewQueryRepository {
                 )
                 .fetchOne();
         return count == null ? 0L : count;
+    }
+
+    @Override
+    public Set<ReviewKey> findWrittenKeys(Collection<Long> userIds, Collection<Long> contentIds) {
+        if (userIds.isEmpty() || contentIds.isEmpty()) {
+            return Set.of();
+        }
+        return queryFactory
+                .select(Projections.constructor(ReviewKey.class, r.userId, r.contentId))
+                .from(r)
+                .where(
+                        r.userId.in(userIds),
+                        r.contentId.in(contentIds),
+                        r.isDeleted.isFalse()
+                )
+                .fetch()
+                .stream()
+                .collect(Collectors.toUnmodifiableSet());
     }
 
     private OrderSpecifier<?>[] orderBy(ReviewSort sort) {
