@@ -10,4 +10,6 @@ public interface GpsRepository extends JpaRepository<Gps, Long> {
     Optional<Gps> findByCourseIdAndContentIdAndDay(Long courseId, Long contentId, Integer day);
 
     List<Gps> findByCourseId(Long courseId);
+
+    boolean existsByUserIdAndContentId(Long userId, Long contentId);
 }
