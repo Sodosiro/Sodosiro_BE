@@ -12,6 +12,7 @@ import com.sodosiro.domain.course.controller.specification.CourseSpecification;
 import com.sodosiro.domain.course.service.CourseConfirmationService;
 import com.sodosiro.domain.course.service.CourseQueryService;
 import com.sodosiro.domain.course.service.CourseRecommendationService;
+import com.sodosiro.domain.course.controller.specification.CourseSpecification;
 import com.sodosiro.global.resolver.LoginUser;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -46,14 +47,14 @@ public class CourseController implements CourseSpecification {
     }
 
     @PostMapping("/confirm/car")
-    public ResponseEntity<CourseConfirmCarResponse> confirmCar(
-            @LoginUser Long userId, @RequestBody @Valid CourseConfirmCarRequest request) {
+    public ResponseEntity<CourseConfirmCarResponse> confirmCar(@LoginUser Long userId, @RequestBody @Valid CourseConfirmCarRequest request) {
+
         return ResponseEntity.ok(courseConfirmationService.confirmCar(userId, request));
     }
 
     @PostMapping("/confirm/public-transport")
-    public ResponseEntity<CourseConfirmPublicTransportResponse> confirmPublicTransport(
-            @LoginUser Long userId, @RequestBody @Valid CourseConfirmPublicTransportRequest request) {
+    public ResponseEntity<CourseConfirmPublicTransportResponse> confirmPublicTransport(@LoginUser Long userId, @RequestBody @Valid CourseConfirmPublicTransportRequest request) {
+
         return ResponseEntity.ok(courseConfirmationService.confirmPublicTransport(userId, request));
     }
 }

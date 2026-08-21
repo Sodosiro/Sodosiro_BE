@@ -7,9 +7,15 @@ import com.sodosiro.domain.course.controller.dto.CourseConfirmPublicTransportReq
 import com.sodosiro.domain.course.controller.dto.CourseConfirmPublicTransportResponse;
 import com.sodosiro.domain.course.controller.dto.CourseRecommendRequest;
 import com.sodosiro.domain.course.controller.dto.CourseRecommendResponse;
+import com.sodosiro.global.resolver.LoginUser;
 import com.sodosiro.domain.course.controller.dto.MyCourseListResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestBody;
 
 public interface CourseSpecification {
 
@@ -20,17 +26,87 @@ public interface CourseSpecification {
                     + "thumbnail 은 첫 스팟의 이미지입니다.")
     ResponseEntity<MyCourseListResponse> getMyCourses(Long userId, CourseStatus status);
 
-    @Operation(summary = "AI 코스 추천",
-            description = "여행 기간·스타일·필수 방문지를 바탕으로 일자별 코스를 추천하고 미확정 draft 로 저장합니다. "
-                    + "사용자당 미확정 draft 는 1개만 유지되며, 다시 호출하면 기존 draft 를 대체합니다.")
-    ResponseEntity<CourseRecommendResponse> recommend(Long userId, CourseRecommendRequest request);
+    @Operation(
+            summary = "AI 코스 추천 생성",
+            description = "사용자의 입력 조건을 바탕으로 맞춤형 여행 코스를 추천합니다. "
+                    + "여행 기간, 선호 카테고리, 특정 여행지 포함 여부 등을 반영하여 최적의 코스를 구성하며, "
+                    + "로그인한 사용자의 고유 식별자(userId)를 기반으로 코스를 생성합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "코스 추천 성공"),
+            @ApiResponse(responseCode = "400", description = "요청 파라미터 유효성 검증 실패 (예: 필수값 누락, 일자 범위 오류 등)"),
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자")
+    })
+    public ResponseEntity<CourseRecommendResponse> recommend(
+            @Parameter(hidden = true) @LoginUser Long userId,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "코스 추천에 필요한 요청 정보 (여행 일정, 선호 태그, 출발지 등)",
+                    required = true
+            )
+            @RequestBody @Valid CourseRecommendRequest request
+    );
 
-    @Operation(summary = "코스 확정 (자동차)",
-            description = "추천받은 코스를 자동차 이동 기준으로 확정하고, 일자별 구간 경로를 반환합니다.")
-    ResponseEntity<CourseConfirmCarResponse> confirmCar(Long userId, CourseConfirmCarRequest request);
+    @Operation(
+            summary = "코스 확정 (자차)",
+            description = "프론트에서 최종 확정한 일자별 관광지 순서를 받아 코스를 확정 상태(is_confirmed=true)로 전환하고, "
+                    + "카카오 자동차 길찾기 API로 계산한 구간별 소요시간/거리와 지도 표시용 경로 좌표(코너 좌표)를 함께 반환합니다.\n\n"
+                    + "[응답 필드 설명 - days[].legs[]]\n"
+                    + "- day: 여행 일자 (1일차, 2일차 ...)\n"
+                    + "- fromId / toId: 출발/도착 관광지 ID\n"
+                    + "- durationSeconds: 예상 소요 시간(초)\n"
+                    + "- distanceMeters: 이동 거리(m)\n"
+                    + "- tollFare: 통행료(원)\n"
+                    + "- estimatedFuelCost: 예상 유류비(원)\n"
+                    + "- path: 지도에 경로선을 그리기 위한 좌표 목록 (longitude, latitude)\n"
+                    + "- success: 경로 계산 성공 여부 (false면 durationSeconds 등 나머지 값은 모두 null)"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "코스 확정 및 자차 경로 계산 성공"),
+            @ApiResponse(responseCode = "400", description = "요청 파라미터 유효성 검증 실패 (예: 일자별 관광지 목록 누락)"),
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자"),
+            @ApiResponse(responseCode = "404", description = "코스 또는 관광지를 찾을 수 없음")
+    })
+    public ResponseEntity<CourseConfirmCarResponse> confirmCar(
+            @Parameter(hidden = true) @LoginUser Long userId,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "확정할 코스 ID와 일자별 최종 관광지 순서",
+                    required = true
+            )
+            @RequestBody @Valid CourseConfirmCarRequest request
+    );
 
-    @Operation(summary = "코스 확정 (대중교통)",
-            description = "추천받은 코스를 대중교통 이동 기준으로 확정하고, 일자별 구간 경로를 반환합니다.")
-    ResponseEntity<CourseConfirmPublicTransportResponse> confirmPublicTransport(
-            Long userId, CourseConfirmPublicTransportRequest request);
+    @Operation(
+            summary = "코스 확정 (대중교통)",
+            description = "프론트에서 최종 확정한 일자별 관광지 순서를 받아 코스를 확정 상태(is_confirmed=true)로 전환하고, "
+                    + "카카오 대중교통 길찾기 API로 계산한 구간별 소요시간/거리/환승/요금과 지도 표시용 경로 좌표(단계별 좌표 포함)를 함께 반환합니다.\n\n"
+                    + "[응답 필드 설명 - days[].details[]]\n"
+                    + "- day: 여행 일자 (1일차, 2일차 ...)\n"
+                    + "- success: 경로 탐색 성공 여부 (false면 나머지 값은 모두 null)\n"
+                    + "- type: 경로 타입 (카카오 API 반환값)\n"
+                    + "- totalTimeSeconds: 총 소요 시간(초)\n"
+                    + "- totalDistanceMeters: 총 이동 거리(m)\n"
+                    + "- transfers: 환승 횟수\n"
+                    + "- fare: 요금(원)\n"
+                    + "- steps[]: 도보/버스/지하철 등 구간별 상세\n"
+                    + "  - type: 단계 종류 (도보/버스/지하철 등)\n"
+                    + "  - guidance: 안내 문구\n"
+                    + "  - distanceMeters / timeSeconds: 해당 단계 거리(m) / 소요 시간(초)\n"
+                    + "  - stopNames: 정류장/역 이름 목록\n"
+                    + "  - vehicleNames: 버스 번호/지하철 호선 등 노선 이름 목록\n"
+                    + "  - path: 지도에 단계별로 색을 구분해 그릴 좌표 목록 (longitude, latitude)"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "코스 확정 및 대중교통 경로 계산 성공"),
+            @ApiResponse(responseCode = "400", description = "요청 파라미터 유효성 검증 실패 (예: 일자별 관광지 목록 누락)"),
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자"),
+            @ApiResponse(responseCode = "404", description = "코스 또는 관광지를 찾을 수 없음")
+    })
+    public ResponseEntity<CourseConfirmPublicTransportResponse> confirmPublicTransport(
+            @Parameter(hidden = true) @LoginUser Long userId,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "확정할 코스 ID와 일자별 최종 관광지 순서",
+                    required = true
+            )
+            @RequestBody @Valid CourseConfirmPublicTransportRequest request
+    );
 }

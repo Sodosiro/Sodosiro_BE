@@ -86,10 +86,19 @@ spring:
 kakao:
   mobility:
     rest-api-key: ${KAKAO_CLIENT_ID}
+  map:
+    rest-api-key: ${KAKAO_CLIENT_ID}
 
 odsay:
   api:
     key: ${ODSAY_API_KEY}
+
+# 자차 예상 주유비 추정용 상수. 실시간 유가 연동 전까지 임의값으로 운영하며,
+# 유가가 바뀌면 재배포 없이 이 값만 갱신한다.
+route:
+  fuel:
+    price-per-liter-won: ${FUEL_PRICE_PER_LITER_WON:1800}
+    efficiency-km-per-liter: ${FUEL_EFFICIENCY_KM_PER_LITER:10.0}
 
 swagger:
   username: ${SWAGGER_USERNAME:admin}
