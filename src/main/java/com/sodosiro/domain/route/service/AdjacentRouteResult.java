@@ -1,7 +1,7 @@
 package com.sodosiro.domain.route.service;
 
 import com.sodosiro.domain.route.dto.RouteLeg;
-import com.sodosiro.domain.route.odsay.dto.OdsayRouteDetailResponse;
+import com.sodosiro.domain.route.kakao.dto.KakaoTransitRouteResult;
 
 import java.util.List;
 
@@ -10,5 +10,5 @@ public sealed interface AdjacentRouteResult {
 
     record Car(List<RouteLeg> legs) implements AdjacentRouteResult {}
 
-    record PublicTransport(List<OdsayRouteDetailResponse> details) implements AdjacentRouteResult {}
+    record PublicTransport(List<KakaoTransitRouteResult> details) implements AdjacentRouteResult {}
 }

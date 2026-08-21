@@ -8,6 +8,7 @@ import com.sodosiro.domain.course.controller.dto.CourseRecommendRequest;
 import com.sodosiro.domain.course.controller.dto.CourseRecommendResponse;
 import com.sodosiro.domain.course.service.CourseConfirmationService;
 import com.sodosiro.domain.course.service.CourseRecommendationService;
+import com.sodosiro.domain.course.controller.specification.CourseSpecification;
 import com.sodosiro.global.resolver.LoginUser;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/courses")
-public class CourseController {
+public class CourseController implements CourseSpecification {
 
     private final CourseRecommendationService courseRecommendationService;
     private final CourseConfirmationService courseConfirmationService;
@@ -32,14 +33,14 @@ public class CourseController {
     }
 
     @PostMapping("/confirm/car")
-    public ResponseEntity<CourseConfirmCarResponse> confirmCar(
-            @LoginUser Long userId, @RequestBody @Valid CourseConfirmCarRequest request) {
+    public ResponseEntity<CourseConfirmCarResponse> confirmCar(@LoginUser Long userId, @RequestBody @Valid CourseConfirmCarRequest request) {
+
         return ResponseEntity.ok(courseConfirmationService.confirmCar(userId, request));
     }
 
     @PostMapping("/confirm/public-transport")
-    public ResponseEntity<CourseConfirmPublicTransportResponse> confirmPublicTransport(
-            @LoginUser Long userId, @RequestBody @Valid CourseConfirmPublicTransportRequest request) {
+    public ResponseEntity<CourseConfirmPublicTransportResponse> confirmPublicTransport(@LoginUser Long userId, @RequestBody @Valid CourseConfirmPublicTransportRequest request) {
+
         return ResponseEntity.ok(courseConfirmationService.confirmPublicTransport(userId, request));
     }
 }

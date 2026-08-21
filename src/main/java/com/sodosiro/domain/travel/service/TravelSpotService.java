@@ -17,6 +17,8 @@ import com.sodosiro.domain.travel.repository.TravelSpotQueryRepository;
 import com.sodosiro.domain.travel.repository.SpotPopularityRepository;
 import com.sodosiro.domain.user.entity.User;
 import com.sodosiro.domain.user.repository.UserRepository;
+import com.sodosiro.global.payload.code.error.TravelErrorCode;
+import com.sodosiro.global.payload.exception.GeneralException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Arrays;
@@ -28,8 +30,6 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
-import org.springframework.http.HttpStatus;
 
 @Service
 @RequiredArgsConstructor
@@ -101,7 +101,7 @@ public class TravelSpotService {
 
     private TouristSpot findTouristSpotDetail(Long contentId) {
         return queryRepository.findTouristSpotDetail(contentId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "여행지를 찾을 수 없습니다."));
+                .orElseThrow(() -> new GeneralException(TravelErrorCode._TOURIST_SPOT_NOT_FOUND));
     }
 
     private List<ReviewResponse> toLatestReviewResponses(
@@ -132,7 +132,7 @@ public class TravelSpotService {
             return DEFAULT_PAGE_SIZE;
         }
         if (size < 1 || size > MAX_PAGE_SIZE) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "size는 1~100 사이여야 합니다.");
+            throw new GeneralException(TravelErrorCode._INVALID_PAGE_SIZE);
         }
         return size;
     }
@@ -147,7 +147,7 @@ public class TravelSpotService {
         try {
             return new TouristSpotCursor(Long.valueOf(cursor), null);
         } catch (NumberFormatException exception) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "유효하지 않은 cursor입니다.");
+            throw new GeneralException(TravelErrorCode._INVALID_CURSOR);
         }
     }
 
@@ -160,7 +160,7 @@ public class TravelSpotService {
             }
             return new TouristSpotCursor(Long.valueOf(values[1]), Double.valueOf(values[0]));
         } catch (IllegalArgumentException exception) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "유효하지 않은 cursor입니다.");
+            throw new GeneralException(TravelErrorCode._INVALID_CURSOR);
         }
     }
 

@@ -2,7 +2,6 @@ package com.sodosiro.domain.route.service;
 
 import com.sodosiro.domain.route.dto.RouteWaypoint;
 import com.sodosiro.domain.route.dto.TransportMode;
-import com.sodosiro.domain.route.odsay.service.OdsayRouteDetailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,12 +13,12 @@ import java.util.List;
 public class RouteCalculationService {
 
     private final RouteLegTimeService routeLegTimeService;
-    private final OdsayRouteDetailService odsayRouteDetailService;
+    private final KakaoTransitRouteService kakaoTransitRouteService;
 
     public AdjacentRouteResult calculateAdjacentRoutes(List<RouteWaypoint> orderedWaypoints, TransportMode mode) {
         return switch (mode) {
             case CAR -> new AdjacentRouteResult.Car(routeLegTimeService.calculateAdjacentLegTimes(orderedWaypoints));
-            case PUBLIC_TRANSPORT -> new AdjacentRouteResult.PublicTransport(odsayRouteDetailService.calculateAdjacentRouteDetails(orderedWaypoints));
+            case PUBLIC_TRANSPORT -> new AdjacentRouteResult.PublicTransport(kakaoTransitRouteService.calculateAdjacentRouteDetails(orderedWaypoints));
         };
     }
 }
