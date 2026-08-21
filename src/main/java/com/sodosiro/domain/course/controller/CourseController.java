@@ -8,7 +8,7 @@ import com.sodosiro.domain.course.controller.dto.CourseRecommendRequest;
 import com.sodosiro.domain.course.controller.dto.CourseRecommendResponse;
 import com.sodosiro.domain.course.service.CourseConfirmationService;
 import com.sodosiro.domain.course.service.CourseRecommendationService;
-import com.sodosiro.domain.course.specification.CourseSpecification;
+import com.sodosiro.domain.course.controller.specification.CourseSpecification;
 import com.sodosiro.global.resolver.LoginUser;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
