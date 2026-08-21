@@ -12,7 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
 
-@Tag(name = "Region", description = "시도·시군구 코드와 시군구별 지역 소개 조회 API")
+@Tag(name = "지역", description = "시도·시군구 코드와 시군구별 지역 소개 조회 API")
 public interface RegionIntroSpecification {
 
     @Operation(

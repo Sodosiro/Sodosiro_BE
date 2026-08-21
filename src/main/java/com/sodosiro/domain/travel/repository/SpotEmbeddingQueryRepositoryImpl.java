@@ -43,7 +43,7 @@ public class SpotEmbeddingQueryRepositoryImpl implements SpotEmbeddingQueryRepos
 
         StringBuilder sql = new StringBuilder(
                 "SELECT e.content_id FROM spot_embedding e JOIN tourist_spot s ON s.content_id = e.content_id");
-        sql.append(" WHERE s.sigungu_code = :sigunguCode");
+        sql.append(" WHERE s.ldong_signgu_code = :sigunguCode");
         sql.append(" ORDER BY ");
         if (hasCategoryBoost) {
             sql.append("(CASE WHEN s.category IN (:categoryCodes) THEN 0 ELSE 1 END), ");
@@ -71,7 +71,7 @@ public class SpotEmbeddingQueryRepositoryImpl implements SpotEmbeddingQueryRepos
 
         StringBuilder sql = new StringBuilder(
                 "SELECT e.content_id FROM spot_embedding e JOIN tourist_spot s ON s.content_id = e.content_id");
-        sql.append(" WHERE s.category IN (:requiredCategoryCodes) AND s.sigungu_code = :sigunguCode");
+        sql.append(" WHERE s.category IN (:requiredCategoryCodes) AND s.ldong_signgu_code = :sigunguCode");
         sql.append(" ORDER BY ");
         if (hasBoost) {
             sql.append("(CASE WHEN s.category IN (:boostCategoryCodes) THEN 0 ELSE 1 END), ");

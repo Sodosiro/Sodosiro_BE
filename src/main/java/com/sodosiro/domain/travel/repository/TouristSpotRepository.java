@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface TouristSpotRepository extends JpaRepository<TouristSpot, Long>, TouristSpotQueryRepository {
 
-    List<TouristSpot> findByCategoryInAndSigunguCodeOrderByAvgRatingDesc(List<Integer> categories, String sigunguCode, Pageable pageable);
+    List<TouristSpot> findByCategoryInAndLdongSignguCodeOrderByAvgRatingDesc(List<Integer> categories, String ldongSignguCode, Pageable pageable);
 
-    List<TouristSpot> findBySigunguCodeOrderByAvgRatingDesc(String sigunguCode, Pageable pageable);
+    List<TouristSpot> findByLdongSignguCodeOrderByAvgRatingDesc(String ldongSignguCode, Pageable pageable);
 }

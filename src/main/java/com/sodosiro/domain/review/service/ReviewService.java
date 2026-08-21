@@ -1,12 +1,11 @@
 package com.sodosiro.domain.review.service;
 
+import com.sodosiro.domain.gps.repository.GpsRepository;
 import com.sodosiro.domain.review.constants.ReviewSort;
 import com.sodosiro.domain.review.controller.dto.request.ReviewCreateRequest;
-import com.sodosiro.domain.review.controller.dto.request.ReviewGpsVerificationRequest;
 import com.sodosiro.domain.review.controller.dto.request.ReviewUpdateRequest;
 import com.sodosiro.domain.review.controller.dto.response.MyReviewListResponse;
 import com.sodosiro.domain.review.controller.dto.response.ReviewListResponse;
-import com.sodosiro.domain.review.controller.dto.response.ReviewGpsVerificationResponse;
 import com.sodosiro.domain.review.controller.dto.response.ReviewResponse;
 import com.sodosiro.domain.review.entity.Review;
 import com.sodosiro.domain.review.entity.ReviewImage;
@@ -50,6 +49,7 @@ public class ReviewService {
     private final ReviewImageRepository reviewImageRepository;
     private final TouristSpotRepository touristSpotRepository;
     private final UserRepository userRepository;
+    private final GpsRepository gpsRepository;
     private final S3Service s3Service;
     private final ApplicationEventPublisher eventPublisher;
 
@@ -68,6 +68,9 @@ public class ReviewService {
         eventPublisher.publishEvent(ReviewImageChangedEvent.onlyNew(uploadedUrls));
 
         Review review = Review.create(request.contentId(), userId, request.rating(), request.body());
+        if (gpsRepository.existsByUserIdAndContentId(userId, request.contentId())) {
+            review.verifyGpsVisit();
+        }
         reviewRepository.save(review);
 
         List<ReviewImage> reviewImages = saveImages(review.getId(), uploadedUrls);
@@ -78,26 +81,6 @@ public class ReviewService {
                 .orElseThrow(() -> new GeneralException(UserErrorCode._USER_NOT_FOUND));
 
         return ReviewResponse.of(review, author, spot, reviewImages, userId);
-    }
-
-    @Transactional
-    public ReviewGpsVerificationResponse verifyGpsVisit(
-            Long userId, Long reviewId, ReviewGpsVerificationRequest request) {
-        Review review = reviewRepository.findByIdAndIsDeletedFalse(reviewId)
-                .orElseThrow(() -> new GeneralException(ReviewErrorCode._REVIEW_NOT_FOUND));
-        if (!review.getUserId().equals(userId)) {
-            throw new GeneralException(ReviewErrorCode._REVIEW_FORBIDDEN);
-        }
-        TouristSpot spot = touristSpotRepository.findById(review.getContentId())
-                .orElseThrow(() -> new GeneralException(ReviewErrorCode._SPOT_NOT_FOUND));
-        if (spot.getMapY() == null || spot.getMapX() == null) {
-            throw new GeneralException(ReviewErrorCode._SPOT_LOCATION_UNAVAILABLE);
-        }
-        if (ReviewGpsVerifier.isWithinVerificationRadius(
-                spot.getMapY(), spot.getMapX(), request.latitude(), request.longitude())) {
-            review.verifyGpsVisit();
-        }
-        return ReviewGpsVerificationResponse.from(review);
     }
 
     @Transactional(readOnly = true)
