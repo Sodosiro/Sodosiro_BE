@@ -81,7 +81,7 @@ public class Course {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "transport_mode", length = 20)
-    @Comment("확정 시 선택한 이동수단, 확정 전에는 null")
+    @Comment("추천 생성 시 선택한 이동수단")
     private TransportMode transportMode;
 
     @Column(name = "is_confirmed", nullable = false)
@@ -115,6 +115,7 @@ public class Course {
             Long userId,
             LocalDate startDate,
             LocalDate endDate,
+            TransportMode transportMode,
             List<TravelStyle> travelStyles,
             Long mustVisitContentId,
             String aiMessage,
@@ -123,6 +124,7 @@ public class Course {
         course.userId = userId;
         course.startDate = startDate;
         course.endDate = endDate;
+        course.transportMode = transportMode;
         course.travelStyles = joinTravelStyles(travelStyles);
         course.mustVisitContentId = mustVisitContentId;
         course.aiMessage = aiMessage;

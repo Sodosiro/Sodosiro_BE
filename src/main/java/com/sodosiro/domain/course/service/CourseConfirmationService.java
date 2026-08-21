@@ -64,6 +64,10 @@ public class CourseConfirmationService {
         Course course = courseRepository.findByIdAndUserId(courseId, userId)
                 .orElseThrow(() -> new GeneralException(CourseErrorCode._COURSE_NOT_FOUND));
 
+        if (course.getTransportMode() != transportMode) {
+            throw new GeneralException(CourseErrorCode._TRANSPORT_MODE_MISMATCH);
+        }
+
         Map<Long, TouristSpot> spotsById = findSpotsByContentId(days);
         Map<Integer, LocalDate> datesByDay = course.getDays().stream()
                 .collect(Collectors.toMap(Course.DaySnapshot::day, Course.DaySnapshot::date));

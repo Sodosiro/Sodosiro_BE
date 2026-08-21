@@ -1,6 +1,7 @@
 package com.sodosiro.domain.course.controller.dto;
 
 import com.sodosiro.domain.course.constants.TravelStyle;
+import com.sodosiro.domain.route.dto.TransportMode;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -16,6 +17,9 @@ public record CourseRecommendRequest(
 
         @NotNull(message = "여행 종료일은 필수입니다.")
         LocalDate endDate,
+
+        @NotNull(message = "이동수단은 필수입니다.")
+        TransportMode transportMode,
 
         @Size(max = 2, message = "여행스타일은 최대 2개까지 선택할 수 있습니다.")
         List<TravelStyle> travelStyles,
