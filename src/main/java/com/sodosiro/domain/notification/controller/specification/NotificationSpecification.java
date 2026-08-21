@@ -1,10 +1,14 @@
 package com.sodosiro.domain.notification.controller.specification;
 
 import com.sodosiro.domain.notification.controller.dto.NotificationListResponse;
+import com.sodosiro.domain.notification.controller.dto.NotificationPreferenceRequest;
+import com.sodosiro.domain.notification.controller.dto.NotificationPreferenceResponse;
 import com.sodosiro.domain.notification.controller.dto.PushTokenUpsertRequest;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 
+@Tag(name = "알림", description = "알림 목록·읽음 처리, 기기 푸시 토큰, 푸시 수신 설정 API")
 public interface NotificationSpecification {
 
     @Operation(summary = "알림 목록 조회",
@@ -33,4 +37,14 @@ public interface NotificationSpecification {
             description = "해당 기기를 비활성화해 더 이상 푸시를 보내지 않습니다(로그아웃 시 호출). "
                     + "이미 비활성화됐거나 존재하지 않는 기기여도 성공(204)입니다.")
     ResponseEntity<Void> deleteDevice(Long userId, String deviceId);
+
+    @Operation(summary = "푸시 수신 설정 조회",
+            description = "로그인 사용자의 푸시(FCM) 수신 여부를 조회합니다. 한 번도 설정한 적 없으면 기본값(true)을 반환합니다. "
+                    + "이 설정을 꺼도 앱 내 알림 목록(GET /notifications)에는 계속 쌓이며, FCM 푸시 전송만 막힙니다.")
+    ResponseEntity<NotificationPreferenceResponse> getPreference(Long userId);
+
+    @Operation(summary = "푸시 수신 설정 변경",
+            description = "로그인 사용자의 푸시(FCM) 수신 여부를 켜거나 끕니다. 꺼도 앱 내 알림 목록 적재는 계속되고, "
+                    + "이후 발생하는 알림의 FCM 푸시 전송만 건너뜁니다.")
+    ResponseEntity<NotificationPreferenceResponse> updatePreference(Long userId, NotificationPreferenceRequest request);
 }

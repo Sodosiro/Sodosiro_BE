@@ -2,6 +2,7 @@ package com.sodosiro.domain.notification.controller;
 
 import com.sodosiro.domain.notification.controller.dto.*;
 import com.sodosiro.domain.notification.controller.specification.NotificationSpecification;
+import com.sodosiro.domain.notification.service.NotificationPreferenceService;
 import com.sodosiro.domain.notification.service.NotificationQueryService;
 import com.sodosiro.domain.notification.service.UserDeviceService;
 import com.sodosiro.global.resolver.LoginUser;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 public class NotificationController implements NotificationSpecification {
     private final NotificationQueryService notificationQueryService;
     private final UserDeviceService userDeviceService;
+    private final NotificationPreferenceService notificationPreferenceService;
 
     @GetMapping("/notifications")
     public ResponseEntity<NotificationListResponse> list(
@@ -50,5 +52,17 @@ public class NotificationController implements NotificationSpecification {
     public ResponseEntity<Void> deleteDevice(@LoginUser Long userId, @PathVariable String deviceId) {
         userDeviceService.deactivate(userId, deviceId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/notifications/preferences")
+    public ResponseEntity<NotificationPreferenceResponse> getPreference(@LoginUser Long userId) {
+        return ResponseEntity.ok(new NotificationPreferenceResponse(notificationPreferenceService.isPushEnabled(userId)));
+    }
+
+    @PatchMapping("/notifications/preferences")
+    public ResponseEntity<NotificationPreferenceResponse> updatePreference(
+            @LoginUser Long userId, @Valid @RequestBody NotificationPreferenceRequest request) {
+        boolean updated = notificationPreferenceService.updatePushEnabled(userId, request.pushEnabled());
+        return ResponseEntity.ok(new NotificationPreferenceResponse(updated));
     }
 }

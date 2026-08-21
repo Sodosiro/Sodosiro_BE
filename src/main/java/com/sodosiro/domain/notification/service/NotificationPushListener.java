@@ -23,12 +23,17 @@ public class NotificationPushListener {
 
     private final NotificationRepository notificationRepository;
     private final UserDeviceService userDeviceService;
+    private final NotificationPreferenceService notificationPreferenceService;
     private final FcmSender fcmSender;
 
     @Async("fcmPushExecutor")
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void on(NotificationCreatedEvent event) {
+        if (!notificationPreferenceService.isPushEnabled(event.userId())) {
+            log.debug("푸시 수신 꺼짐, FCM 전송 생략: userId={}, notificationId={}", event.userId(), event.notificationId());
+            return;
+        }
         Notification notification = notificationRepository.findById(event.notificationId()).orElse(null);
         if (notification == null) {
             return;
