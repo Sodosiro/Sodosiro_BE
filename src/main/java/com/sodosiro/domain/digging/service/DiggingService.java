@@ -17,8 +17,6 @@ import com.sodosiro.domain.digging.repository.DiggingImageRepository;
 import com.sodosiro.domain.digging.repository.DiggingLikeRepository;
 import com.sodosiro.domain.digging.repository.DiggingRepository;
 import com.sodosiro.domain.digging.service.event.DiggingImageChangedEvent;
-import com.sodosiro.domain.gps.entity.Gps;
-import com.sodosiro.domain.gps.repository.GpsRepository;
 import com.sodosiro.domain.travel.entity.TouristSpot;
 import com.sodosiro.domain.travel.repository.TouristSpotRepository;
 import com.sodosiro.domain.user.entity.User;
@@ -28,7 +26,6 @@ import com.sodosiro.global.payload.exception.GeneralException;
 import com.sodosiro.global.s3.constants.FileFolder;
 import com.sodosiro.global.s3.service.S3Service;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -54,7 +51,6 @@ public class DiggingService {
     private final DiggingLikeRepository diggingLikeRepository;
     private final DiggingBookmarkRepository diggingBookmarkRepository;
     private final CourseRepository courseRepository;
-    private final GpsRepository gpsRepository;
     private final TouristSpotRepository touristSpotRepository;
     private final UserRepository userRepository;
     private final S3Service s3Service;
@@ -62,19 +58,16 @@ public class DiggingService {
 
     // ---------------- 후보 조회 ----------------
 
-    /** 완료된 코스에서 GPS 인증된 여행지만 디깅 후보로 반환한다. */
+    /** 완료된 코스에 포함된 모든 여행지를 디깅 후보로 반환한다. */
     @Transactional(readOnly = true)
     public DiggingCandidateResponse getCandidates(Long userId, Long courseId) {
         Course course = findFinishedCourse(userId, courseId);
 
-        Set<Long> verifiedContentIds = verifiedContentIds(courseId);
         Set<Long> postedContentIds = diggingRepository.findByCourseIdAndIsDeletedFalse(courseId).stream()
                 .map(Digging::getContentId)
                 .collect(Collectors.toSet());
 
-        List<DiggingCandidateResponse.CandidateSpot> spots = course.getDays().stream()
-                .flatMap(day -> day.spots().stream())
-                .filter(spot -> verifiedContentIds.contains(spot.contentId()))
+        List<DiggingCandidateResponse.CandidateSpot> spots = course.allSpots().stream()
                 // 여러 일자에 같은 스팟이 있을 수 있으므로 contentId 기준으로 중복 제거
                 .collect(Collectors.toMap(
                         Course.SpotSnapshot::contentId,
@@ -98,11 +91,8 @@ public class DiggingService {
     public DiggingResponse create(Long userId, DiggingCreateRequest request, List<MultipartFile> images) {
         validateImageCount(images == null ? 0 : images.size());
 
-        findFinishedCourse(userId, request.courseId());
-
-        if (!verifiedContentIds(request.courseId()).contains(request.contentId())) {
-            throw new GeneralException(DiggingErrorCode._SPOT_NOT_VERIFIED);
-        }
+        Course course = findFinishedCourse(userId, request.courseId());
+        validateCourseSpot(course, request.contentId());
         if (diggingRepository.existsByCourseIdAndContentIdAndIsDeletedFalse(request.courseId(), request.contentId())) {
             throw new GeneralException(DiggingErrorCode._DIGGING_ALREADY_EXISTS);
         }
@@ -261,10 +251,13 @@ public class DiggingService {
         return course;
     }
 
-    private Set<Long> verifiedContentIds(Long courseId) {
-        return gpsRepository.findByCourseId(courseId).stream()
-                .map(Gps::getContentId)
-                .collect(Collectors.toCollection(LinkedHashSet::new));
+    /** 다른 코스의 관광지를 임의로 작성 대상으로 지정하지 못하게 코스 스냅샷에 포함됐는지 확인한다. */
+    private void validateCourseSpot(Course course, Long contentId) {
+        boolean belongsToCourse = course.allSpots().stream()
+                .anyMatch(spot -> spot.contentId().equals(contentId));
+        if (!belongsToCourse) {
+            throw new GeneralException(DiggingErrorCode._COURSE_SPOT_NOT_FOUND);
+        }
     }
 
     private Digging findOwnDigging(Long userId, Long diggingId) {

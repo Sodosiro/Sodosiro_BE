@@ -8,20 +8,22 @@ import com.sodosiro.domain.digging.controller.dto.response.DiggingLikeResponse;
 import com.sodosiro.domain.digging.controller.dto.response.DiggingListResponse;
 import com.sodosiro.domain.digging.controller.dto.response.DiggingResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
+@Tag(name = "디깅", description = "완료된 코스의 여행 기록(디깅) 작성·조회·좋아요·즐겨찾기 API")
 public interface DiggingSpecification {
 
     @Operation(summary = "디깅 후보 여행지 조회",
-            description = "완료된(FINISHED) 코스에서 GPS 인증을 마친 여행지 목록을 반환합니다. "
+            description = "완료된(FINISHED) 코스에 포함된 모든 여행지 목록을 반환합니다. "
                     + "이미 디깅을 작성한 여행지는 alreadyPosted=true 로 표시됩니다. "
                     + "본인 코스가 아니면 404, 코스가 완료 상태가 아니면 409를 반환합니다.")
     ResponseEntity<DiggingCandidateResponse> getCandidates(Long userId, Long courseId);
 
     @Operation(summary = "디깅 작성",
-            description = "완료된 코스에서 GPS 인증된 여행지 1곳에 대해 사진(최대 5장)과 감성 한마디(최대 300자)를 남깁니다. "
+            description = "완료된 코스에 포함된 여행지 1곳에 대해 사진(최대 5장)과 감성 한마디(최대 300자)를 남깁니다. "
                     + "같은 코스의 같은 여행지에는 1건만 작성할 수 있습니다. multipart/form-data 로 request(JSON)와 images 를 함께 전송합니다.")
     ResponseEntity<DiggingResponse> create(Long userId, DiggingCreateRequest request, List<MultipartFile> images);
 

@@ -24,7 +24,7 @@ import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 
 /**
- * 완료된 코스에서 GPS 인증된 여행지 1곳에 대해 남기는 회고 포스팅.
+ * 완료된 코스에 포함된 여행지 1곳에 대해 남기는 회고 포스팅.
  * 같은 코스의 같은 여행지에는 1건만 작성할 수 있다.
  */
 @Entity
