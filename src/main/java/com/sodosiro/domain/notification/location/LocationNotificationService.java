@@ -16,19 +16,24 @@ public class LocationNotificationService {
     private final NotificationFacade notificationFacade;
 
     @Transactional
-    public void createNearbyNotification(
+    public boolean createNearbyNotification(
             Long userId,
+            Long courseId,
+            java.time.LocalDate courseEndDate,
             Long nearestContentId,
             String nearestSpotTitle,
             int nearbyCount,
             List<String> nearbySpotTitles) {
         NearbyLikedSpotsDetectedEvent event = new NearbyLikedSpotsDetectedEvent(
                 userId,
+                courseId,
+                courseEndDate,
                 nearestContentId,
                 nearestSpotTitle,
                 nearbyCount,
                 nearbySpotTitles
         );
-        notificationFactory.create(event).forEach(notificationFacade::create);
+        return notificationFactory.create(event).stream()
+                .anyMatch(notificationFacade::create);
     }
 }

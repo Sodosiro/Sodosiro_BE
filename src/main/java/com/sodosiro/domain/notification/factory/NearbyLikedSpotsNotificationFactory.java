@@ -6,14 +6,10 @@ import com.sodosiro.domain.notification.trigger.NearbyLikedSpotsDetectedEvent;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
 public class NearbyLikedSpotsNotificationFactory implements NotificationFactory<NearbyLikedSpotsDetectedEvent> {
-
-    @Value("${notification.nearby.cooldown-seconds:21600}")
-    private long cooldownSeconds;
 
     @Override
     public Class<NearbyLikedSpotsDetectedEvent> triggerType() {
@@ -35,9 +31,12 @@ public class NearbyLikedSpotsNotificationFactory implements NotificationFactory<
                 NotificationType.NEARBY_LIKED_SPOTS,
                 title,
                 body,
-                Map.of("nearestContentId", event.nearestContentId(), "nearbyCount", event.nearbyCount()),
-                "NEARBY:%d".formatted(event.nearestContentId()),
-                LocalDateTime.now().plusSeconds(cooldownSeconds)
+                Map.of(
+                        "courseId", event.courseId(),
+                        "nearestContentId", event.nearestContentId(),
+                        "nearbyCount", event.nearbyCount()),
+                "NEARBY:COURSE:%d:SPOT:%d".formatted(event.courseId(), event.nearestContentId()),
+                event.courseEndDate().plusDays(1).atStartOfDay()
         ));
     }
 }

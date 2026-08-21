@@ -1,13 +1,23 @@
 package com.sodosiro.domain.notification.location;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sodosiro.domain.course.constants.CourseStatus;
+import com.sodosiro.domain.course.entity.Course;
+import com.sodosiro.domain.course.repository.CourseRepository;
+import com.sodosiro.domain.gps.entity.Gps;
+import com.sodosiro.domain.gps.repository.GpsRepository;
 import com.sodosiro.domain.travel.entity.TouristSpot;
 import com.sodosiro.domain.travel.repository.TouristSpotRepository;
 import com.sodosiro.global.service.RedisService;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,14 +39,23 @@ public class LocationWebSocketHandler extends TextWebSocketHandler {
     private static final double SEARCH_RADIUS_KILOMETERS = 0.2; // 알림 범위 현재는 200m
     private static final double MAX_ACCURACY_METERS = 100.0;    // 알림 정확도
     private static final Duration MAX_EVENT_AGE = Duration.ofMinutes(5);
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
     private final ObjectMapper objectMapper;
     private final RedisService redisService;
+    private final CourseRepository courseRepository;
+    private final GpsRepository gpsRepository;
     private final TouristSpotRepository touristSpotRepository;
     private final LocationNotificationService locationNotificationService;
 
-    @Value("${notification.nearby.redis-ttl-seconds:5}")
+    @Value("${notification.nearby.redis-ttl-seconds:300}")
     private long nearbySpotsTtlSeconds;
+
+    @Value("${notification.nearby.minimum-interval-hours:4}")
+    private long minimumIntervalHours;
+
+    @Value("${notification.nearby.daily-max-notifications:2}")
+    private int dailyMaxNotifications;
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
@@ -86,34 +105,59 @@ public class LocationWebSocketHandler extends TextWebSocketHandler {
             WebSocketSession session,
             Long userId,
             LocationUpdateRequest request) throws Exception {
+        Course course = findActiveCourse(userId, request.courseId());
+        if (course == null) {
+            send(session, Map.of(
+                    "type", "LOCATION_IGNORED",
+                    "reason", "COURSE_NOT_IN_PROGRESS",
+                    "notificationTriggered", false));
+            return;
+        }
+
+        Set<Long> excludedContentIds = excludedContentIds(course);
         List<GeoResult<RedisGeoCommands.GeoLocation<String>>> nearbySpots = redisService.searchGeo(
                 "user:%d:liked-spots:geo".formatted(userId),
                 request.longitude(),
                 request.latitude(),
                 SEARCH_RADIUS_KILOMETERS
         );
-        List<String> nearbyContentIds = nearbySpots.stream()
+        List<GeoResult<RedisGeoCommands.GeoLocation<String>>> eligibleNearbySpots = nearbySpots.stream()
+                .filter(result -> !excludedContentIds.contains(Long.valueOf(result.getContent().getName())))
+                .toList();
+        List<String> nearbyContentIds = eligibleNearbySpots.stream()
                 .map(result -> result.getContent().getName())
                 .toList();
         List<String> newlyEnteredContentIds = redisService.replaceNearbySpotsAndFindNewEntries(
-                "user:%d:nearby-spots".formatted(userId),
+                "user:%d:course:%d:nearby-spots".formatted(userId, course.getId()),
                 nearbyContentIds,
                 nearbySpotsTtlSeconds
         );
 
         send(session, Map.of(
                 "type", "LOCATION_PROCESSED",
-                "nearbyCount", nearbySpots.size(),
+                "nearbyCount", eligibleNearbySpots.size(),
                 "newlyEnteredContentIds", newlyEnteredContentIds,
-                "notificationTriggered", createNearbyNotification(userId, nearbySpots, newlyEnteredContentIds)
+                "notificationTriggered", createNearbyNotification(
+                        userId, course, eligibleNearbySpots, newlyEnteredContentIds)
         ));
     }
 
     private boolean createNearbyNotification(
             Long userId,
+            Course course,
             List<GeoResult<RedisGeoCommands.GeoLocation<String>>> nearbySpots,
             List<String> newlyEnteredContentIds) {
         if (newlyEnteredContentIds.isEmpty() || nearbySpots.isEmpty()) {
+            return false;
+        }
+
+        Set<String> newlyEntered = new HashSet<>(newlyEnteredContentIds);
+        List<Long> newlyEnteredNearbyContentIds = nearbySpots.stream()
+                .map(result -> result.getContent().getName())
+                .filter(newlyEntered::contains)
+                .map(Long::valueOf)
+                .toList();
+        if (newlyEnteredNearbyContentIds.isEmpty()) {
             return false;
         }
 
@@ -125,7 +169,7 @@ public class LocationWebSocketHandler extends TextWebSocketHandler {
         Map<Long, String> titleById = touristSpotRepository.findAllById(nearbyContentIds).stream()
                 .collect(toMap(TouristSpot::getContentId, TouristSpot::getTitle));
 
-        Long nearestContentId = nearbyContentIds.getFirst();
+        Long nearestContentId = newlyEnteredNearbyContentIds.getFirst();
         String nearestTitle = titleById.get(nearestContentId);
         if (nearestTitle == null) {
             log.warn("근처 알림 대상 관광지를 찾지 못했습니다. userId={}, contentId={}", userId, nearestContentId);
@@ -138,14 +182,23 @@ public class LocationWebSocketHandler extends TextWebSocketHandler {
                 .filter(java.util.Objects::nonNull)
                 .toList();
 
-        locationNotificationService.createNearbyNotification(
+        RedisService.NearbyNotificationPermit permit = reserveNotificationPermit(
+                userId, course.getId(), nearestContentId, course.getEndDate());
+        if (permit != RedisService.NearbyNotificationPermit.ACQUIRED) {
+            log.debug("근처 찜 알림 발송 제한 userId={} courseId={} contentId={} reason={}",
+                    userId, course.getId(), nearestContentId, permit);
+            return false;
+        }
+
+        return locationNotificationService.createNearbyNotification(
                 userId,
+                course.getId(),
+                course.getEndDate(),
                 nearestContentId,
                 nearestTitle,
                 nearbySpots.size(),
                 nearbyTitles
         );
-        return true;
     }
 
     private void sendError(WebSocketSession session, String code, String message) throws Exception {
@@ -166,7 +219,9 @@ public class LocationWebSocketHandler extends TextWebSocketHandler {
         if (request == null || !"LOCATION_UPDATE".equals(request.type())) {
             return false;
         }
-        if (request.latitude() == null || request.longitude() == null || request.accuracy() == null || request.occurredAt() == null) {
+        if (request.courseId() == null
+                || request.latitude() == null || request.longitude() == null
+                || request.accuracy() == null || request.occurredAt() == null) {
             return false;
         }
         if (request.latitude() < -90 || request.latitude() > 90 || request.longitude() < -180 || request.longitude() > 180) {
@@ -176,5 +231,41 @@ public class LocationWebSocketHandler extends TextWebSocketHandler {
             return false;
         }
         return !request.occurredAt().isBefore(Instant.now().minus(MAX_EVENT_AGE));
+    }
+
+    private Course findActiveCourse(Long userId, Long courseId) {
+        Course course = courseRepository.findByIdAndUserId(courseId, userId).orElse(null);
+        if (course == null || !Boolean.TRUE.equals(course.getIsConfirmed())
+                || course.getStatus() != CourseStatus.IN_PROGRESS) {
+            return null;
+        }
+        LocalDate today = LocalDate.now(KST);
+        return today.isBefore(course.getStartDate()) || today.isAfter(course.getEndDate()) ? null : course;
+    }
+
+    private Set<Long> excludedContentIds(Course course) {
+        Set<Long> excluded = course.allSpots().stream()
+                .map(Course.SpotSnapshot::contentId)
+                .collect(java.util.stream.Collectors.toSet());
+        gpsRepository.findByCourseId(course.getId()).stream()
+                .map(Gps::getContentId)
+                .forEach(excluded::add);
+        return excluded;
+    }
+
+    private RedisService.NearbyNotificationPermit reserveNotificationPermit(
+            Long userId, Long courseId, Long contentId, LocalDate courseEndDate) {
+        ZonedDateTime now = ZonedDateTime.now(KST);
+        ZonedDateTime nextMidnight = now.toLocalDate().plusDays(1).atStartOfDay(KST);
+        ZonedDateTime courseExpiresAt = courseEndDate.plusDays(1).atStartOfDay(KST);
+        return redisService.reserveNearbyNotification(
+                "user:%d:course:%d:nearby-notification:spot:%d".formatted(userId, courseId, contentId),
+                "user:%d:nearby-notification:daily:%s".formatted(userId, now.toLocalDate()),
+                "user:%d:nearby-notification:last-sent".formatted(userId),
+                now.toInstant().toEpochMilli(),
+                Math.max(1, Duration.between(now, courseExpiresAt).toMillis()),
+                Math.max(1, Duration.between(now, nextMidnight).toMillis()),
+                Duration.ofHours(minimumIntervalHours).toMillis(),
+                dailyMaxNotifications);
     }
 }

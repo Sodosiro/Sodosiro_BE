@@ -128,4 +128,50 @@ public class RedisService {
         return entered == null ? List.of() : entered.stream().map(String::valueOf).toList();
     }
 
+    public NearbyNotificationPermit reserveNearbyNotification(
+            String sentSpotKey,
+            String dailyCountKey,
+            String lastSentKey,
+            long nowEpochMillis,
+            long sentSpotTtlMillis,
+            long dailyTtlMillis,
+            long minimumIntervalMillis,
+            int dailyLimit) {
+        DefaultRedisScript<Long> script = new DefaultRedisScript<>();
+        script.setResultType(Long.class);
+        script.setScriptText("""
+                if redis.call('EXISTS', KEYS[1]) == 1 then return 0 end
+                if redis.call('EXISTS', KEYS[3]) == 1 then return 1 end
+                local count = tonumber(redis.call('GET', KEYS[2]) or '0')
+                if count >= tonumber(ARGV[4]) then return 2 end
+                redis.call('SET', KEYS[1], '1', 'PX', ARGV[2])
+                redis.call('SET', KEYS[2], tostring(count + 1), 'PX', ARGV[3])
+                redis.call('SET', KEYS[3], ARGV[1], 'PX', ARGV[5])
+                return 3
+                """);
+        Long result = redisTemplate.execute(
+                script,
+                List.of(sentSpotKey, dailyCountKey, lastSentKey),
+                String.valueOf(nowEpochMillis),
+                String.valueOf(sentSpotTtlMillis),
+                String.valueOf(dailyTtlMillis),
+                String.valueOf(dailyLimit),
+                String.valueOf(minimumIntervalMillis));
+        return switch (result == null ? -1 : result.intValue()) {
+            case 3 -> NearbyNotificationPermit.ACQUIRED;
+            case 0 -> NearbyNotificationPermit.SAME_SPOT_ALREADY_SENT;
+            case 1 -> NearbyNotificationPermit.MINIMUM_INTERVAL;
+            case 2 -> NearbyNotificationPermit.DAILY_LIMIT;
+            default -> NearbyNotificationPermit.REJECTED;
+        };
+    }
+
+    public enum NearbyNotificationPermit {
+        ACQUIRED,
+        SAME_SPOT_ALREADY_SENT,
+        MINIMUM_INTERVAL,
+        DAILY_LIMIT,
+        REJECTED
+    }
+
 }
