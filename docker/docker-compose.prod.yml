@@ -36,10 +36,12 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      FIREBASE_SERVICE_ACCOUNT_PATH: /run/secrets/firebase-service-account.json
     ports:
       - "${APP_HOST_PORT:-8082}:${SERVER_PORT:-8081}"
     volumes:
       - ../logs:/app/logs
+      - ${FIREBASE_SERVICE_ACCOUNT_FILE}:/run/secrets/firebase-service-account.json:ro
 
 volumes:
   redis-data:
