@@ -108,3 +108,11 @@ search:
 server:
   port: ${SERVER_PORT:8081}
 
+notification:
+  nearby:
+    redis-ttl-seconds: ${NOTIFICATION_NEARBY_REDIS_TTL_SECONDS:5}
+    cooldown-seconds: ${NOTIFICATION_NEARBY_COOLDOWN_SECONDS:5}
+
+firebase:
+  service-account-path: ${FIREBASE_SERVICE_ACCOUNT_PATH:}
+

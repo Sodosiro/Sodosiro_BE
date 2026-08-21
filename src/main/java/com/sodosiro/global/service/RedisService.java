@@ -1,14 +1,25 @@
 package com.sodosiro.global.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
+import org.springframework.data.redis.connection.RedisGeoCommands;
+import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.GeoResult;
+import org.springframework.data.geo.GeoResults;
+import org.springframework.data.redis.domain.geo.GeoReference;
+import org.springframework.data.geo.Metrics;
+import org.springframework.data.geo.Point;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Set;
+import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class RedisService {
@@ -57,6 +68,64 @@ public class RedisService {
     /** score 내림차순 [start, end] 구간을 score 와 함께 반환한다(ZREVRANGE WITHSCORES). */
     public Set<ZSetOperations.TypedTuple<String>> reverseRangeWithScores(String key, long start, long end) {
         return redisTemplate.opsForZSet().reverseRangeWithScores(key, start, end);
+    }
+
+    public void addGeo(String key, double longitude, double latitude, String member) {
+        redisTemplate.opsForGeo().add(key, new Point(longitude, latitude), member);
+    }
+
+    public void removeFromGeo(String key, String member) {
+        redisTemplate.opsForZSet().remove(key, member);
+    }
+
+    public List<GeoResult<RedisGeoCommands.GeoLocation<String>>> searchGeo(
+            String key,
+            double longitude,
+            double latitude,
+            double radiusKilometers) {
+        GeoResults<RedisGeoCommands.GeoLocation<String>> results = redisTemplate.opsForGeo().search(
+                key,
+                GeoReference.fromCoordinate(longitude, latitude),
+                new Distance(radiusKilometers, Metrics.KILOMETERS),
+                RedisGeoCommands.GeoSearchCommandArgs.newGeoSearchArgs()
+                        .includeDistance()
+                        .sortAscending()
+        );
+
+        log.info("searchGeo: {}", results);
+
+        return results == null ? List.of() : results.getContent();
+    }
+
+    public List<String> replaceNearbySpotsAndFindNewEntries(String key, List<String> currentSpotIds, long ttlSeconds) {
+        DefaultRedisScript<List> script = new DefaultRedisScript<>();
+        script.setResultType(List.class);
+        script.setScriptText("""
+                local ttl = tonumber(ARGV[1])
+                local previous = redis.call('SMEMBERS', KEYS[1])
+                local known = {}
+                for _, member in ipairs(previous) do known[member] = true end
+                redis.call('DEL', KEYS[1])
+                local entered = {}
+                for i = 2, #ARGV do
+                    local member = ARGV[i]
+                    redis.call('SADD', KEYS[1], member)
+                    if not known[member] then table.insert(entered, member) end
+                end
+                if redis.call('EXISTS', KEYS[1]) == 1 then
+                    redis.call('EXPIRE', KEYS[1], ttl)
+                end
+                return entered
+                """);
+
+        Object[] args = new Object[currentSpotIds.size() + 1];
+        args[0] = String.valueOf(ttlSeconds);
+        for (int i = 0; i < currentSpotIds.size(); i++) {
+            args[i + 1] = currentSpotIds.get(i);
+        }
+
+        List<String> entered = redisTemplate.execute(script, List.of(key), args);
+        return entered == null ? List.of() : entered.stream().map(String::valueOf).toList();
     }
 
 }
