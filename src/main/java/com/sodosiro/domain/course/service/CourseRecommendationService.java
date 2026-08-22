@@ -64,7 +64,7 @@ public class CourseRecommendationService {
         courseRepository.findByUserIdAndIsConfirmedFalse(userId).ifPresent(courseRepository::delete);
         List<Course.DaySnapshot> snapshots = days.stream().map(this::toSnapshot).toList();
         Course draft = Course.createDraft(
-                userId, request.startDate(), request.endDate(), request.transportMode(),
+                userId, request.title(), request.startDate(), request.endDate(), request.transportMode(),
                 request.travelStylesOrEmpty(), request.mustVisitContentId(), request.aiMessage(), snapshots);
         return courseRepository.save(draft).getId();
     }

@@ -12,6 +12,10 @@ public record CourseRecommendRequest(
         @NotBlank(message = "지역(시/군)은 필수입니다.")
         String sigunguCode,
 
+        @NotBlank(message = "코스 제목은 필수입니다.")
+        @Size(max = 10, message = "코스 제목은 최대 10자까지 입력할 수 있습니다.")
+        String title,
+
         @NotNull(message = "여행 시작일은 필수입니다.")
         LocalDate startDate,
 

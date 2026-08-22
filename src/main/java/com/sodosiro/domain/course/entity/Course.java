@@ -59,6 +59,10 @@ public class Course {
             foreignKey = @jakarta.persistence.ForeignKey(jakarta.persistence.ConstraintMode.NO_CONSTRAINT))
     private User user;
 
+    @Column(name = "title", length = 10, nullable = false)
+    @Comment("코스 제목")
+    private String title;
+
     @Column(name = "start_date", nullable = false)
     @Comment("여행 시작일")
     private LocalDate startDate;
@@ -113,6 +117,7 @@ public class Course {
 
     public static Course createDraft(
             Long userId,
+            String title,
             LocalDate startDate,
             LocalDate endDate,
             TransportMode transportMode,
@@ -122,6 +127,7 @@ public class Course {
             List<DaySnapshot> days) {
         Course course = new Course();
         course.userId = userId;
+        course.title = title;
         course.startDate = startDate;
         course.endDate = endDate;
         course.transportMode = transportMode;
