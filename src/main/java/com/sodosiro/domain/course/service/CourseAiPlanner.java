@@ -75,12 +75,13 @@ public class CourseAiPlanner {
 
             for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
                 String responseText = chatClient.prompt().system(SYSTEM_PROMPT).user(userPrompt).call().content();
+                String[] failReason = new String[1];
                 Optional<List<CourseRecommendResponse.DayCourse>> validated =
-                        parseAndValidate(responseText, dates, pool, mustVisitSpot, mustVisitDayIndex);
+                        parseAndValidate(responseText, dates, pool, mustVisitSpot, mustVisitDayIndex, failReason);
                 if (validated.isPresent()) {
                     return validated;
                 }
-                log.warn("AI 코스 검증 실패(시도 {}/{})", attempt, MAX_ATTEMPTS);
+                log.warn("AI 코스 검증 실패(시도 {}/{}): {}", attempt, MAX_ATTEMPTS, failReason[0]);
             }
             return Optional.empty();
         } catch (Exception exception) {
@@ -93,15 +94,18 @@ public class CourseAiPlanner {
 
     private Optional<List<CourseRecommendResponse.DayCourse>> parseAndValidate(
             String responseText, List<LocalDate> dates, CandidatePoolResult pool,
-            TouristSpot mustVisitSpot, int mustVisitDayIndex) {
+            TouristSpot mustVisitSpot, int mustVisitDayIndex, String[] failReason) {
         LlmCourseResponse response;
         try {
             response = objectMapper.readValue(stripCodeFence(responseText), LlmCourseResponse.class);
         } catch (Exception exception) {
             log.warn("AI 코스 응답 파싱 실패: {}", responseText, exception);
+            failReason[0] = "JSON 파싱 실패";
             return Optional.empty();
         }
         if (response == null || response.days() == null || response.days().size() != dates.size()) {
+            failReason[0] = "days 개수 불일치(응답=%s, 기대=%d)".formatted(
+                    response == null || response.days() == null ? "null" : response.days().size(), dates.size());
             return Optional.empty();
         }
 
@@ -110,10 +114,12 @@ public class CourseAiPlanner {
 
         for (LlmCourseDay day : response.days()) {
             if (day.day() < 1 || day.day() > dates.size() || byDay.containsKey(day.day())) {
+                failReason[0] = "day 필드 이상(day=%d)".formatted(day.day());
                 return Optional.empty();
             }
             if (day.contentIds() == null || day.contentIds().size() != DAILY_SLOT_COUNT
                     || new HashSet<>(day.contentIds()).size() != DAILY_SLOT_COUNT) {
+                failReason[0] = "day %d contentIds 개수/중복 오류(%s)".formatted(day.day(), day.contentIds());
                 return Optional.empty();
             }
 
@@ -125,6 +131,7 @@ public class CourseAiPlanner {
             for (Long contentId : day.contentIds()) {
                 //그 날짜 자신의 풀 안의 id만 허용: 다른 날짜의 풀은 애초에 이 Set에 없으므로 전역 중복도 여기서 함께 걸러진다.
                 if (!validIds.contains(contentId)) {
+                    failReason[0] = "day %d 유효하지 않은 contentId=%d(풀=%s)".formatted(day.day(), contentId, validIds);
                     return Optional.empty();
                 }
                 TouristSpot spot = pool.byId().get(contentId);
@@ -136,9 +143,11 @@ public class CourseAiPlanner {
                 }
             }
             if (restaurantCount != RESTAURANT_SLOTS_PER_DAY) {
+                failReason[0] = "day %d 식당 개수 불일치(응답=%d, 기대=%d)".formatted(day.day(), restaurantCount, RESTAURANT_SLOTS_PER_DAY);
                 return Optional.empty();
             }
             if (mustVisitId != null && day.day() - 1 == mustVisitDayIndex && !mustVisitIncluded) {
+                failReason[0] = "day %d mustVisit(%d) 누락".formatted(day.day(), mustVisitId);
                 return Optional.empty();
             }
             byDay.put(day.day(), day);

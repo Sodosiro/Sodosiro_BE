@@ -40,6 +40,7 @@ public class CourseRecommendationService {
     public CourseRecommendResponse recommend(Long userId, CourseRecommendRequest request) {
 
         validateDateRange(request.startDate(), request.endDate());
+        validateSigunguCode(request.sigunguCode());
         List<LocalDate> dates = buildDateRange(request.startDate(), request.endDate());
 
         TouristSpot mustVisitSpot = request.mustVisitContentId() == null
@@ -56,7 +57,7 @@ public class CourseRecommendationService {
                 .orElseGet(() -> courseRuleBasedPlanner.generate(request, dates, mustVisitSpot, mustVisitDayIndex, queryEmbedding));
 
         Long courseId = saveDraft(userId, request, days);
-        return new CourseRecommendResponse(courseId, days);
+        return new CourseRecommendResponse(courseId, request.title(), request.transportMode(), days);
     }
 
     /** 사용자당 미확정 draft는 1개만 유지한다: 기존 미확정 draft가 있으면 지우고 새로 저장한다. */
@@ -81,6 +82,13 @@ public class CourseRecommendationService {
     private void validateDateRange(LocalDate startDate, LocalDate endDate) {
         if (endDate.isBefore(startDate)) {
             throw new GeneralException(CourseErrorCode._INVALID_DATE_RANGE);
+        }
+    }
+
+    /** sigunguCode는 tourist_spot.ldong_signgu_code(법정동 시군구 코드) 값이어야 한다. 옛 TourAPI sigunguCode 등 존재하지 않는 값이 오면 후보 풀이 조용히 비어버리므로 여기서 막는다. */
+    private void validateSigunguCode(String sigunguCode) {
+        if (!touristSpotRepository.existsByLdongSignguCode(sigunguCode)) {
+            throw new GeneralException(CourseErrorCode._INVALID_SIGUNGU_CODE);
         }
     }
 
