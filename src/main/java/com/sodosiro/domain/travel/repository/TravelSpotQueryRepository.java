@@ -31,13 +31,17 @@ public class TravelSpotQueryRepository {
             Double popularityScoreCursor,
             int size,
             List<Integer> categories,
-            String keyword) {
+            String keyword,
+            String sigunguCode ) {
         BooleanBuilder conditions = new BooleanBuilder();
         if (categories != null && !categories.isEmpty()) {
             conditions.and(touristSpot.category.in(categories));
         }
         if (keyword != null && !keyword.isBlank()) {
             conditions.and(touristSpot.title.likeIgnoreCase("%" + keyword.trim() + "%"));
+        }
+        if (sigunguCode != null && !sigunguCode.isBlank()) {
+            conditions.and(touristSpot.ldongSignguCode.eq(sigunguCode));
         }
 
         if (sort == TravelSpotSort.POPULAR) {

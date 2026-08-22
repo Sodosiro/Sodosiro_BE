@@ -50,6 +50,7 @@ public class TravelSpotController implements TravelSpotSpecification {
             @RequestParam(name = "category", required = false) List<Integer> categories,
             @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "DEFAULT") TravelSpotSort sort,
+            @RequestParam(required = false) String sigunguCode,
             @LoginUser Long userId,
             @Parameter(hidden = true)
             @RequestHeader(value = "X-Internal-Bot", required = false) String requestBotToken) {
@@ -57,7 +58,7 @@ public class TravelSpotController implements TravelSpotSpecification {
             boolean bot = botToken != null && !botToken.isBlank() && botToken.equals(requestBotToken);
             eventPublisher.publishEvent(new SearchKeywordSearchedEvent(keyword, userId, bot));
         }
-        return ResponseEntity.ok(travelSpotService.getTouristSpots(cursor, size, categories, keyword, sort, userId));
+        return ResponseEntity.ok(travelSpotService.getTouristSpots(cursor, size, categories, keyword,sigunguCode, sort, userId));
     }
 
     /** 상세 조회에서만 이미지 목록을 fetch join한다. */
