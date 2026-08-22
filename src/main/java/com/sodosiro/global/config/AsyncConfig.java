@@ -58,6 +58,22 @@ public class AsyncConfig {
         return executor;
     }
 
+    @Bean(name = "fcmPushExecutor")
+    public Executor fcmPushExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(2);
+        executor.setMaxPoolSize(5);
+        executor.setQueueCapacity(200);
+        executor.setThreadNamePrefix("fcm-push-");
+
+        // 푸시 발송은 유실돼도 치명적이지 않으므로 큐가 넘치면 조용히 버린다.
+        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.DiscardPolicy());
+        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.setAwaitTerminationSeconds(10);
+        executor.initialize();
+        return executor;
+    }
+
     @Bean(name = "searchTrendingExecutor")
     public Executor searchTrendingExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();

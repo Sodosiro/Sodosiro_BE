@@ -9,6 +9,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication
 @EnableAsync
 @EnableJpaAuditing
+@EnableScheduling
 public class SodosiroApplication {
 
 	public static void main(String[] args) {

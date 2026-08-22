@@ -110,6 +110,10 @@ public class Course {
     @Comment("여행 상태 (UPCOMING: 예정, IN_PROGRESS: 진행 중, FINISHED: 종료)")
     private CourseStatus status;
 
+    @Column(name = "finished_at")
+    @Comment("여행 종료(FINISHED) 전환 시각. 리뷰 유도 알림 발송 기준")
+    private LocalDateTime finishedAt;
+
     @PrePersist
     private void prePersist() {
         this.createdAt = LocalDateTime.now();
@@ -147,7 +151,37 @@ public class Course {
             this.mustVisitContentId = null;
         }
         this.isConfirmed = true;
+        this.status = CourseStatus.IN_PROGRESS;
         this.updatedAt = LocalDateTime.now();
+    }
+
+    public void finish() {
+        if (this.status == CourseStatus.FINISHED) {
+            return;
+        }
+        this.status = CourseStatus.FINISHED;
+        this.finishedAt = LocalDateTime.now();
+        this.updatedAt = this.finishedAt;
+    }
+
+    /** 코스에 이름 필드가 없어 대표 스팟명 + 스팟 수로 합성한다 (예: "설악산 국립공원 외 3곳"). */
+    public String displayName() {
+        List<SpotSnapshot> spots = allSpots();
+        if (spots.isEmpty()) {
+            return "여행 코스";
+        }
+        String first = spots.getFirst().title();
+        return spots.size() == 1 ? first : "%s 외 %d곳".formatted(first, spots.size() - 1);
+    }
+
+    /** 모든 일자의 스팟을 일정 순서대로 펼친다. days 가 비어 있으면 빈 목록. */
+    public List<SpotSnapshot> allSpots() {
+        if (days == null) {
+            return List.of();
+        }
+        return days.stream()
+                .flatMap(day -> day.spots().stream())
+                .toList();
     }
 
     /** 확정 과정에서 필수 방문지가 목록에서 빠졌다면 mustVisitContentId도 함께 정리해 스냅샷과 어긋나지 않게 한다 */

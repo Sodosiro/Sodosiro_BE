@@ -6,6 +6,7 @@ import com.sodosiro.domain.like.controller.dto.response.MyLikedSpotListResponse;
 import com.sodosiro.domain.like.controller.dto.response.SpotLikeBatchToggleResponse;
 import com.sodosiro.domain.like.entity.SpotLike;
 import com.sodosiro.domain.like.repository.SpotLikeRepository;
+import com.sodosiro.domain.like.service.event.SpotLikeChangedEvent;
 import com.sodosiro.domain.review.constants.ReviewSort;
 import com.sodosiro.domain.travel.entity.TouristSpot;
 import com.sodosiro.domain.travel.repository.TouristSpotRepository;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.List;
 import java.util.Map;
@@ -34,6 +36,7 @@ public class SpotLikeService {
 
     private final SpotLikeRepository spotLikeRepository;
     private final TouristSpotRepository touristSpotRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public LikeToggleResponse toggleTouristSpotLike(Long userId, Long contentId) {
@@ -48,6 +51,7 @@ public class SpotLikeService {
         Map<Long, TouristSpot> spotsById = findSpots(contentIds);
         Map<Long, SpotLike> existingLikes = findExistingLikes(userId, contentIds);
         persistLikeChanges(userId, contentIds, existingLikes);
+        contentIds.forEach(contentId -> eventPublisher.publishEvent(new SpotLikeChangedEvent(userId, contentId, !existingLikes.containsKey(contentId))));
         return new SpotLikeBatchToggleResponse(updateLikeCountsAndBuildItems(contentIds, spotsById, existingLikes));
     }
 

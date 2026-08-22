@@ -4,6 +4,7 @@ package com.sodosiro.global.s3.constants;
 public enum FileFolder {
 
     REVIEWS("reviews"),
+    DIGGINGS("diggings"),
     PROFILES("profiles"),
     TEST("test");
 

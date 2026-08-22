@@ -117,3 +117,16 @@ search:
 server:
   port: ${SERVER_PORT:8081}
 
+notification:
+  nearby:
+    # 위치 업데이트 간 근처 진입 상태를 유지할 시간
+    redis-ttl-seconds: ${NOTIFICATION_NEARBY_REDIS_TTL_SECONDS:300}
+    minimum-interval-hours: ${NOTIFICATION_NEARBY_MINIMUM_INTERVAL_HOURS:4}
+    daily-max-notifications: ${NOTIFICATION_NEARBY_DAILY_MAX_NOTIFICATIONS:2}
+  review-request:
+    after-days: ${NOTIFICATION_REVIEW_AFTER_DAYS:0}
+    grace-days: ${NOTIFICATION_REVIEW_GRACE_DAYS:10}           # 이보다 오래된 코스는 제외
+    cooldown-days: ${NOTIFICATION_REVIEW_COOLDOWN_DAYS:30}     # 같은 코스 재알림 방지
+
+firebase:
+  service-account-path: ${FIREBASE_SERVICE_ACCOUNT_PATH:}

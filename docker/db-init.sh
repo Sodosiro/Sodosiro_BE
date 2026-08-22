@@ -12,6 +12,7 @@ psql -v ON_ERROR_STOP=1 -d "$APP_DB" -c "CREATE EXTENSION IF NOT EXISTS vector;"
 
 echo "==> [2/3] DDL 적용"
 psql -v ON_ERROR_STOP=1 -d "$APP_DB" -f "$SQL_DIR/000_initialize_travel_schema.sql"
+psql -v ON_ERROR_STOP=1 -d "$APP_DB" -f "$SQL_DIR/001_add_notification_schema.sql"
 
 echo "==> [3/3] CSV 시드 데이터"
 

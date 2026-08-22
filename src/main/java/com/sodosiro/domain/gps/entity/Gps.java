@@ -37,7 +37,10 @@ import org.hibernate.annotations.NotFoundAction;
                 name = "uk_gps_verification_course_content_day",
                 columnNames = {"course_id", "content_id", "day"}
         ),
-        indexes = @Index(name = "idx_gps_verification_user", columnList = "user_id")
+        indexes = {
+                @Index(name = "idx_gps_verification_user", columnList = "user_id"),
+                @Index(name = "idx_gps_verification_user_content", columnList = "user_id, content_id")
+        }
 )
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Comment("코스 스팟별 GPS 방문 인증 기록")

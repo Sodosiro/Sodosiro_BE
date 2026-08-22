@@ -156,7 +156,7 @@ class CourseCandidatePoolBuilder {
     private List<TouristSpot> fetchByCategory(List<Integer> categories, String sigunguCode, float[] queryEmbedding, int limit) {
 
         if (queryEmbedding == null) {
-            return touristSpotRepository.findByCategoryInAndSigunguCodeOrderByAvgRatingDesc(categories, sigunguCode, PageRequest.of(0, limit));
+            return touristSpotRepository.findByCategoryInAndLdongSignguCodeOrderByAvgRatingDesc(categories, sigunguCode, PageRequest.of(0, limit));
         }
         List<Long> nearestIds = spotEmbeddingRepository.findNearestContentIdsInCategories(queryEmbedding, categories, List.of(), sigunguCode, limit);
 

@@ -40,7 +40,9 @@ dependencyManagement {
 dependencies {
 	// Web
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 	implementation 'org.springframework.boot:spring-boot-starter-json'
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 	// Spring Boot 4는 별도 AOP starter 대신 Spring AOP와 AspectJ Weaver를 직접 추가한다.
 	implementation 'org.springframework:spring-aop'
 	implementation 'org.aspectj:aspectjweaver'
@@ -64,6 +66,7 @@ dependencies {
 
 	// Redis (non-reactive)
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	implementation 'com.google.firebase:firebase-admin:9.7.0'
 
 	// Security & OAuth2 (Kakao Login)
 	implementation 'org.springframework.boot:spring-boot-starter-security'
