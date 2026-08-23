@@ -20,7 +20,8 @@ public enum CourseErrorCode implements BaseCode {
     _TRANSPORT_MODE_MISMATCH(HttpStatus.BAD_REQUEST, "COURSE400-TRANSPORT_MODE_MISMATCH", "추천 시 선택한 이동수단과 일치하지 않습니다."),
     _INVALID_SIGUNGU_CODE(HttpStatus.BAD_REQUEST, "COURSE400-INVALID_SIGUNGU_CODE", "지원하지 않는 시군구코드입니다."),
     _COURSE_ALREADY_CONFIRMED(HttpStatus.BAD_REQUEST, "COURSE400-ALREADY_CONFIRMED", "이미 확정된 코스는 수정할 수 없습니다."),
-    _TRANSPORT_MODE_NOT_SELECTED(HttpStatus.BAD_REQUEST, "COURSE400-TRANSPORT_MODE_NOT_SELECTED", "이동수단이 선택되지 않은 코스입니다.");
+    _TRANSPORT_MODE_NOT_SELECTED(HttpStatus.BAD_REQUEST, "COURSE400-TRANSPORT_MODE_NOT_SELECTED", "이동수단이 선택되지 않은 코스입니다."),
+    _TRAVEL_DATE_OVERLAP(HttpStatus.BAD_REQUEST, "COURSE400-TRAVEL_DATE_OVERLAP", "이미 확정된 다른 여행 기간과 겹칩니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

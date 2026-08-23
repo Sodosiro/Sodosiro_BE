@@ -1,5 +1,6 @@
 package com.sodosiro.domain.course.service;
 
+import com.sodosiro.domain.course.constants.CourseStatus;
 import com.sodosiro.domain.course.controller.dto.CourseRecommendRequest;
 import com.sodosiro.domain.course.controller.dto.CourseRecommendResponse;
 import com.sodosiro.domain.course.entity.Course;
@@ -41,6 +42,7 @@ public class CourseRecommendationService {
 
         validateDateRange(request.startDate(), request.endDate());
         validateSigunguCode(request.sigunguCode());
+        validateNoOverlappingConfirmedTrip(userId, request.startDate(), request.endDate());
         List<LocalDate> dates = buildDateRange(request.startDate(), request.endDate());
 
         TouristSpot mustVisitSpot = request.mustVisitContentId() == null
@@ -81,6 +83,16 @@ public class CourseRecommendationService {
     private void validateSigunguCode(String sigunguCode) {
         if (!touristSpotRepository.existsByLdongSignguCode(sigunguCode)) {
             throw new GeneralException(CourseErrorCode._INVALID_SIGUNGU_CODE);
+        }
+    }
+
+    /** 진행 중인(또는 예정된) 여행은 동시에 여러 개일 수 없으므로, 이미 확정된 다른 여행 기간과 겹치면 막는다. */
+    private void validateNoOverlappingConfirmedTrip(Long userId, LocalDate startDate, LocalDate endDate) {
+        boolean overlaps = courseRepository
+                .existsByUserIdAndIsConfirmedTrueAndStatusNotAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
+                        userId, CourseStatus.FINISHED, endDate, startDate);
+        if (overlaps) {
+            throw new GeneralException(CourseErrorCode._TRAVEL_DATE_OVERLAP);
         }
     }
 

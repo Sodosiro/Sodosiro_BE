@@ -53,7 +53,7 @@ public interface CourseSpecification {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "코스 추천 성공"),
-            @ApiResponse(responseCode = "400", description = "요청 파라미터 유효성 검증 실패 (예: 필수값 누락, 일자 범위 오류 등)"),
+            @ApiResponse(responseCode = "400", description = "요청 파라미터 유효성 검증 실패 (예: 필수값 누락, 일자 범위 오류, 이미 확정된 다른 여행 기간과 겹침 등)"),
             @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자")
     })
     public ResponseEntity<CourseRecommendResponse> recommend(
