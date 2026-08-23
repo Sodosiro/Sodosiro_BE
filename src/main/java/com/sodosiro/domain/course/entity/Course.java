@@ -3,7 +3,7 @@ package com.sodosiro.domain.course.entity;
 import com.sodosiro.domain.course.constants.CourseStatus;
 import com.sodosiro.domain.course.constants.TravelStyle;
 import com.sodosiro.domain.route.dto.RouteLeg;
-import com.sodosiro.domain.route.dto.TransportMode;
+import com.sodosiro.domain.route.constants.TransportMode;
 import com.sodosiro.domain.route.kakao.dto.KakaoTransitRouteResult;
 import com.sodosiro.domain.user.entity.User;
 import jakarta.persistence.Column;

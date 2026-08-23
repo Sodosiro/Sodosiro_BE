@@ -9,7 +9,7 @@ import com.sodosiro.domain.course.controller.dto.DayConfirm;
 import com.sodosiro.domain.course.entity.Course;
 import com.sodosiro.domain.course.repository.CourseRepository;
 import com.sodosiro.domain.route.dto.RouteWaypoint;
-import com.sodosiro.domain.route.dto.TransportMode;
+import com.sodosiro.domain.route.constants.TransportMode;
 import com.sodosiro.domain.route.service.AdjacentRouteResult;
 import com.sodosiro.domain.route.service.RouteCalculationService;
 import com.sodosiro.domain.travel.entity.TouristSpot;

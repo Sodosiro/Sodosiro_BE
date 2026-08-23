@@ -1,7 +1,7 @@
 package com.sodosiro.domain.course.controller.dto;
 
 import com.sodosiro.domain.course.constants.TravelStyle;
-import com.sodosiro.domain.route.dto.TransportMode;
+import com.sodosiro.domain.route.constants.TransportMode;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;

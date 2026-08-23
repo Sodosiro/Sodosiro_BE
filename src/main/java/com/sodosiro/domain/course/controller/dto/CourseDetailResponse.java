@@ -2,7 +2,7 @@ package com.sodosiro.domain.course.controller.dto;
 
 import com.sodosiro.domain.course.constants.CourseStatus;
 import com.sodosiro.domain.course.entity.Course;
-import com.sodosiro.domain.route.dto.TransportMode;
+import com.sodosiro.domain.route.constants.TransportMode;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
