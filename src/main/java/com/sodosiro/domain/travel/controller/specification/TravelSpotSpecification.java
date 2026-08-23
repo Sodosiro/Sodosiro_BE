@@ -25,7 +25,9 @@ public interface TravelSpotSpecification {
             description = "sort=ALL 또는 DEFAULT는 TourAPI 여행지를 contentId 내림차순으로 전체 조회합니다. "
                     + "sort=POPULAR는 ETL이 계산한 카테고리별 상위 10위 여행지를 종합 인기도순으로 반환합니다. "
                     + "category를 생략하면 전체, 반복 전달하면 여러 카테고리를 조회하며, "
-                    + "keyword는 여행지 제목 LIKE 검색에 함께 적용됩니다. 목록의 overview는 최대 30자 미리보기이며, "
+                    + "keyword는 여행지 제목 LIKE 검색에 함께 적용됩니다. sigunguCode를 지정하면 해당 시군구의 여행지만 조회하며, "
+                    + "생략하면 전체 지역을 조회합니다. 유효한 코드는 GET /api/v1/regions?areaCode=로 조회할 수 있습니다. "
+                    + "목록의 overview는 최대 30자 미리보기이며, "
                     + "restdate와 인기 여부(isPopular), 인기 태그(popularity.rankTag)를 함께 반환합니다."
     )
     @ApiResponses({
@@ -39,6 +41,7 @@ public interface TravelSpotSpecification {
             @Parameter(in = ParameterIn.QUERY, description = "여행지명 부분 검색어", example = "강릉") String keyword,
             @Parameter(in = ParameterIn.QUERY, description = "조회 정렬 기준", example = "POPULAR",
                     schema = @Schema(type = "string", allowableValues = {"ALL", "DEFAULT", "POPULAR"})) TravelSpotSort sort,
+            @Parameter(in = ParameterIn.QUERY, description = "시군구 코드. 지정하면 해당 시군구로 결과를 제한하고, 생략하면 전체 지역을 조회함", example = "1") String sigunguCode,
             @Parameter(hidden = true) @LoginUser Long userId,
             @Parameter(hidden = true) @RequestHeader(value = "X-Internal-Bot", required = false) String requestBotToken
     );

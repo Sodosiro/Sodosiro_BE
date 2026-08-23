@@ -16,8 +16,9 @@ public record DiggingResponse(
         List<DiggingImageResponse> images,
         int likeCount,
         boolean isLikedByMe,
-        boolean isBookmarkedByMe,
+        boolean isSpotLikedByMe,
         boolean isMyDigging,
+        boolean isGpsVerified,
         LocalDateTime createdAt
 ) {
     public record AuthorInfo(Long userId, String displayName, String profileImageUrl) {
@@ -29,12 +30,13 @@ public record DiggingResponse(
         }
     }
 
-    public record SpotSummary(Long contentId, String title, String firstImage) {
+    public record SpotSummary(Long contentId, String title, String firstImage, Integer category, int likeCount) {
         public static SpotSummary from(TouristSpot spot) {
             if (spot == null) {
                 return null;
             }
-            return new SpotSummary(spot.getContentId(), spot.getTitle(), spot.getFirstImage());
+            return new SpotSummary(
+                    spot.getContentId(), spot.getTitle(), spot.getFirstImage(), spot.getCategory(), spot.getLikeCount());
         }
     }
 
@@ -50,7 +52,8 @@ public record DiggingResponse(
             TouristSpot spot,
             List<DiggingImage> images,
             boolean liked,
-            boolean bookmarked,
+            boolean spotLiked,
+            boolean gpsVerified,
             Long loginUserId) {
         return new DiggingResponse(
                 digging.getId(),
@@ -61,8 +64,9 @@ public record DiggingResponse(
                 images.stream().map(DiggingImageResponse::from).toList(),
                 digging.getLikeCount(),
                 liked,
-                bookmarked,
+                spotLiked,
                 digging.getUserId().equals(loginUserId),
+                gpsVerified,
                 digging.getCreatedAt()
         );
     }

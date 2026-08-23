@@ -3,6 +3,7 @@ package com.sodosiro.domain.region.controller.specification;
 import com.sodosiro.domain.region.controller.dto.AreaCodeResponse;
 import com.sodosiro.domain.region.controller.dto.RegionCodeResponse;
 import com.sodosiro.domain.region.controller.dto.RegionIntroductionResponse;
+import com.sodosiro.domain.region.controller.dto.VisitedRegionResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -47,5 +48,18 @@ public interface RegionIntroSpecification {
     ResponseEntity<RegionIntroductionResponse> getIntroduction(
             @Parameter(in = ParameterIn.PATH, required = true,
                     description = "시군구 코드 목록 API가 반환한 내부 식별자", example = "18") Long sigunguId
+    );
+
+    @Operation(
+            summary = "내가 실제로 방문한 지역 조회",
+            description = "GPS 방문 인증(POST /api/v1/gps)이 완료된 관광지를 기준으로, 로그인 사용자가 실제로 방문한 시군구만 반환합니다. "
+                    + "일정에 있었지만 GPS 인증을 하지 않은 관광지는 집계되지 않습니다. "
+                    + "areaCode를 생략하면 강원특별자치도(51) 기준으로 조회합니다(현재 이 서비스가 다루는 지역이 강원도뿐이라 기본값으로 둠). "
+                    + "visitCount는 해당 시군구에서 GPS 인증된 서로 다른 관광지 수입니다."
+    )
+    @ApiResponse(responseCode = "200", description = "조회 성공 (방문 기록이 없으면 visitedSigungus는 빈 배열)")
+    ResponseEntity<VisitedRegionResponse> getVisitedRegions(
+            @Parameter(hidden = true) Long userId,
+            @Parameter(in = ParameterIn.QUERY, description = "법정동 시도 코드. 생략하면 강원특별자치도(51)", example = "51") String areaCode
     );
 }

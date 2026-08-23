@@ -2,7 +2,6 @@ package com.sodosiro.domain.digging.controller.specification;
 
 import com.sodosiro.domain.digging.controller.dto.request.DiggingCreateRequest;
 import com.sodosiro.domain.digging.controller.dto.request.DiggingUpdateRequest;
-import com.sodosiro.domain.digging.controller.dto.response.DiggingBookmarkResponse;
 import com.sodosiro.domain.digging.controller.dto.response.DiggingCandidateResponse;
 import com.sodosiro.domain.digging.controller.dto.response.DiggingLikeResponse;
 import com.sodosiro.domain.digging.controller.dto.response.DiggingListResponse;
@@ -13,7 +12,7 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
-@Tag(name = "디깅", description = "완료된 코스의 여행 기록(디깅) 작성·조회·좋아요·즐겨찾기 API")
+@Tag(name = "디깅", description = "완료된 코스의 여행 기록(디깅) 작성·조회·좋아요 API")
 public interface DiggingSpecification {
 
     @Operation(summary = "디깅 후보 여행지 조회",
@@ -40,9 +39,6 @@ public interface DiggingSpecification {
     @Operation(summary = "여행지별 디깅 목록 조회", description = "특정 관광지(contentId)에 작성된 디깅을 최신순으로 조회합니다.")
     ResponseEntity<DiggingListResponse> getBySpot(Long loginUserId, Long contentId, Long cursor, int size);
 
-    @Operation(summary = "내 즐겨찾기 디깅 목록 조회")
-    ResponseEntity<DiggingListResponse> getMyBookmarks(Long userId, Long cursor, int size);
-
     @Operation(summary = "디깅 수정",
             description = "본인 디깅의 감성 한마디와 이미지를 수정합니다. keepImageUrls 에 없는 기존 이미지는 삭제되고, "
                     + "새 images 가 뒤에 추가됩니다. 유지분 + 신규가 5장을 넘으면 400을 반환합니다.")
@@ -57,8 +53,4 @@ public interface DiggingSpecification {
                     + "응답의 liked 로 현재 상태를, likeCount 로 갱신된 좋아요 수를 확인합니다. "
                     + "타인의 디깅에 좋아요가 등록되는 순간에만 작성자에게 푸시 알림이 발송되며, 취소 시에는 발송되지 않습니다.")
     ResponseEntity<DiggingLikeResponse> toggleLike(Long userId, Long diggingId);
-
-    @Operation(summary = "디깅 즐겨찾기 토글",
-            description = "호출할 때마다 즐겨찾기 상태가 뒤집힙니다. 알림은 발송되지 않습니다.")
-    ResponseEntity<DiggingBookmarkResponse> toggleBookmark(Long userId, Long diggingId);
 }

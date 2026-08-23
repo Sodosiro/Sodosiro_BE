@@ -50,12 +50,12 @@ public class TravelSpotService {
     private final RegionNameResolver regionNameResolver;
 
     public CursorPageResponse<TouristSpotSummaryResponse> getTouristSpots(
-            String cursor, Integer size, List<Integer> categories, String keyword,
+            String cursor, Integer size, List<Integer> categories, String keyword,String sigunguCode,
             TravelSpotSort sort, Long userId) {
         int pageSize = normalizePageSize(size);
         TouristSpotCursor parsedCursor = parseTouristSpotCursor(cursor, sort);
         List<TravelSpotQueryRepository.TouristSpotWithPopularity> rows = queryRepository.findTouristSpots(
-                sort, parsedCursor.contentId(), parsedCursor.popularityScore(), pageSize, categories, keyword);
+                sort, parsedCursor.contentId(), parsedCursor.popularityScore(), pageSize, categories, keyword,sigunguCode);
         boolean hasNext = rows.size() > pageSize;
         Set<Long> likedContentIds = findLikedContentIds(userId, rows, pageSize);
         List<TravelSpotQueryRepository.TouristSpotWithPopularity> pageRows = rows.stream().limit(pageSize).toList();

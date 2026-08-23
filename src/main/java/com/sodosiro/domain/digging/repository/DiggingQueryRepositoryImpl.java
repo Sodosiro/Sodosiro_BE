@@ -1,10 +1,8 @@
 package com.sodosiro.domain.digging.repository;
 
-import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sodosiro.domain.digging.entity.Digging;
 import com.sodosiro.domain.digging.entity.QDigging;
-import com.sodosiro.domain.digging.entity.QDiggingBookmark;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -15,7 +13,6 @@ public class DiggingQueryRepositoryImpl implements DiggingQueryRepository {
 
     private final JPAQueryFactory queryFactory;
     private static final QDigging d = QDigging.digging;
-    private static final QDiggingBookmark b = QDiggingBookmark.diggingBookmark;
 
     @Override
     public List<Digging> findFeed(Long cursor, int size) {
@@ -33,17 +30,6 @@ public class DiggingQueryRepositoryImpl implements DiggingQueryRepository {
     public List<Digging> findByUserId(Long userId, Long cursor, int size) {
         return baseQuery(cursor, size)
                 .where(d.userId.eq(userId))
-                .fetch();
-    }
-
-    @Override
-    public List<Digging> findBookmarkedByUserId(Long userId, Long cursor, int size) {
-        return baseQuery(cursor, size)
-                .where(d.id.in(
-                        JPAExpressions.select(b.diggingId)
-                                .from(b)
-                                .where(b.userId.eq(userId))
-                ))
                 .fetch();
     }
 

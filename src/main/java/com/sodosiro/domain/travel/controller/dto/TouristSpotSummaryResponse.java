@@ -64,10 +64,10 @@ public record TouristSpotSummaryResponse(
     }
 
     static String abbreviateOverview(String overview) {
-        if (overview == null || overview.length() <= 30) {
+        if (overview == null || overview.length() <= 70) {
             return overview;
         }
-        return overview.substring(0, 30) + "...";
+        return overview.substring(0, 70) + "...";
     }
 
     public record Popularity(

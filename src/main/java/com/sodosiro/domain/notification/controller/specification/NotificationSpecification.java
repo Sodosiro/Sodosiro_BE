@@ -5,6 +5,9 @@ import com.sodosiro.domain.notification.controller.dto.NotificationPreferenceReq
 import com.sodosiro.domain.notification.controller.dto.NotificationPreferenceResponse;
 import com.sodosiro.domain.notification.controller.dto.PushTokenUpsertRequest;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 
@@ -15,7 +18,77 @@ public interface NotificationSpecification {
             description = "로그인 사용자의 알림을 최신순(id 내림차순)으로 조회합니다. "
                     + "cursor 는 직전 응답의 nextCursor 를 그대로 전달하며, 첫 페이지에서는 생략합니다. "
                     + "응답의 unreadCount 는 커서와 무관하게 사용자의 전체 안 읽은 알림 수입니다. "
-                    + "size 는 1~100 범위이며 벗어나면 400을 반환합니다.")
+                    + "size 는 1~100 범위이며 벗어나면 400을 반환합니다. "
+                    + "payload 형식은 type 마다 다르며 아래 예시로 타입별 실제 구조를 확인할 수 있습니다.")
+    @ApiResponse(responseCode = "200", description = "조회 성공", content = @Content(
+            mediaType = "application/json",
+            examples = {
+                    @ExampleObject(name = "NEARBY_LIKED_SPOTS", summary = "찜한 장소 근처 진입", value = """
+                            {
+                              "items": [
+                                {
+                                  "id": 101,
+                                  "type": "NEARBY_LIKED_SPOTS",
+                                  "title": "찜한 장소 4곳이 근처에 있어요",
+                                  "body": "설악산 국립공원, 낙산사, 속초해수욕장, 아바이마을",
+                                  "payload": {
+                                    "courseId": 12,
+                                    "nearbyContentIds": [126508, 126510, 126522, 126599],
+                                    "nearbyCount": 4
+                                  },
+                                  "isRead": false,
+                                  "createdAt": "2026-08-23T14:30:00"
+                                }
+                              ],
+                              "nextCursor": "101",
+                              "hasNext": false,
+                              "unreadCount": 1
+                            }
+                            """),
+                    @ExampleObject(name = "REVIEW_REQUEST", summary = "리뷰 작성 요청", value = """
+                            {
+                              "items": [
+                                {
+                                  "id": 98,
+                                  "type": "REVIEW_REQUEST",
+                                  "title": "속초 여행은 어떠셨나요?",
+                                  "body": "다녀오신 곳의 리뷰를 남겨주세요. 다른 여행자에게 큰 도움이 돼요!",
+                                  "payload": {
+                                    "courseId": 12,
+                                    "pendingSpotCount": 3
+                                  },
+                                  "isRead": true,
+                                  "createdAt": "2026-08-20T09:00:00"
+                                }
+                              ],
+                              "nextCursor": null,
+                              "hasNext": false,
+                              "unreadCount": 0
+                            }
+                            """),
+                    @ExampleObject(name = "DIGGING_POST_LIKE", summary = "내 디깅에 좋아요", value = """
+                            {
+                              "items": [
+                                {
+                                  "id": 102,
+                                  "type": "DIGGING_POST_LIKE",
+                                  "title": "내 게시물에 좋아요 2개가 달렸어요",
+                                  "body": "영진횟집",
+                                  "payload": {
+                                    "diggingId": 3,
+                                    "likerUserId": 100
+                                  },
+                                  "isRead": false,
+                                  "createdAt": "2026-08-23T15:10:00"
+                                }
+                              ],
+                              "nextCursor": null,
+                              "hasNext": false,
+                              "unreadCount": 2
+                            }
+                            """)
+            }
+    ))
     ResponseEntity<NotificationListResponse> list(Long userId, String cursor, int size);
 
     @Operation(summary = "알림 단건 읽음 처리",

@@ -5,11 +5,10 @@ import java.util.Collection;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface DiggingImageRepository extends JpaRepository<DiggingImage, Long> {
+public interface DiggingImageRepository extends JpaRepository<DiggingImage, Long>, DiggingImageQueryRepository {
 
     List<DiggingImage> findAllByDiggingIdOrderByDisplayOrderAsc(Long diggingId);
 
     List<DiggingImage> findAllByDiggingIdInOrderByDiggingIdAscDisplayOrderAsc(Collection<Long> diggingIds);
 
-    void deleteAllByDiggingId(Long diggingId);
 }

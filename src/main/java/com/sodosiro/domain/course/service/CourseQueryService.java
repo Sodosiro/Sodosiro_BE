@@ -7,9 +7,12 @@ import com.sodosiro.domain.course.entity.Course;
 import com.sodosiro.domain.course.repository.CourseRepository;
 import com.sodosiro.domain.gps.entity.Gps;
 import com.sodosiro.domain.gps.repository.GpsRepository;
+import com.sodosiro.domain.review.entity.Review;
+import com.sodosiro.domain.review.repository.ReviewRepository;
 import com.sodosiro.global.payload.code.error.CourseErrorCode;
 import com.sodosiro.global.payload.exception.GeneralException;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +26,7 @@ public class CourseQueryService {
 
     private final CourseRepository courseRepository;
     private final GpsRepository gpsRepository;
+    private final ReviewRepository reviewRepository;
 
     @Transactional(readOnly = true)
     public MyCourseListResponse getMyCourses(Long userId, CourseStatus status) {
@@ -43,7 +47,15 @@ public class CourseQueryService {
                 .map(gps -> gps.getDay() + ":" + gps.getContentId())
                 .collect(Collectors.toSet());
 
-        return CourseDetailResponse.from(course, verifiedKeys);
+        List<Long> contentIds = course.allSpots().stream()
+                .map(Course.SpotSnapshot::contentId)
+                .distinct()
+                .toList();
+        Map<Long, Long> reviewIdByContentId = reviewRepository
+                .findByUserIdAndContentIdInAndIsDeletedFalse(userId, contentIds).stream()
+                .collect(Collectors.toMap(Review::getContentId, Review::getId));
+
+        return CourseDetailResponse.from(course, verifiedKeys, reviewIdByContentId);
     }
 
     /** 상태(draft/확정/진행중/완료) 상관없이 삭제 가능하다. GPS 인증·디깅 기록은 건드리지 않는다. */

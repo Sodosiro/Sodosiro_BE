@@ -10,6 +10,4 @@ public interface DiggingQueryRepository {
     List<Digging> findByContentId(Long contentId, Long cursor, int size);
 
     List<Digging> findByUserId(Long userId, Long cursor, int size);
-
-    List<Digging> findBookmarkedByUserId(Long userId, Long cursor, int size);
 }

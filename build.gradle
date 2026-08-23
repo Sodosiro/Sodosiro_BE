@@ -40,7 +40,6 @@ dependencyManagement {
 dependencies {
 	// Web
 	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 	implementation 'org.springframework.boot:spring-boot-starter-json'
 	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 	// Spring Boot 4는 별도 AOP starter 대신 Spring AOP와 AspectJ Weaver를 직접 추가한다.
