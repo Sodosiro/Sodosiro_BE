@@ -2,13 +2,11 @@ package com.sodosiro.domain.digging.controller;
 
 import com.sodosiro.domain.digging.controller.dto.request.DiggingCreateRequest;
 import com.sodosiro.domain.digging.controller.dto.request.DiggingUpdateRequest;
-import com.sodosiro.domain.digging.controller.dto.response.DiggingBookmarkResponse;
 import com.sodosiro.domain.digging.controller.dto.response.DiggingCandidateResponse;
 import com.sodosiro.domain.digging.controller.dto.response.DiggingLikeResponse;
 import com.sodosiro.domain.digging.controller.dto.response.DiggingListResponse;
 import com.sodosiro.domain.digging.controller.dto.response.DiggingResponse;
 import com.sodosiro.domain.digging.controller.specification.DiggingSpecification;
-import com.sodosiro.domain.digging.service.DiggingBookmarkService;
 import com.sodosiro.domain.digging.service.DiggingLikeService;
 import com.sodosiro.domain.digging.service.DiggingService;
 import com.sodosiro.global.resolver.LoginUser;
@@ -36,7 +34,6 @@ public class DiggingController implements DiggingSpecification {
 
     private final DiggingService diggingService;
     private final DiggingLikeService diggingLikeService;
-    private final DiggingBookmarkService diggingBookmarkService;
 
     @GetMapping("/courses/{courseId}/digging-candidates")
     public ResponseEntity<DiggingCandidateResponse> getCandidates(
@@ -67,14 +64,6 @@ public class DiggingController implements DiggingSpecification {
             @RequestParam(required = false) Long cursor,
             @RequestParam(defaultValue = "20") int size) {
         return ResponseEntity.ok(diggingService.getMine(userId, cursor, size));
-    }
-
-    @GetMapping("/diggings/bookmarks")
-    public ResponseEntity<DiggingListResponse> getMyBookmarks(
-            @LoginUser Long userId,
-            @RequestParam(required = false) Long cursor,
-            @RequestParam(defaultValue = "20") int size) {
-        return ResponseEntity.ok(diggingService.getMyBookmarks(userId, cursor, size));
     }
 
     @GetMapping("/spots/{contentId}/diggings")
@@ -111,11 +100,5 @@ public class DiggingController implements DiggingSpecification {
     @PostMapping("/diggings/{diggingId}/like")
     public ResponseEntity<DiggingLikeResponse> toggleLike(@LoginUser Long userId, @PathVariable Long diggingId) {
         return ResponseEntity.ok(diggingLikeService.toggle(userId, diggingId));
-    }
-
-    @PostMapping("/diggings/{diggingId}/bookmark")
-    public ResponseEntity<DiggingBookmarkResponse> toggleBookmark(
-            @LoginUser Long userId, @PathVariable Long diggingId) {
-        return ResponseEntity.ok(diggingBookmarkService.toggle(userId, diggingId));
     }
 }

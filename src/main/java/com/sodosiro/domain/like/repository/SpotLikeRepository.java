@@ -14,6 +14,8 @@ public interface SpotLikeRepository extends JpaRepository<SpotLike, Long>, SpotL
 
     Optional<SpotLike> findByUserIdAndContentId(Long userId, Long contentId);
 
+    boolean existsByUserIdAndContentId(Long userId, Long contentId);
+
     List<SpotLike> findByUserIdAndContentIdIn(Long userId, Collection<Long> contentIds);
 
     @Query("""
