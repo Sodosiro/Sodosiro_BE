@@ -28,11 +28,12 @@ public class CourseQueryService {
     private final GpsRepository gpsRepository;
     private final ReviewRepository reviewRepository;
 
+    /** draft(미확정)도 status가 항상 UPCOMING이라 자연스럽게 UPCOMING 필터/전체 조회에 포함된다. */
     @Transactional(readOnly = true)
     public MyCourseListResponse getMyCourses(Long userId, CourseStatus status) {
         List<Course> courses = status == null
-                ? courseRepository.findByUserIdAndIsConfirmedTrueOrderByIdDesc(userId)
-                : courseRepository.findByUserIdAndIsConfirmedTrueAndStatusOrderByIdDesc(userId, status);
+                ? courseRepository.findByUserIdOrderByIdDesc(userId)
+                : courseRepository.findByUserIdAndStatusOrderByIdDesc(userId, status);
 
         return new MyCourseListResponse(
                 courses.stream().map(MyCourseListResponse.MyCourse::from).toList());

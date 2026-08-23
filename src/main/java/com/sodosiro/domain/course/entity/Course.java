@@ -156,17 +156,6 @@ public class Course {
         return course;
     }
 
-    public void confirm(TransportMode transportMode, List<DaySnapshot> days) {
-        this.transportMode = transportMode;
-        this.days = days;
-        if (mustVisitContentId != null && !containsMustVisitSpot(days)) {
-            this.mustVisitContentId = null;
-        }
-        this.isConfirmed = true;
-        applyResolvedStatus();
-        this.updatedAt = LocalDateTime.now();
-    }
-
     /** 확정 전 draft의 일자별 관광지 순서를 수정한다. 호출부에서 이미 확정된 코스가 아닌지 확인해야 한다. */
     public void updateDays(List<DaySnapshot> days) {
         this.days = days;

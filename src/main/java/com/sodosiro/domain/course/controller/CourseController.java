@@ -1,9 +1,5 @@
 package com.sodosiro.domain.course.controller;
 
-import com.sodosiro.domain.course.controller.dto.CourseConfirmCarRequest;
-import com.sodosiro.domain.course.controller.dto.CourseConfirmCarResponse;
-import com.sodosiro.domain.course.controller.dto.CourseConfirmPublicTransportRequest;
-import com.sodosiro.domain.course.controller.dto.CourseConfirmPublicTransportResponse;
 import com.sodosiro.domain.course.controller.dto.CourseConfirmRequest;
 import com.sodosiro.domain.course.controller.dto.CourseDayUpdateRequest;
 import com.sodosiro.domain.course.constants.CourseStatus;
@@ -61,18 +57,6 @@ public class CourseController implements CourseSpecification {
     public ResponseEntity<CourseRecommendResponse> recommend(@LoginUser Long userId, @RequestBody @Valid CourseRecommendRequest request) {
 
         return ResponseEntity.ok(courseRecommendationService.recommend(userId, request));
-    }
-
-    @PostMapping("/confirm/car")
-    public ResponseEntity<CourseConfirmCarResponse> confirmCar(@LoginUser Long userId, @RequestBody @Valid CourseConfirmCarRequest request) {
-
-        return ResponseEntity.ok(courseConfirmationService.confirmCar(userId, request));
-    }
-
-    @PostMapping("/confirm/public-transport")
-    public ResponseEntity<CourseConfirmPublicTransportResponse> confirmPublicTransport(@LoginUser Long userId, @RequestBody @Valid CourseConfirmPublicTransportRequest request) {
-
-        return ResponseEntity.ok(courseConfirmationService.confirmPublicTransport(userId, request));
     }
 
     @PatchMapping("/{courseId}/days")

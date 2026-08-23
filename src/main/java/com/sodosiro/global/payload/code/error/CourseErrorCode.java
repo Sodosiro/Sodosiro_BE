@@ -17,7 +17,6 @@ public enum CourseErrorCode implements BaseCode {
     _TOURIST_SPOT_NOT_FOUND(HttpStatus.NOT_FOUND, "COURSE404-SPOT_NOT_FOUND", "여행지를 찾을 수 없습니다."),
     _COURSE_NOT_FOUND(HttpStatus.NOT_FOUND, "COURSE404-NOT_FOUND", "코스를 찾을 수 없습니다."),
     _CONTENT_NOT_FOUND(HttpStatus.NOT_FOUND, "COURSE404-CONTENT_NOT_FOUND", "존재하지 않는 관광지가 포함되어 있습니다."),
-    _TRANSPORT_MODE_MISMATCH(HttpStatus.BAD_REQUEST, "COURSE400-TRANSPORT_MODE_MISMATCH", "추천 시 선택한 이동수단과 일치하지 않습니다."),
     _INVALID_SIGUNGU_CODE(HttpStatus.BAD_REQUEST, "COURSE400-INVALID_SIGUNGU_CODE", "지원하지 않는 시군구코드입니다."),
     _COURSE_ALREADY_CONFIRMED(HttpStatus.BAD_REQUEST, "COURSE400-ALREADY_CONFIRMED", "이미 확정된 코스는 수정할 수 없습니다."),
     _TRANSPORT_MODE_NOT_SELECTED(HttpStatus.BAD_REQUEST, "COURSE400-TRANSPORT_MODE_NOT_SELECTED", "이동수단이 선택되지 않은 코스입니다."),
