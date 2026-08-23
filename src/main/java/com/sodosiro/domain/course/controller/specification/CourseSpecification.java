@@ -29,7 +29,9 @@ public interface CourseSpecification {
 
     @Operation(summary = "코스 상세(일자별 스팟) 조회",
             description = "코스의 일자별 스팟 목록을 방문 순서대로 반환합니다. 각 스팟의 gpsVerified 는 해당 코스·일자에서 "
-                    + "이미 GPS 인증(POST /api/v1/gps)을 마쳤는지를 나타냅니다. 현장 GPS 인증 화면에서 사용합니다.")
+                    + "이미 GPS 인증(POST /api/v1/gps)을 마쳤는지를 나타냅니다. 현장 GPS 인증 화면에서 사용합니다. "
+                    + "reviewWritten 은 로그인 사용자가 해당 관광지(contentId)에 리뷰를 작성했는지를 나타내며(코스 단위가 아니라 관광지 단위), "
+                    + "작성했다면 reviewId 에 해당 리뷰 ID가, 아니면 null 이 내려갑니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "코스 상세 조회 성공"),
             @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자"),
