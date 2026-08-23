@@ -1,7 +1,7 @@
 package com.sodosiro.domain.course.service;
 
 import com.sodosiro.domain.course.controller.dto.CourseRecommendRequest;
-import com.sodosiro.domain.course.controller.dto.CourseRecommendResponse;
+import com.sodosiro.domain.course.entity.Course;
 import com.sodosiro.domain.course.service.dto.CandidatePoolResult;
 import com.sodosiro.domain.course.service.dto.CandidateSpot;
 import com.sodosiro.domain.course.service.dto.DayCandidatePool;
@@ -35,11 +35,11 @@ class CourseRuleBasedPlanner {
         this.candidatePoolBuilder = candidatePoolBuilder;
     }
 
-    List<CourseRecommendResponse.DayCourse> generate(CourseRecommendRequest request, List<LocalDate> dates, TouristSpot mustVisitSpot, int mustVisitDayIndex, float[] queryEmbedding) {
+    List<Course.DaySnapshot> generate(CourseRecommendRequest request, List<LocalDate> dates, TouristSpot mustVisitSpot, int mustVisitDayIndex, float[] queryEmbedding) {
 
         CandidatePoolResult pool = candidatePoolBuilder.build(request, dates, queryEmbedding, mustVisitSpot, mustVisitDayIndex);
 
-        List<CourseRecommendResponse.DayCourse> days = new ArrayList<>();
+        List<Course.DaySnapshot> days = new ArrayList<>();
         for (int i = 0; i < dates.size(); i++) {
             DayCandidatePool dayPool = pool.dayPools().get(i);
             DaySlotNeeds needs = pool.slotNeeds().get(i);
@@ -57,17 +57,17 @@ class CourseRuleBasedPlanner {
 
             List<TouristSpot> spotsForDay = contentIds.stream().map(pool.byId()::get).toList();
             if (spotsForDay.isEmpty()) {
-                days.add(new CourseRecommendResponse.DayCourse(i + 1, dates.get(i), List.of()));
+                days.add(new Course.DaySnapshot(i + 1, dates.get(i), List.of()));
                 continue;
             }
             List<TouristSpot> geoOrdered = orderByProximity(spotsForDay, mustVisitHere ? mustVisitSpot : null);
             List<Long> finalOrder = MealSlotOrdering.placeRestaurantsAtMealSlots(
                     geoOrdered.stream().map(TouristSpot::getContentId).toList(), pool.byId());
 
-            List<CourseRecommendResponse.RecommendedSpot> spots = finalOrder.stream()
-                    .map(contentId -> toRecommendedSpot(pool.byId().get(contentId), mustVisitHere && contentId.equals(mustVisitSpot.getContentId())))
+            List<Course.SpotSnapshot> spots = finalOrder.stream()
+                    .map(contentId -> toSpotSnapshot(pool.byId().get(contentId), mustVisitHere && contentId.equals(mustVisitSpot.getContentId())))
                     .toList();
-            days.add(new CourseRecommendResponse.DayCourse(i + 1, dates.get(i), spots));
+            days.add(new Course.DaySnapshot(i + 1, dates.get(i), spots));
         }
         return days;
     }
@@ -148,8 +148,8 @@ class CourseRuleBasedPlanner {
         return dx * dx + dy * dy;
     }
 
-    private CourseRecommendResponse.RecommendedSpot toRecommendedSpot(TouristSpot spot, boolean mustVisit) {
-        return new CourseRecommendResponse.RecommendedSpot(
+    private Course.SpotSnapshot toSpotSnapshot(TouristSpot spot, boolean mustVisit) {
+        return new Course.SpotSnapshot(
                 spot.getContentId(), spot.getTitle(), spot.getFirstImage(),
                 spot.getMapX(), spot.getMapY(), spot.getCategory(), mustVisit);
     }

@@ -3,7 +3,7 @@ package com.sodosiro.domain.course.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sodosiro.domain.course.constants.TravelStyle;
 import com.sodosiro.domain.course.controller.dto.CourseRecommendRequest;
-import com.sodosiro.domain.course.controller.dto.CourseRecommendResponse;
+import com.sodosiro.domain.course.entity.Course;
 import com.sodosiro.domain.course.service.dto.CandidatePoolResult;
 import com.sodosiro.domain.course.service.dto.DayCandidatePool;
 import com.sodosiro.domain.course.service.dto.LlmCourseDay;
@@ -67,7 +67,7 @@ public class CourseAiPlanner {
         this.chatClient = ChatClient.create(chatModel);
     }
 
-    public Optional<List<CourseRecommendResponse.DayCourse>> tryGenerate(CourseRecommendRequest request, List<LocalDate> dates, TouristSpot mustVisitSpot, int mustVisitDayIndex, float[] queryEmbedding) {
+    public Optional<List<Course.DaySnapshot>> tryGenerate(CourseRecommendRequest request, List<LocalDate> dates, TouristSpot mustVisitSpot, int mustVisitDayIndex, float[] queryEmbedding) {
 
         try {
             CandidatePoolResult pool = candidatePoolBuilder.build(request, dates, queryEmbedding, mustVisitSpot, mustVisitDayIndex);
@@ -76,8 +76,8 @@ public class CourseAiPlanner {
             for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
                 String responseText = chatClient.prompt().system(SYSTEM_PROMPT).user(userPrompt).call().content();
                 String[] failReason = new String[1];
-                Optional<List<CourseRecommendResponse.DayCourse>> validated =
-                        parseAndValidate(responseText, dates, pool, mustVisitSpot, mustVisitDayIndex, failReason);
+                Optional<List<Course.DaySnapshot>> validated = parseAndValidate(responseText, dates, pool, mustVisitSpot, mustVisitDayIndex, failReason);
+
                 if (validated.isPresent()) {
                     return validated;
                 }
@@ -92,7 +92,7 @@ public class CourseAiPlanner {
 
     // ---------- Validation ----------
 
-    private Optional<List<CourseRecommendResponse.DayCourse>> parseAndValidate(
+    private Optional<List<Course.DaySnapshot>> parseAndValidate(
             String responseText, List<LocalDate> dates, CandidatePoolResult pool,
             TouristSpot mustVisitSpot, int mustVisitDayIndex, String[] failReason) {
         LlmCourseResponse response;
@@ -153,14 +153,14 @@ public class CourseAiPlanner {
             byDay.put(day.day(), day);
         }
 
-        List<CourseRecommendResponse.DayCourse> result = new ArrayList<>();
+        List<Course.DaySnapshot> result = new ArrayList<>();
         for (int i = 0; i < dates.size(); i++) {
             LlmCourseDay day = byDay.get(i + 1);
             List<Long> orderedContentIds = MealSlotOrdering.placeRestaurantsAtMealSlots(day.contentIds(), pool.byId());
-            List<CourseRecommendResponse.RecommendedSpot> spots = orderedContentIds.stream()
-                    .map(contentId -> toRecommendedSpot(pool.byId().get(contentId), contentId.equals(mustVisitId)))
+            List<Course.SpotSnapshot> spots = orderedContentIds.stream()
+                    .map(contentId -> toSpotSnapshot(pool.byId().get(contentId), contentId.equals(mustVisitId)))
                     .toList();
-            result.add(new CourseRecommendResponse.DayCourse(i + 1, dates.get(i), spots));
+            result.add(new Course.DaySnapshot(i + 1, dates.get(i), spots));
         }
         return Optional.of(result);
     }
@@ -188,8 +188,8 @@ public class CourseAiPlanner {
         return trimmed.trim();
     }
 
-    private CourseRecommendResponse.RecommendedSpot toRecommendedSpot(TouristSpot spot, boolean mustVisit) {
-        return new CourseRecommendResponse.RecommendedSpot(
+    private Course.SpotSnapshot toSpotSnapshot(TouristSpot spot, boolean mustVisit) {
+        return new Course.SpotSnapshot(
                 spot.getContentId(), spot.getTitle(), spot.getFirstImage(),
                 spot.getMapX(), spot.getMapY(), spot.getCategory(), mustVisit);
     }

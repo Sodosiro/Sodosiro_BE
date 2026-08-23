@@ -43,7 +43,8 @@ public interface CourseSpecification {
             summary = "AI 코스 추천 생성",
             description = "사용자의 입력 조건을 바탕으로 맞춤형 여행 코스를 추천합니다. "
                     + "여행 기간, 선호 카테고리, 특정 여행지 포함 여부 등을 반영하여 최적의 코스를 구성하며, "
-                    + "로그인한 사용자의 고유 식별자(userId)를 기반으로 코스를 생성합니다."
+                    + "로그인한 사용자의 고유 식별자(userId)를 기반으로 코스를 생성해 draft로 저장합니다. "
+                    + "응답은 courseId만 반환하며, 코스 내용은 GET /api/v1/courses/{courseId}로 조회합니다."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "코스 추천 성공"),
