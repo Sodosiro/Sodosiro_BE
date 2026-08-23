@@ -24,7 +24,8 @@ public interface CourseSpecification {
                     + "코스에는 이름 필드가 없으므로 displayName 은 대표 스팟명으로 합성되고(예: \"영진횟집 외 9곳\"), "
                     + "thumbnail 은 첫 스팟의 이미지입니다. "
                     + "아직 확정하지 않은 draft가 있으면 status=UPCOMING(생략 시에도 포함)일 때 함께 나오며, "
-                    + "isConfirmed=false 로 구분할 수 있습니다.")
+                    + "isConfirmed=false 로 구분할 수 있습니다. sigunguCode 는 코스 자체에 저장된 값이 아니라 "
+                    + "코스 첫 스팟의 지역(TouristSpot.ldongSignguCode)에서 가져옵니다.")
     ResponseEntity<MyCourseListResponse> getMyCourses(Long userId, CourseStatus status);
 
     @Operation(summary = "코스 상세(일자별 스팟) 조회",
