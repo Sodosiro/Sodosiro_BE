@@ -79,6 +79,7 @@ public class DiggingService {
                         spot.contentId(),
                         spot.title(),
                         spot.firstImage(),
+                        spot.category(),
                         postedContentIds.contains(spot.contentId())))
                 .toList();
 

@@ -12,6 +12,7 @@ public record DiggingCandidateResponse(
             Long contentId,
             String title,
             String firstImage,
+            Integer category,
             boolean alreadyPosted
     ) {
     }
