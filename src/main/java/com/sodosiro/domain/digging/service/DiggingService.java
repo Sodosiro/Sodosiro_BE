@@ -17,6 +17,7 @@ import com.sodosiro.domain.digging.repository.DiggingImageRepository;
 import com.sodosiro.domain.digging.repository.DiggingLikeRepository;
 import com.sodosiro.domain.digging.repository.DiggingRepository;
 import com.sodosiro.domain.digging.service.event.DiggingImageChangedEvent;
+import com.sodosiro.domain.gps.repository.GpsRepository;
 import com.sodosiro.domain.travel.entity.TouristSpot;
 import com.sodosiro.domain.travel.repository.TouristSpotRepository;
 import com.sodosiro.domain.user.entity.User;
@@ -50,6 +51,7 @@ public class DiggingService {
     private final DiggingImageRepository diggingImageRepository;
     private final DiggingLikeRepository diggingLikeRepository;
     private final DiggingBookmarkRepository diggingBookmarkRepository;
+    private final GpsRepository gpsRepository;
     private final CourseRepository courseRepository;
     private final TouristSpotRepository touristSpotRepository;
     private final UserRepository userRepository;
@@ -106,7 +108,7 @@ public class DiggingService {
         List<DiggingImage> savedImages = saveImages(digging.getId(), uploadedUrls);
 
         return DiggingResponse.of(digging, findUser(userId), findSpot(request.contentId()),
-                savedImages, false, false, userId);
+                savedImages, false, false, isGpsVerified(request.courseId(), request.contentId()), userId);
     }
 
     @Transactional
@@ -137,7 +139,8 @@ public class DiggingService {
         digging.update(request.body());
 
         return DiggingResponse.of(digging, findUser(userId), findSpot(digging.getContentId()),
-                savedImages, isLiked(userId, diggingId), isBookmarked(userId, diggingId), userId);
+                savedImages, isLiked(userId, diggingId), isBookmarked(userId, diggingId),
+                isGpsVerified(digging.getCourseId(), digging.getContentId()), userId);
     }
 
     @Transactional
@@ -170,6 +173,7 @@ public class DiggingService {
                 diggingImageRepository.findAllByDiggingIdOrderByDisplayOrderAsc(diggingId),
                 isLiked(loginUserId, diggingId),
                 isBookmarked(loginUserId, diggingId),
+                isGpsVerified(digging.getCourseId(), digging.getContentId()),
                 loginUserId);
     }
 
@@ -230,6 +234,11 @@ public class DiggingService {
                 : diggingBookmarkRepository.findByUserIdAndDiggingIdIn(loginUserId, diggingIds).stream()
                         .map(DiggingBookmark::getDiggingId).collect(Collectors.toSet());
 
+        Set<String> verifiedCourseContentKeys = gpsRepository
+                .findByCourseIdIn(diggings.stream().map(Digging::getCourseId).distinct().toList()).stream()
+                .map(gps -> verificationKey(gps.getCourseId(), gps.getContentId()))
+                .collect(Collectors.toSet());
+
         return diggings.stream()
                 .map(digging -> DiggingResponse.of(
                         digging,
@@ -238,6 +247,7 @@ public class DiggingService {
                         imageMap.getOrDefault(digging.getId(), List.of()),
                         likedIds.contains(digging.getId()),
                         bookmarkedIds.contains(digging.getId()),
+                        verifiedCourseContentKeys.contains(verificationKey(digging.getCourseId(), digging.getContentId())),
                         loginUserId))
                 .toList();
     }
@@ -276,6 +286,14 @@ public class DiggingService {
 
     private boolean isBookmarked(Long userId, Long diggingId) {
         return userId != null && diggingBookmarkRepository.findByDiggingIdAndUserId(diggingId, userId).isPresent();
+    }
+
+    private boolean isGpsVerified(Long courseId, Long contentId) {
+        return gpsRepository.existsByCourseIdAndContentId(courseId, contentId);
+    }
+
+    private static String verificationKey(Long courseId, Long contentId) {
+        return courseId + "|" + contentId;
     }
 
     private User findUser(Long userId) {

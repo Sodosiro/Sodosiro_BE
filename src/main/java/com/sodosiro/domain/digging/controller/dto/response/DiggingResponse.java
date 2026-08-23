@@ -18,6 +18,7 @@ public record DiggingResponse(
         boolean isLikedByMe,
         boolean isBookmarkedByMe,
         boolean isMyDigging,
+        boolean isGpsVerified,
         LocalDateTime createdAt
 ) {
     public record AuthorInfo(Long userId, String displayName, String profileImageUrl) {
@@ -51,6 +52,7 @@ public record DiggingResponse(
             List<DiggingImage> images,
             boolean liked,
             boolean bookmarked,
+            boolean gpsVerified,
             Long loginUserId) {
         return new DiggingResponse(
                 digging.getId(),
@@ -63,6 +65,7 @@ public record DiggingResponse(
                 liked,
                 bookmarked,
                 digging.getUserId().equals(loginUserId),
+                gpsVerified,
                 digging.getCreatedAt()
         );
     }
