@@ -29,12 +29,12 @@ public record DiggingResponse(
         }
     }
 
-    public record SpotSummary(Long contentId, String title, String firstImage) {
+    public record SpotSummary(Long contentId, String title, String firstImage,Integer category) {
         public static SpotSummary from(TouristSpot spot) {
             if (spot == null) {
                 return null;
             }
-            return new SpotSummary(spot.getContentId(), spot.getTitle(), spot.getFirstImage());
+            return new SpotSummary(spot.getContentId(), spot.getTitle(), spot.getFirstImage(),spot.getCategory());
         }
     }
 
