@@ -14,7 +14,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -25,16 +24,12 @@ import org.hibernate.annotations.NotFoundAction;
 
 /**
  * 완료된 코스에 포함된 여행지 1곳에 대해 남기는 회고 포스팅.
- * 같은 코스의 같은 여행지에는 1건만 작성할 수 있다.
+ * 같은 코스의 같은 여행지에는 활성 디깅 1건만 작성할 수 있다.
  */
 @Entity
 @Getter
 @Table(
         name = "digging",
-        uniqueConstraints = @UniqueConstraint(
-                name = "uk_digging_course_content",
-                columnNames = {"course_id", "content_id"}
-        ),
         indexes = {
                 @Index(name = "idx_digging_user", columnList = "user_id"),
                 @Index(name = "idx_digging_content", columnList = "content_id")

@@ -23,6 +23,7 @@ public class DiggingQueryRepositoryImpl implements DiggingQueryRepository {
     public List<Digging> findByContentId(Long contentId, Long cursor, int size) {
         return baseQuery(cursor, size)
                 .where(d.contentId.eq(contentId))
+                .orderBy(d.createdAt.desc())
                 .fetch();
     }
 
