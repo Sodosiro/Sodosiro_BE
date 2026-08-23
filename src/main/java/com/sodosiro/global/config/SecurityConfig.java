@@ -45,6 +45,9 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/admin/**").hasRole("ADMIN")
+                        // /api/v1/regions/** 는 아래에서 permitAll 이지만, 본인 GPS 기록을 보여주는
+                        // /visited 만은 로그인이 필요하다 — 더 구체적인 규칙이라 wildcard 보다 먼저 선언한다.
+                        .requestMatchers("/api/v1/regions/visited").authenticated()
                         .requestMatchers("/", "/login/**", "/oauth2/**", "/error",
                                 "/v1/auth/reissue", "/v1/auth/social", "/v1/travel/**",
                                 "/api/v1/travel/**", "/api/v1/regions/**", "/api/v1/festivals/**",
