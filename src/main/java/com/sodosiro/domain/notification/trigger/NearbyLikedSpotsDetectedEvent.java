@@ -9,6 +9,7 @@ public record NearbyLikedSpotsDetectedEvent(
         Long nearestContentId,
         String nearestSpotTitle,
         int nearbyCount,
-        List<String> nearbySpotTitles
+        List<String> nearbySpotTitles,
+        List<Long> nearbyContentIds
 ) implements NotificationTrigger {
 }

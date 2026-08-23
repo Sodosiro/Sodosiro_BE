@@ -33,7 +33,7 @@ public class NearbyLikedSpotsNotificationFactory implements NotificationFactory<
                 body,
                 Map.of(
                         "courseId", event.courseId(),
-                        "nearestContentId", event.nearestContentId(),
+                        "nearbyContentIds", event.nearbyContentIds(),
                         "nearbyCount", event.nearbyCount()),
                 "NEARBY:COURSE:%d:SPOT:%d".formatted(event.courseId(), event.nearestContentId()),
                 event.courseEndDate().plusDays(1).atStartOfDay()

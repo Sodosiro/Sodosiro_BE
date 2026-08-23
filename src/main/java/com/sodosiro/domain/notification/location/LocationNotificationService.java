@@ -23,7 +23,8 @@ public class LocationNotificationService {
             Long nearestContentId,
             String nearestSpotTitle,
             int nearbyCount,
-            List<String> nearbySpotTitles) {
+            List<String> nearbySpotTitles,
+            List<Long> nearbyContentIds) {
         NearbyLikedSpotsDetectedEvent event = new NearbyLikedSpotsDetectedEvent(
                 userId,
                 courseId,
@@ -31,7 +32,8 @@ public class LocationNotificationService {
                 nearestContentId,
                 nearestSpotTitle,
                 nearbyCount,
-                nearbySpotTitles
+                nearbySpotTitles,
+                nearbyContentIds
         );
         return notificationFactory.create(event).stream()
                 .anyMatch(notificationFacade::create);

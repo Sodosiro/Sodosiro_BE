@@ -148,7 +148,8 @@ public class LocationUpdateService {
                 nearestContentId,
                 nearestTitle,
                 nearbySpots.size(),
-                nearbyTitles
+                nearbyTitles,
+                nearbyContentIds
         );
     }
 

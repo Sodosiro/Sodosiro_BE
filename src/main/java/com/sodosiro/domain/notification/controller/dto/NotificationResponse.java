@@ -21,7 +21,7 @@ public record NotificationResponse(
         String body,
 
         @Schema(description = "알림 종류별 추가 정보. 클릭 시 이동할 대상 식별에 사용한다 "
-                + "(NEARBY_LIKED_SPOTS: courseId·nearestContentId·nearbyCount, "
+                + "(NEARBY_LIKED_SPOTS: courseId·nearbyContentIds(거리순 배열)·nearbyCount, "
                 + "REVIEW_REQUEST: courseId·pendingSpotCount, "
                 + "DIGGING_POST_LIKE: diggingId·likerUserId). "
                 + "타입별 실제 예시는 GET /v1/notifications 응답 예시를 참고한다.",

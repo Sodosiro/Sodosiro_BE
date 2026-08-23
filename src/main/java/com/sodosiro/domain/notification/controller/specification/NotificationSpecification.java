@@ -33,7 +33,7 @@ public interface NotificationSpecification {
                                   "body": "설악산 국립공원, 낙산사, 속초해수욕장, 아바이마을",
                                   "payload": {
                                     "courseId": 12,
-                                    "nearestContentId": 126508,
+                                    "nearbyContentIds": [126508, 126510, 126522, 126599],
                                     "nearbyCount": 4
                                   },
                                   "isRead": false,
