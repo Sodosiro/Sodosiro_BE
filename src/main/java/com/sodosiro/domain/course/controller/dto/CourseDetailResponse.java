@@ -15,7 +15,9 @@ public record CourseDetailResponse(
         LocalDate endDate,
         TransportMode transportMode,
         CourseStatus status,
-        List<DayDetail> days
+        List<DayDetail> days,
+        List<Course.DayCarRoute> carRoutes,
+        List<Course.DayPublicTransportRoute> transitRoutes
 ) {
     public record DayDetail(int day, LocalDate date, List<SpotDetail> spots) {
     }
@@ -52,6 +54,7 @@ public record CourseDetailResponse(
                 .toList();
         return new CourseDetailResponse(
                 course.getId(), course.getTitle(), course.getStartDate(), course.getEndDate(),
-                course.getTransportMode(), course.getStatus(), days);
+                course.getTransportMode(), course.getStatus(), days,
+                course.getCarRoutes(), course.getTransitRoutes());
     }
 }

@@ -4,6 +4,7 @@ import com.sodosiro.domain.course.controller.dto.CourseConfirmCarRequest;
 import com.sodosiro.domain.course.controller.dto.CourseConfirmCarResponse;
 import com.sodosiro.domain.course.controller.dto.CourseConfirmPublicTransportRequest;
 import com.sodosiro.domain.course.controller.dto.CourseConfirmPublicTransportResponse;
+import com.sodosiro.domain.course.controller.dto.CourseConfirmRequest;
 import com.sodosiro.domain.course.controller.dto.DayConfirm;
 import com.sodosiro.domain.course.entity.Course;
 import com.sodosiro.domain.course.repository.CourseRepository;
@@ -56,6 +57,62 @@ public class CourseConfirmationService {
                         dayConfirm.day(), calculatePublicTransportDetails(toWaypoints(dayConfirm, spotsById))))
                 .toList();
         return new CourseConfirmPublicTransportResponse(days);
+    }
+
+    /** 확정 전 draft의 일자별 관광지 순서를 수정한다. */
+    public void updateDraftDays(Long userId, Long courseId, List<DayConfirm> days) {
+        Course course = courseRepository.findByIdAndUserId(courseId, userId)
+                .orElseThrow(() -> new GeneralException(CourseErrorCode._COURSE_NOT_FOUND));
+
+        if (course.getIsConfirmed()) {
+            throw new GeneralException(CourseErrorCode._COURSE_ALREADY_CONFIRMED);
+        }
+
+        Map<Long, TouristSpot> spotsById = findSpotsByContentId(days);
+
+        Map<Integer, LocalDate> datesByDay = course.getDays().stream()
+                .collect(Collectors.toMap(Course.DaySnapshot::day, Course.DaySnapshot::date));
+
+        List<Course.DaySnapshot> rebuiltDays = days.stream()
+                .map(dayConfirm -> toSnapshot(dayConfirm, spotsById, course.getMustVisitContentId(), datesByDay))
+                .toList();
+
+        course.updateDays(rebuiltDays);
+    }
+
+    /**
+     * draft에 이미 저장된 transportMode/days를 그대로 사용해 코스를 확정한다.
+     * 요청은 courseId만 받으며, 어떤 카카오 API를 호출할지는 draft의 transportMode로 결정한다.
+     * 계산된 경로는 저장만 하고 응답으로 돌려주지 않는다 — GET /courses/{courseId}로 조회한다.
+     */
+    public void confirm(Long userId, CourseConfirmRequest request) {
+
+        Course course = courseRepository.findByIdAndUserId(request.courseId(), userId)
+                .orElseThrow(() -> new GeneralException(CourseErrorCode._COURSE_NOT_FOUND));
+
+        TransportMode transportMode = course.getTransportMode();
+        if (transportMode == null) {
+            throw new GeneralException(CourseErrorCode._TRANSPORT_MODE_NOT_SELECTED);
+        }
+
+        if (transportMode == TransportMode.CAR) {
+            List<Course.DayCarRoute> days = course.getDays().stream()
+                    .map(day -> new Course.DayCarRoute(day.day(), calculateCarLegs(toWaypointsFromSnapshot(day.spots()))))
+                    .toList();
+            course.updateCarRoutes(days);
+        } else {
+            List<Course.DayPublicTransportRoute> days = course.getDays().stream()
+                    .map(day -> new Course.DayPublicTransportRoute(day.day(), calculatePublicTransportDetails(toWaypointsFromSnapshot(day.spots()))))
+                    .toList();
+            course.updateTransitRoutes(days);
+        }
+        course.confirmDraft();
+    }
+
+    private List<RouteWaypoint> toWaypointsFromSnapshot(List<Course.SpotSnapshot> spots) {
+        return spots.stream()
+                .map(spot -> new RouteWaypoint(spot.contentId(), spot.mapX(), spot.mapY()))
+                .toList();
     }
 
     /** draft 소유자 검증 후 제출된 최종 장소/순서로 draft를 확정 상태로 덮어쓴다. */
