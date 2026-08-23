@@ -2,6 +2,7 @@ package com.sodosiro.domain.course.controller.dto;
 
 import com.sodosiro.domain.course.constants.CourseStatus;
 import com.sodosiro.domain.course.entity.Course;
+import com.sodosiro.domain.route.constants.TransportMode;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -10,10 +11,14 @@ import java.util.Set;
 
 public record CourseDetailResponse(
         Long courseId,
+        String title,
         LocalDate startDate,
         LocalDate endDate,
+        TransportMode transportMode,
         CourseStatus status,
-        List<DayDetail> days
+        List<DayDetail> days,
+        List<Course.DayCarRoute> carRoutes,
+        List<Course.DayPublicTransportRoute> transitRoutes
 ) {
     public record DayDetail(int day, LocalDate date, List<SpotDetail> spots) {
     }
@@ -60,6 +65,8 @@ public record CourseDetailResponse(
                                 .toList()))
                 .toList();
         return new CourseDetailResponse(
-                course.getId(), course.getStartDate(), course.getEndDate(), course.getStatus(), days);
+                course.getId(), course.getTitle(), course.getStartDate(), course.getEndDate(),
+                course.getTransportMode(), course.getStatus(), days,
+                course.getCarRoutes(), course.getTransitRoutes());
     }
 }

@@ -16,7 +16,11 @@ public enum CourseErrorCode implements BaseCode {
     _COURSE_NOT_STARTABLE(HttpStatus.BAD_REQUEST, "COURSE400-NOT_STARTABLE", "오늘 진행할 수 있는 확정 코스만 시작할 수 있습니다."),
     _TOURIST_SPOT_NOT_FOUND(HttpStatus.NOT_FOUND, "COURSE404-SPOT_NOT_FOUND", "여행지를 찾을 수 없습니다."),
     _COURSE_NOT_FOUND(HttpStatus.NOT_FOUND, "COURSE404-NOT_FOUND", "코스를 찾을 수 없습니다."),
-    _CONTENT_NOT_FOUND(HttpStatus.NOT_FOUND, "COURSE404-CONTENT_NOT_FOUND", "존재하지 않는 관광지가 포함되어 있습니다.");
+    _CONTENT_NOT_FOUND(HttpStatus.NOT_FOUND, "COURSE404-CONTENT_NOT_FOUND", "존재하지 않는 관광지가 포함되어 있습니다."),
+    _INVALID_SIGUNGU_CODE(HttpStatus.BAD_REQUEST, "COURSE400-INVALID_SIGUNGU_CODE", "지원하지 않는 시군구코드입니다."),
+    _COURSE_ALREADY_CONFIRMED(HttpStatus.BAD_REQUEST, "COURSE400-ALREADY_CONFIRMED", "이미 확정된 코스는 수정할 수 없습니다."),
+    _TRANSPORT_MODE_NOT_SELECTED(HttpStatus.BAD_REQUEST, "COURSE400-TRANSPORT_MODE_NOT_SELECTED", "이동수단이 선택되지 않은 코스입니다."),
+    _TRAVEL_DATE_OVERLAP(HttpStatus.BAD_REQUEST, "COURSE400-TRAVEL_DATE_OVERLAP", "이미 확정된 다른 여행 기간과 겹칩니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

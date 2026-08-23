@@ -10,4 +10,6 @@ public interface TouristSpotRepository extends JpaRepository<TouristSpot, Long>,
     List<TouristSpot> findByCategoryInAndLdongSignguCodeOrderByAvgRatingDesc(List<Integer> categories, String ldongSignguCode, Pageable pageable);
 
     List<TouristSpot> findByLdongSignguCodeOrderByAvgRatingDesc(String ldongSignguCode, Pageable pageable);
+
+    boolean existsByLdongSignguCode(String ldongSignguCode);
 }

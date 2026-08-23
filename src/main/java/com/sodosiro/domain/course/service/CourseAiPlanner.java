@@ -3,7 +3,7 @@ package com.sodosiro.domain.course.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sodosiro.domain.course.constants.TravelStyle;
 import com.sodosiro.domain.course.controller.dto.CourseRecommendRequest;
-import com.sodosiro.domain.course.controller.dto.CourseRecommendResponse;
+import com.sodosiro.domain.course.entity.Course;
 import com.sodosiro.domain.course.service.dto.CandidatePoolResult;
 import com.sodosiro.domain.course.service.dto.DayCandidatePool;
 import com.sodosiro.domain.course.service.dto.LlmCourseDay;
@@ -67,7 +67,7 @@ public class CourseAiPlanner {
         this.chatClient = ChatClient.create(chatModel);
     }
 
-    public Optional<List<CourseRecommendResponse.DayCourse>> tryGenerate(CourseRecommendRequest request, List<LocalDate> dates, TouristSpot mustVisitSpot, int mustVisitDayIndex, float[] queryEmbedding) {
+    public Optional<List<Course.DaySnapshot>> tryGenerate(CourseRecommendRequest request, List<LocalDate> dates, TouristSpot mustVisitSpot, int mustVisitDayIndex, float[] queryEmbedding) {
 
         try {
             CandidatePoolResult pool = candidatePoolBuilder.build(request, dates, queryEmbedding, mustVisitSpot, mustVisitDayIndex);
@@ -75,12 +75,13 @@ public class CourseAiPlanner {
 
             for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
                 String responseText = chatClient.prompt().system(SYSTEM_PROMPT).user(userPrompt).call().content();
-                Optional<List<CourseRecommendResponse.DayCourse>> validated =
-                        parseAndValidate(responseText, dates, pool, mustVisitSpot, mustVisitDayIndex);
+                String[] failReason = new String[1];
+                Optional<List<Course.DaySnapshot>> validated = parseAndValidate(responseText, dates, pool, mustVisitSpot, mustVisitDayIndex, failReason);
+
                 if (validated.isPresent()) {
                     return validated;
                 }
-                log.warn("AI 코스 검증 실패(시도 {}/{})", attempt, MAX_ATTEMPTS);
+                log.warn("AI 코스 검증 실패(시도 {}/{}): {}", attempt, MAX_ATTEMPTS, failReason[0]);
             }
             return Optional.empty();
         } catch (Exception exception) {
@@ -91,17 +92,20 @@ public class CourseAiPlanner {
 
     // ---------- Validation ----------
 
-    private Optional<List<CourseRecommendResponse.DayCourse>> parseAndValidate(
+    private Optional<List<Course.DaySnapshot>> parseAndValidate(
             String responseText, List<LocalDate> dates, CandidatePoolResult pool,
-            TouristSpot mustVisitSpot, int mustVisitDayIndex) {
+            TouristSpot mustVisitSpot, int mustVisitDayIndex, String[] failReason) {
         LlmCourseResponse response;
         try {
             response = objectMapper.readValue(stripCodeFence(responseText), LlmCourseResponse.class);
         } catch (Exception exception) {
             log.warn("AI 코스 응답 파싱 실패: {}", responseText, exception);
+            failReason[0] = "JSON 파싱 실패";
             return Optional.empty();
         }
         if (response == null || response.days() == null || response.days().size() != dates.size()) {
+            failReason[0] = "days 개수 불일치(응답=%s, 기대=%d)".formatted(
+                    response == null || response.days() == null ? "null" : response.days().size(), dates.size());
             return Optional.empty();
         }
 
@@ -110,10 +114,12 @@ public class CourseAiPlanner {
 
         for (LlmCourseDay day : response.days()) {
             if (day.day() < 1 || day.day() > dates.size() || byDay.containsKey(day.day())) {
+                failReason[0] = "day 필드 이상(day=%d)".formatted(day.day());
                 return Optional.empty();
             }
             if (day.contentIds() == null || day.contentIds().size() != DAILY_SLOT_COUNT
                     || new HashSet<>(day.contentIds()).size() != DAILY_SLOT_COUNT) {
+                failReason[0] = "day %d contentIds 개수/중복 오류(%s)".formatted(day.day(), day.contentIds());
                 return Optional.empty();
             }
 
@@ -125,6 +131,7 @@ public class CourseAiPlanner {
             for (Long contentId : day.contentIds()) {
                 //그 날짜 자신의 풀 안의 id만 허용: 다른 날짜의 풀은 애초에 이 Set에 없으므로 전역 중복도 여기서 함께 걸러진다.
                 if (!validIds.contains(contentId)) {
+                    failReason[0] = "day %d 유효하지 않은 contentId=%d(풀=%s)".formatted(day.day(), contentId, validIds);
                     return Optional.empty();
                 }
                 TouristSpot spot = pool.byId().get(contentId);
@@ -136,22 +143,24 @@ public class CourseAiPlanner {
                 }
             }
             if (restaurantCount != RESTAURANT_SLOTS_PER_DAY) {
+                failReason[0] = "day %d 식당 개수 불일치(응답=%d, 기대=%d)".formatted(day.day(), restaurantCount, RESTAURANT_SLOTS_PER_DAY);
                 return Optional.empty();
             }
             if (mustVisitId != null && day.day() - 1 == mustVisitDayIndex && !mustVisitIncluded) {
+                failReason[0] = "day %d mustVisit(%d) 누락".formatted(day.day(), mustVisitId);
                 return Optional.empty();
             }
             byDay.put(day.day(), day);
         }
 
-        List<CourseRecommendResponse.DayCourse> result = new ArrayList<>();
+        List<Course.DaySnapshot> result = new ArrayList<>();
         for (int i = 0; i < dates.size(); i++) {
             LlmCourseDay day = byDay.get(i + 1);
             List<Long> orderedContentIds = MealSlotOrdering.placeRestaurantsAtMealSlots(day.contentIds(), pool.byId());
-            List<CourseRecommendResponse.RecommendedSpot> spots = orderedContentIds.stream()
-                    .map(contentId -> toRecommendedSpot(pool.byId().get(contentId), contentId.equals(mustVisitId)))
+            List<Course.SpotSnapshot> spots = orderedContentIds.stream()
+                    .map(contentId -> toSpotSnapshot(pool.byId().get(contentId), contentId.equals(mustVisitId)))
                     .toList();
-            result.add(new CourseRecommendResponse.DayCourse(i + 1, dates.get(i), spots));
+            result.add(new Course.DaySnapshot(i + 1, dates.get(i), spots));
         }
         return Optional.of(result);
     }
@@ -179,8 +188,8 @@ public class CourseAiPlanner {
         return trimmed.trim();
     }
 
-    private CourseRecommendResponse.RecommendedSpot toRecommendedSpot(TouristSpot spot, boolean mustVisit) {
-        return new CourseRecommendResponse.RecommendedSpot(
+    private Course.SpotSnapshot toSpotSnapshot(TouristSpot spot, boolean mustVisit) {
+        return new Course.SpotSnapshot(
                 spot.getContentId(), spot.getTitle(), spot.getFirstImage(),
                 spot.getMapX(), spot.getMapY(), spot.getCategory(), mustVisit);
     }

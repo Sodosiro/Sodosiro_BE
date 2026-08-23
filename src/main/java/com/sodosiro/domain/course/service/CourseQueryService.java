@@ -19,7 +19,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** 확정된 내 코스 목록/상세 조회. 디깅 작성, GPS 인증 화면 등에서 사용한다. */
+/** 확정된 내 코스 목록/상세 조회 및 코스 삭제. 디깅 작성, GPS 인증 화면 등에서 사용한다. */
 @Service
 @RequiredArgsConstructor
 public class CourseQueryService {
@@ -28,11 +28,12 @@ public class CourseQueryService {
     private final GpsRepository gpsRepository;
     private final ReviewRepository reviewRepository;
 
+    /** draft(미확정)도 status가 항상 UPCOMING이라 자연스럽게 UPCOMING 필터/전체 조회에 포함된다. */
     @Transactional(readOnly = true)
     public MyCourseListResponse getMyCourses(Long userId, CourseStatus status) {
         List<Course> courses = status == null
-                ? courseRepository.findByUserIdAndIsConfirmedTrueOrderByIdDesc(userId)
-                : courseRepository.findByUserIdAndIsConfirmedTrueAndStatusOrderByIdDesc(userId, status);
+                ? courseRepository.findByUserIdOrderByIdDesc(userId)
+                : courseRepository.findByUserIdAndStatusOrderByIdDesc(userId, status);
 
         return new MyCourseListResponse(
                 courses.stream().map(MyCourseListResponse.MyCourse::from).toList());
@@ -56,5 +57,13 @@ public class CourseQueryService {
                 .collect(Collectors.toMap(Review::getContentId, Review::getId));
 
         return CourseDetailResponse.from(course, verifiedKeys, reviewIdByContentId);
+    }
+
+    /** 상태(draft/확정/진행중/완료) 상관없이 삭제 가능하다. GPS 인증·디깅 기록은 건드리지 않는다. */
+    @Transactional
+    public void deleteCourse(Long userId, Long courseId) {
+        Course course = courseRepository.findByIdAndUserId(courseId, userId)
+                .orElseThrow(() -> new GeneralException(CourseErrorCode._COURSE_NOT_FOUND));
+        courseRepository.delete(course);
     }
 }

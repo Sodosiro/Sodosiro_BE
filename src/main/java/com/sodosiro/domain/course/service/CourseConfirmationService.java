@@ -2,16 +2,13 @@ package com.sodosiro.domain.course.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sodosiro.domain.course.controller.dto.CourseConfirmCarRequest;
-import com.sodosiro.domain.course.controller.dto.CourseConfirmCarResponse;
-import com.sodosiro.domain.course.controller.dto.CourseConfirmPublicTransportRequest;
-import com.sodosiro.domain.course.controller.dto.CourseConfirmPublicTransportResponse;
+import com.sodosiro.domain.course.controller.dto.CourseConfirmRequest;
 import com.sodosiro.domain.course.controller.dto.DayConfirm;
 import com.sodosiro.domain.course.entity.Course;
 import com.sodosiro.domain.course.repository.CourseRepository;
 import com.sodosiro.domain.course.service.dto.ActiveCourseCache;
 import com.sodosiro.domain.route.dto.RouteWaypoint;
-import com.sodosiro.domain.route.dto.TransportMode;
+import com.sodosiro.domain.route.constants.TransportMode;
 import com.sodosiro.domain.route.service.AdjacentRouteResult;
 import com.sodosiro.domain.route.service.RouteCalculationService;
 import com.sodosiro.domain.travel.entity.TouristSpot;
@@ -50,34 +47,17 @@ public class CourseConfirmationService {
     private final RedisService redisService;
     private final ObjectMapper objectMapper;
 
-    public CourseConfirmCarResponse confirmCar(Long userId, CourseConfirmCarRequest request) {
-
-        Map<Long, TouristSpot> spotsById = confirmCourse(userId, request.courseId(), request.days(), TransportMode.CAR);
-
-        List<CourseConfirmCarResponse.DayCarRoute> days = request.days().stream()
-                .map(dayConfirm -> new CourseConfirmCarResponse.DayCarRoute(dayConfirm.day(), calculateCarLegs(toWaypoints(dayConfirm, spotsById))))
-                .toList();
-        return new CourseConfirmCarResponse(days);
-    }
-
-    public CourseConfirmPublicTransportResponse confirmPublicTransport(Long userId, CourseConfirmPublicTransportRequest request) {
-
-        Map<Long, TouristSpot> spotsById = confirmCourse(userId, request.courseId(), request.days(), TransportMode.PUBLIC_TRANSPORT);
-
-        List<CourseConfirmPublicTransportResponse.DayPublicTransportRoute> days = request.days().stream()
-                .map(dayConfirm -> new CourseConfirmPublicTransportResponse.DayPublicTransportRoute(
-                        dayConfirm.day(), calculatePublicTransportDetails(toWaypoints(dayConfirm, spotsById))))
-                .toList();
-        return new CourseConfirmPublicTransportResponse(days);
-    }
-
-    /** draft 소유자 검증 후 제출된 최종 장소/순서로 draft를 확정 상태로 덮어쓴다. */
-    private Map<Long, TouristSpot> confirmCourse(Long userId, Long courseId, List<DayConfirm> days, TransportMode transportMode) {
-
+    /** 확정 전 draft의 일자별 관광지 순서를 수정한다. */
+    public void updateDraftDays(Long userId, Long courseId, List<DayConfirm> days) {
         Course course = courseRepository.findByIdAndUserId(courseId, userId)
                 .orElseThrow(() -> new GeneralException(CourseErrorCode._COURSE_NOT_FOUND));
 
+        if (course.getIsConfirmed()) {
+            throw new GeneralException(CourseErrorCode._COURSE_ALREADY_CONFIRMED);
+        }
+
         Map<Long, TouristSpot> spotsById = findSpotsByContentId(days);
+
         Map<Integer, LocalDate> datesByDay = course.getDays().stream()
                 .collect(Collectors.toMap(Course.DaySnapshot::day, Course.DaySnapshot::date));
 
@@ -85,9 +65,43 @@ public class CourseConfirmationService {
                 .map(dayConfirm -> toSnapshot(dayConfirm, spotsById, course.getMustVisitContentId(), datesByDay))
                 .toList();
 
-        course.confirm(transportMode, rebuiltDays);
+        course.updateDays(rebuiltDays);
+    }
+
+    /**
+     * draft에 이미 저장된 transportMode/days를 그대로 사용해 코스를 확정한다.
+     * 요청은 courseId만 받으며, 어떤 카카오 API를 호출할지는 draft의 transportMode로 결정한다.
+     * 계산된 경로는 저장만 하고 응답으로 돌려주지 않는다 — GET /courses/{courseId}로 조회한다.
+     */
+    public void confirm(Long userId, CourseConfirmRequest request) {
+
+        Course course = courseRepository.findByIdAndUserId(request.courseId(), userId)
+                .orElseThrow(() -> new GeneralException(CourseErrorCode._COURSE_NOT_FOUND));
+
+        TransportMode transportMode = course.getTransportMode();
+        if (transportMode == null) {
+            throw new GeneralException(CourseErrorCode._TRANSPORT_MODE_NOT_SELECTED);
+        }
+
+        if (transportMode == TransportMode.CAR) {
+            List<Course.DayCarRoute> days = course.getDays().stream()
+                    .map(day -> new Course.DayCarRoute(day.day(), calculateCarLegs(toWaypointsFromSnapshot(day.spots()))))
+                    .toList();
+            course.updateCarRoutes(days);
+        } else {
+            List<Course.DayPublicTransportRoute> days = course.getDays().stream()
+                    .map(day -> new Course.DayPublicTransportRoute(day.day(), calculatePublicTransportDetails(toWaypointsFromSnapshot(day.spots()))))
+                    .toList();
+            course.updateTransitRoutes(days);
+        }
+        course.confirmDraft();
         cacheActiveCourse(userId, course);
-        return spotsById;
+    }
+
+    private List<RouteWaypoint> toWaypointsFromSnapshot(List<Course.SpotSnapshot> spots) {
+        return spots.stream()
+                .map(spot -> new RouteWaypoint(spot.contentId(), spot.mapX(), spot.mapY()))
+                .toList();
     }
 
     private void cacheActiveCourse(Long userId, Course course) {
@@ -149,12 +163,5 @@ public class CourseConfirmationService {
             throw new GeneralException(CourseErrorCode._CONTENT_NOT_FOUND);
         }
         return spots.stream().collect(Collectors.toMap(TouristSpot::getContentId, Function.identity()));
-    }
-
-    private List<RouteWaypoint> toWaypoints(DayConfirm dayConfirm, Map<Long, TouristSpot> spotsById) {
-        return dayConfirm.contentIds().stream()
-                .map(spotsById::get)
-                .map(spot -> new RouteWaypoint(spot.getContentId(), spot.getMapX(), spot.getMapY()))
-                .toList();
     }
 }

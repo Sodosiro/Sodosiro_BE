@@ -1,7 +1,7 @@
 package com.sodosiro.domain.route.service;
 
 import com.sodosiro.domain.route.dto.RouteWaypoint;
-import com.sodosiro.domain.route.dto.TransportMode;
+import com.sodosiro.domain.route.constants.TransportMode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

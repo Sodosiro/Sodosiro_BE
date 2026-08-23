@@ -1,5 +1,6 @@
 package com.sodosiro.domain.course.service;
 
+import com.sodosiro.domain.course.constants.CourseStatus;
 import com.sodosiro.domain.course.controller.dto.CourseRecommendRequest;
 import com.sodosiro.domain.course.controller.dto.CourseRecommendResponse;
 import com.sodosiro.domain.course.entity.Course;
@@ -40,6 +41,8 @@ public class CourseRecommendationService {
     public CourseRecommendResponse recommend(Long userId, CourseRecommendRequest request) {
 
         validateDateRange(request.startDate(), request.endDate());
+        validateSigunguCode(request.sigunguCode());
+        validateNoOverlappingConfirmedTrip(userId, request.startDate(), request.endDate());
         List<LocalDate> dates = buildDateRange(request.startDate(), request.endDate());
 
         TouristSpot mustVisitSpot = request.mustVisitContentId() == null
@@ -51,36 +54,45 @@ public class CourseRecommendationService {
         // 비용발생: 사전 검증을 통과한 요청만 AI 임베딩 수행. AI 경로/규칙기반 경로가 같은 임베딩을 재사용하므로 한 번만 호출한다.
         float[] queryEmbedding = embedSafely(request.aiMessage());
 
-        List<CourseRecommendResponse.DayCourse> days = courseAiPlanner
+        List<Course.DaySnapshot> days = courseAiPlanner
                 .tryGenerate(request, dates, mustVisitSpot, mustVisitDayIndex, queryEmbedding)
                 .orElseGet(() -> courseRuleBasedPlanner.generate(request, dates, mustVisitSpot, mustVisitDayIndex, queryEmbedding));
 
         Long courseId = saveDraft(userId, request, days);
-        return new CourseRecommendResponse(courseId, days);
+        return new CourseRecommendResponse(courseId);
     }
 
     /** 사용자당 미확정 draft는 1개만 유지한다: 기존 미확정 draft가 있으면 지우고 새로 저장한다. */
-    private Long saveDraft(Long userId, CourseRecommendRequest request, List<CourseRecommendResponse.DayCourse> days) {
-        courseRepository.findByUserIdAndIsConfirmedFalse(userId).ifPresent(courseRepository::delete);
-        List<Course.DaySnapshot> snapshots = days.stream().map(this::toSnapshot).toList();
-        Course draft = Course.createDraft(
-                userId, request.startDate(), request.endDate(),
-                request.travelStylesOrEmpty(), request.mustVisitContentId(), request.aiMessage(), snapshots);
-        return courseRepository.save(draft).getId();
-    }
+    private Long saveDraft(Long userId, CourseRecommendRequest request, List<Course.DaySnapshot> days) {
 
-    private Course.DaySnapshot toSnapshot(CourseRecommendResponse.DayCourse day) {
-        List<Course.SpotSnapshot> spots = day.spots().stream()
-                .map(spot -> new Course.SpotSnapshot(
-                        spot.contentId(), spot.title(), spot.firstImage(),
-                        spot.mapX(), spot.mapY(), spot.category(), spot.mustVisit()))
-                .toList();
-        return new Course.DaySnapshot(day.day(), day.date(), spots);
+        courseRepository.findByUserIdAndIsConfirmedFalse(userId).ifPresent(courseRepository::delete);
+
+        Course draft = Course.createDraft(
+                userId, request.title(), request.startDate(), request.endDate(), request.transportMode(),
+                request.travelStylesOrEmpty(), request.mustVisitContentId(), request.aiMessage(), days);
+        return courseRepository.save(draft).getId();
     }
 
     private void validateDateRange(LocalDate startDate, LocalDate endDate) {
         if (endDate.isBefore(startDate)) {
             throw new GeneralException(CourseErrorCode._INVALID_DATE_RANGE);
+        }
+    }
+
+    /** sigunguCode는 tourist_spot.ldong_signgu_code(법정동 시군구 코드) 값이어야 한다. 옛 TourAPI sigunguCode 등 존재하지 않는 값이 오면 후보 풀이 조용히 비어버리므로 여기서 막는다. */
+    private void validateSigunguCode(String sigunguCode) {
+        if (!touristSpotRepository.existsByLdongSignguCode(sigunguCode)) {
+            throw new GeneralException(CourseErrorCode._INVALID_SIGUNGU_CODE);
+        }
+    }
+
+    /** 진행 중인(또는 예정된) 여행은 동시에 여러 개일 수 없으므로, 이미 확정된 다른 여행 기간과 겹치면 막는다. */
+    private void validateNoOverlappingConfirmedTrip(Long userId, LocalDate startDate, LocalDate endDate) {
+        boolean overlaps = courseRepository
+                .existsByUserIdAndIsConfirmedTrueAndStatusNotAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
+                        userId, CourseStatus.FINISHED, endDate, startDate);
+        if (overlaps) {
+            throw new GeneralException(CourseErrorCode._TRAVEL_DATE_OVERLAP);
         }
     }
 

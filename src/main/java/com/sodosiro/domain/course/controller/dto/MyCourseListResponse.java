@@ -13,6 +13,7 @@ public record MyCourseListResponse(List<MyCourse> courses) {
             LocalDate startDate,
             LocalDate endDate,
             CourseStatus status,
+            boolean isConfirmed,
             String thumbnail
     ) {
         public static MyCourse from(Course course) {
@@ -22,6 +23,7 @@ public record MyCourseListResponse(List<MyCourse> courses) {
                     course.getStartDate(),
                     course.getEndDate(),
                     course.getStatus(),
+                    course.getIsConfirmed(),
                     thumbnail(course)
             );
         }

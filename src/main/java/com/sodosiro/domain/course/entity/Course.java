@@ -2,7 +2,9 @@ package com.sodosiro.domain.course.entity;
 
 import com.sodosiro.domain.course.constants.CourseStatus;
 import com.sodosiro.domain.course.constants.TravelStyle;
-import com.sodosiro.domain.route.dto.TransportMode;
+import com.sodosiro.domain.route.dto.RouteLeg;
+import com.sodosiro.domain.route.constants.TransportMode;
+import com.sodosiro.domain.route.kakao.dto.KakaoTransitRouteResult;
 import com.sodosiro.domain.user.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -59,6 +61,10 @@ public class Course {
             foreignKey = @jakarta.persistence.ForeignKey(jakarta.persistence.ConstraintMode.NO_CONSTRAINT))
     private User user;
 
+    @Column(name = "title", length = 10, nullable = false)
+    @Comment("코스 제목")
+    private String title;
+
     @Column(name = "start_date", nullable = false)
     @Comment("여행 시작일")
     private LocalDate startDate;
@@ -81,7 +87,7 @@ public class Course {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "transport_mode", length = 20)
-    @Comment("확정 시 선택한 이동수단, 확정 전에는 null")
+    @Comment("추천 생성 시 선택한 이동수단")
     private TransportMode transportMode;
 
     @Column(name = "is_confirmed", nullable = false)
@@ -110,6 +116,16 @@ public class Course {
     @Comment("여행 종료(FINISHED) 전환 시각. 리뷰 유도 알림 발송 기준")
     private LocalDateTime finishedAt;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "car_routes", columnDefinition = "jsonb")
+    @Comment("자차로 확정한 경우 계산된 일자별 구간 경로, 그 외에는 null")
+    private List<DayCarRoute> carRoutes;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "transit_routes", columnDefinition = "jsonb")
+    @Comment("대중교통으로 확정한 경우 계산된 일자별 구간 경로, 그 외에는 null")
+    private List<DayPublicTransportRoute> transitRoutes;
+
     @PrePersist
     private void prePersist() {
         this.createdAt = LocalDateTime.now();
@@ -117,16 +133,20 @@ public class Course {
 
     public static Course createDraft(
             Long userId,
+            String title,
             LocalDate startDate,
             LocalDate endDate,
+            TransportMode transportMode,
             List<TravelStyle> travelStyles,
             Long mustVisitContentId,
             String aiMessage,
             List<DaySnapshot> days) {
         Course course = new Course();
         course.userId = userId;
+        course.title = title;
         course.startDate = startDate;
         course.endDate = endDate;
+        course.transportMode = transportMode;
         course.travelStyles = joinTravelStyles(travelStyles);
         course.mustVisitContentId = mustVisitContentId;
         course.aiMessage = aiMessage;
@@ -136,13 +156,41 @@ public class Course {
         return course;
     }
 
-    public void confirm(TransportMode transportMode, List<DaySnapshot> days) {
-        this.transportMode = transportMode;
+    /** 확정 전 draft의 일자별 관광지 순서를 수정한다. 호출부에서 이미 확정된 코스가 아닌지 확인해야 한다. */
+    public void updateDays(List<DaySnapshot> days) {
         this.days = days;
         if (mustVisitContentId != null && !containsMustVisitSpot(days)) {
             this.mustVisitContentId = null;
         }
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    /** transportMode/days가 이미 draft에 채워져 있다는 전제로, 새 값 없이 확정 상태로만 전환한다. */
+    public void confirmDraft() {
         this.isConfirmed = true;
+        applyResolvedStatus();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void updateCarRoutes(List<DayCarRoute> carRoutes) {
+        this.carRoutes = carRoutes;
+    }
+
+    public void updateTransitRoutes(List<DayPublicTransportRoute> transitRoutes) {
+        this.transitRoutes = transitRoutes;
+    }
+
+    /** 확정 시점의 오늘 날짜를 기준으로 UPCOMING/IN_PROGRESS/FINISHED를 계산해 반영한다. */
+    private void applyResolvedStatus() {
+        CourseStatus resolved = CourseStatus.resolve(startDate, endDate, LocalDate.now());
+        this.status = resolved;
+        if (resolved == CourseStatus.FINISHED) {
+            this.finishedAt = LocalDateTime.now();
+        }
+    }
+
+    /** 스케줄러가 시작일이 된 확정 코스를 진행 중으로 전환할 때 사용한다. */
+    public void start() {
         this.status = CourseStatus.IN_PROGRESS;
         this.updatedAt = LocalDateTime.now();
     }
@@ -210,5 +258,11 @@ public class Course {
             BigDecimal mapY,
             Integer category,
             boolean mustVisit) {
+    }
+
+    public record DayCarRoute(int day, List<RouteLeg> legs) {
+    }
+
+    public record DayPublicTransportRoute(int day, List<KakaoTransitRouteResult> details) {
     }
 }
