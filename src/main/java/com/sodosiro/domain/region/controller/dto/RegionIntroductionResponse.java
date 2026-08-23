@@ -27,6 +27,8 @@ public record RegionIntroductionResponse(
             Long contentId,
             String title,
             String address,
+            String overview,
+            Integer category,
             String imageUrl
     ) {
     }
