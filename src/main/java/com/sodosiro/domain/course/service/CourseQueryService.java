@@ -9,10 +9,13 @@ import com.sodosiro.domain.gps.entity.Gps;
 import com.sodosiro.domain.gps.repository.GpsRepository;
 import com.sodosiro.domain.review.entity.Review;
 import com.sodosiro.domain.review.repository.ReviewRepository;
+import com.sodosiro.domain.travel.entity.TouristSpot;
+import com.sodosiro.domain.travel.repository.TouristSpotRepository;
 import com.sodosiro.global.payload.code.error.CourseErrorCode;
 import com.sodosiro.global.payload.exception.GeneralException;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +30,7 @@ public class CourseQueryService {
     private final CourseRepository courseRepository;
     private final GpsRepository gpsRepository;
     private final ReviewRepository reviewRepository;
+    private final TouristSpotRepository touristSpotRepository;
 
     /** draft(미확정)도 status가 항상 UPCOMING이라 자연스럽게 UPCOMING 필터/전체 조회에 포함된다. */
     @Transactional(readOnly = true)
@@ -35,8 +39,24 @@ public class CourseQueryService {
                 ? courseRepository.findByUserIdOrderByIdDesc(userId)
                 : courseRepository.findByUserIdAndStatusOrderByIdDesc(userId, status);
 
+        Map<Long, String> sigunguCodeByContentId = resolveSigunguCodes(courses);
+
         return new MyCourseListResponse(
-                courses.stream().map(MyCourseListResponse.MyCourse::from).toList());
+                courses.stream()
+                        .map(course -> MyCourseListResponse.MyCourse.from(course, sigunguCodeByContentId))
+                        .toList());
+    }
+
+    /** 코스는 시군구코드를 직접 저장하지 않으므로, 각 코스 첫 스팟의 TouristSpot.ldongSignguCode로 지역을 알아낸다. */
+    private Map<Long, String> resolveSigunguCodes(List<Course> courses) {
+        List<Long> firstContentIds = courses.stream()
+                .map(course -> course.allSpots().isEmpty() ? null : course.allSpots().getFirst().contentId())
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+
+        return touristSpotRepository.findAllById(firstContentIds).stream()
+                .collect(Collectors.toMap(TouristSpot::getContentId, TouristSpot::getLdongSignguCode));
     }
 
     @Transactional(readOnly = true)
