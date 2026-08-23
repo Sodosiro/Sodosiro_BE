@@ -44,6 +44,18 @@ public interface CourseSpecification {
             @Parameter(hidden = true) @LoginUser Long userId,
             @Parameter(description = "조회할 코스 ID") Long courseId);
 
+    @Operation(summary = "코스 삭제",
+            description = "draft/확정/진행중/완료 상태와 무관하게 코스를 삭제합니다. "
+                    + "GPS 인증 기록, 디깅(후기) 기록은 삭제하지 않고 그대로 둡니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "코스 삭제 성공"),
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자"),
+            @ApiResponse(responseCode = "404", description = "코스를 찾을 수 없음(본인 소유가 아닌 경우 포함)")
+    })
+    ResponseEntity<Void> deleteCourse(
+            @Parameter(hidden = true) @LoginUser Long userId,
+            @Parameter(description = "삭제할 코스 ID") Long courseId);
+
     @Operation(
             summary = "AI 코스 추천 생성",
             description = "사용자의 입력 조건을 바탕으로 맞춤형 여행 코스를 추천합니다. "

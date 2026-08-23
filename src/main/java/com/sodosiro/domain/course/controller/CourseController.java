@@ -19,6 +19,7 @@ import com.sodosiro.global.resolver.LoginUser;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -48,6 +49,12 @@ public class CourseController implements CourseSpecification {
     public ResponseEntity<CourseDetailResponse> getCourseDetail(
             @LoginUser Long userId, @PathVariable Long courseId) {
         return ResponseEntity.ok(courseQueryService.getCourseDetail(userId, courseId));
+    }
+
+    @DeleteMapping("/{courseId}")
+    public ResponseEntity<Void> deleteCourse(@LoginUser Long userId, @PathVariable Long courseId) {
+        courseQueryService.deleteCourse(userId, courseId);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/recommendations")
