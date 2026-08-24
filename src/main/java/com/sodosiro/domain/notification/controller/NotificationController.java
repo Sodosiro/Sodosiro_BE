@@ -56,13 +56,13 @@ public class NotificationController implements NotificationSpecification {
 
     @GetMapping("/notifications/preferences")
     public ResponseEntity<NotificationPreferenceResponse> getPreference(@LoginUser Long userId) {
-        return ResponseEntity.ok(new NotificationPreferenceResponse(notificationPreferenceService.isPushEnabled(userId)));
+        return ResponseEntity.ok(NotificationPreferenceResponse.from(notificationPreferenceService.getPreference(userId)));
     }
 
     @PatchMapping("/notifications/preferences")
-    public ResponseEntity<NotificationPreferenceResponse> updatePreference(
-            @LoginUser Long userId, @Valid @RequestBody NotificationPreferenceRequest request) {
-        boolean updated = notificationPreferenceService.updatePushEnabled(userId, request.pushEnabled());
-        return ResponseEntity.ok(new NotificationPreferenceResponse(updated));
+    public ResponseEntity<NotificationPreferenceResponse> togglePreference(
+            @LoginUser Long userId, @Valid @RequestBody NotificationPreferenceToggleRequest request) {
+        var preference = notificationPreferenceService.toggle(userId, request.type(), request.enabled());
+        return ResponseEntity.ok(NotificationPreferenceResponse.from(preference));
     }
 }

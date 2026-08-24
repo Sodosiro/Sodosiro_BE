@@ -30,12 +30,13 @@ public class NotificationPushListener {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void on(NotificationCreatedEvent event) {
-        if (!notificationPreferenceService.isPushEnabled(event.userId())) {
-            log.debug("푸시 수신 꺼짐, FCM 전송 생략: userId={}, notificationId={}", event.userId(), event.notificationId());
-            return;
-        }
         Notification notification = notificationRepository.findById(event.notificationId()).orElse(null);
         if (notification == null) {
+            return;
+        }
+        if (!notificationPreferenceService.isPushEnabled(event.userId(), notification.getType())) {
+            log.debug("푸시 수신 꺼짐, FCM 전송 생략: userId={}, notificationId={}, type={}",
+                    event.userId(), event.notificationId(), notification.getType());
             return;
         }
         for (UserDevice device : userDeviceService.activeDevices(event.userId())) {
