@@ -27,10 +27,10 @@ import java.util.List;
 @Comment("서비스 회원 (소셜 로그인 기반)")
 @Table(
         name = "users",
-        uniqueConstraints = @UniqueConstraint(
-                name = "uk_users_email",
-                columnNames = {"email"}
-        )
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_users_email", columnNames = {"email"}),
+                @UniqueConstraint(name = "uk_users_nick_name", columnNames = {"nick_name"})
+        }
 )
 public class User {
 
@@ -120,16 +120,15 @@ public class User {
         this.profileImageUrl = url;
     }
 
-    public static User createUser(SocialUserInfo info) {
+    public static User createUser(SocialUserInfo info, String nickName) {
 
-        User user = User.builder()
+        return User.builder()
                 .email(info.getEmail())
                 .name(info.getNickname())
+                .nickName(nickName)
                 .role(Role.USER)
                 .socialAccounts(new ArrayList<>())
                 .build();
-
-        return user;
     }
 
     public void updateFcmToken(String fcmToken) {

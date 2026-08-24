@@ -61,6 +61,7 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new GeneralException(UserErrorCode._USER_NOT_FOUND));
 
+        validateNicknameAvailable(userId, request.nickName());
         user.updateProfile(request.nickName(), request.introduction());
 
         if (image != null && !image.isEmpty()) {
@@ -81,5 +82,10 @@ public class UserService {
         return ProfileResponse.from(user);
     }
 
+    private void validateNicknameAvailable(Long userId, String nickName) {
+        if (nickName != null && userRepository.existsByNickNameAndUserIdNot(nickName, userId)) {
+            throw new GeneralException(UserErrorCode._DUPLICATE_NICKNAME);
+        }
+    }
 
 }

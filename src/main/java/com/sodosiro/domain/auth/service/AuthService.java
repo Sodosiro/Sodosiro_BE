@@ -12,6 +12,7 @@ import com.sodosiro.domain.user.entity.SocialAccounts;
 import com.sodosiro.domain.user.entity.User;
 import com.sodosiro.domain.user.repository.SocialRepository;
 import com.sodosiro.domain.user.repository.UserRepository;
+import com.sodosiro.domain.user.service.NicknameGenerator;
 import com.sodosiro.domain.user.service.UserService;
 import com.sodosiro.domain.user.service.event.WithdrawEvent;
 import com.sodosiro.global.payload.code.error.AuthErrorCode;
@@ -40,6 +41,7 @@ public class AuthService {
     private final RedisService redisService;
     private final SocialRepository socialRepository;
     private final UserService userService;
+    private final NicknameGenerator nicknameGenerator;
     private final ApplicationEventPublisher eventPublisher;
 
 
@@ -80,7 +82,8 @@ public class AuthService {
         }
         Optional<User> userOptional = userRepository.findByEmail(email);
 
-        User user = userOptional.orElseGet(() -> userRepository.save(User.createUser(socialUser)));
+        User user = userOptional.orElseGet(() ->
+                userRepository.save(User.createUser(socialUser, nicknameGenerator.generateUnique())));
 
         SocialAccounts socialAccount = socialRepository
                 .findByProviderAndProviderId(provider, socialUser.getProviderId())
