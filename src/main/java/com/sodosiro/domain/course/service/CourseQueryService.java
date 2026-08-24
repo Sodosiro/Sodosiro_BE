@@ -76,7 +76,10 @@ public class CourseQueryService {
                 .findByUserIdAndContentIdInAndIsDeletedFalse(userId, contentIds).stream()
                 .collect(Collectors.toMap(Review::getContentId, Review::getId));
 
-        return CourseDetailResponse.from(course, verifiedKeys, reviewIdByContentId);
+        Map<Long, TouristSpot> touristSpotByContentId = touristSpotRepository.findAllById(contentIds).stream()
+                .collect(Collectors.toMap(TouristSpot::getContentId, spot -> spot));
+
+        return CourseDetailResponse.from(course, verifiedKeys, reviewIdByContentId, touristSpotByContentId);
     }
 
     /** 상태(draft/확정/진행중/완료) 상관없이 삭제 가능하다. GPS 인증·디깅 기록은 건드리지 않는다. */
