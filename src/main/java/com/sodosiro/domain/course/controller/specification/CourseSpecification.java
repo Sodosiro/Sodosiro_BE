@@ -76,7 +76,7 @@ public interface CourseSpecification {
             @RequestBody @Valid CourseRecommendRequest request
     );
 
-    @Operation(summary = "확정 전 draft 일자별 관광지 순서 수정",
+    @Operation(summary = "draft 임시저장 UPDATE",
             description = "AI 추천 결과(draft)를 확정하기 전, 사용자가 스팟 순서를 바꾸거나 뺀 최종 상태를 draft에 반영합니다. "
                     + "이미 확정된 코스는 수정할 수 없습니다.")
     @ApiResponses({

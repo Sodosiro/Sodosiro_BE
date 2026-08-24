@@ -3,6 +3,7 @@ package com.sodosiro.domain.course.controller.dto;
 import com.sodosiro.domain.course.constants.CourseStatus;
 import com.sodosiro.domain.course.entity.Course;
 import com.sodosiro.domain.route.constants.TransportMode;
+import com.sodosiro.domain.travel.entity.TouristSpot;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -33,16 +34,21 @@ public record CourseDetailResponse(
             boolean mustVisit,
             boolean gpsVerified,
             boolean reviewWritten,
-            Long reviewId
+            Long reviewId,
+            String overview,
+            BigDecimal avgRating,
+            Integer reviewCount
     ) {
     }
 
     /**
      * verifiedKeys는 "day:contentId" 형태로 이미 GPS 인증된 스팟을 표시하기 위한 키 집합이다.
      * reviewIdByContentId는 로그인 사용자가 해당 관광지에 이미 작성한 리뷰의 id(contentId 기준)다.
+     * touristSpotByContentId는 overview/avgRating/reviewCount 등 최신 스팟 정보를 채우기 위한 조회 결과다.
      */
     public static CourseDetailResponse from(
-            Course course, Set<String> verifiedKeys, Map<Long, Long> reviewIdByContentId) {
+            Course course, Set<String> verifiedKeys, Map<Long, Long> reviewIdByContentId,
+            Map<Long, TouristSpot> touristSpotByContentId) {
         List<DayDetail> days = course.getDays().stream()
                 .map(day -> new DayDetail(
                         day.day(),
@@ -50,6 +56,7 @@ public record CourseDetailResponse(
                         day.spots().stream()
                                 .map(spot -> {
                                     Long reviewId = reviewIdByContentId.get(spot.contentId());
+                                    TouristSpot touristSpot = touristSpotByContentId.get(spot.contentId());
                                     return new SpotDetail(
                                             spot.contentId(),
                                             spot.title(),
@@ -60,7 +67,10 @@ public record CourseDetailResponse(
                                             spot.mustVisit(),
                                             verifiedKeys.contains(day.day() + ":" + spot.contentId()),
                                             reviewId != null,
-                                            reviewId);
+                                            reviewId,
+                                            touristSpot == null ? null : touristSpot.getOverview(),
+                                            touristSpot == null ? null : touristSpot.getAvgRating(),
+                                            touristSpot == null ? null : touristSpot.getReviewCount());
                                 })
                                 .toList()))
                 .toList();
