@@ -119,8 +119,9 @@ public class SpotLikeService {
         List<MyLikedSpotItem> items = likes.stream()
                 .map(l -> MyLikedSpotItem.from(l, l.getTouristSpot()))
                 .toList();
+        long totalCount = spotLikeRepository.countByUserIdAndFilters(userId, sigunguCode, categories);
 
-        return new MyLikedSpotListResponse(items, nextCursor, hasNext);
+        return new MyLikedSpotListResponse(items, nextCursor, hasNext, totalCount);
     }
 
     private LikeCursor parseCursor(String cursor, ReviewSort sort) {

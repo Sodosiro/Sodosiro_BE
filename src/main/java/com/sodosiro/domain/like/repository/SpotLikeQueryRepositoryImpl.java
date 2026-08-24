@@ -52,6 +52,21 @@ public class SpotLikeQueryRepositoryImpl implements SpotLikeQueryRepository {
                 .fetch();
     }
 
+    @Override
+    public long countByUserIdAndFilters(Long userId, String sigunguCode, List<Integer> categories) {
+        Long count = queryFactory
+                .select(l.count())
+                .from(l)
+                .join(l.touristSpot, spot)
+                .where(
+                        l.userId.eq(userId),
+                        sigunguCodeEq(sigunguCode),
+                        categoryIn(categories)
+                )
+                .fetchOne();
+        return count != null ? count : 0L;
+    }
+
     private BooleanExpression cursorCondition(Long likeIdCursor, BigDecimal ratingCursor, ReviewSort sort) {
         if (sort == ReviewSort.RECENT) {
             return l.id.lt(likeIdCursor);

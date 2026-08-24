@@ -29,7 +29,8 @@ public interface SpotLikeSpecification {
     @Operation(summary = "내가 좋아요한 관광지 목록 (지역별)",
                description = "GET /api/v1/travel-spots/likes. sigunguCode에 해당하는 지역의 좋아요 목록만 조회합니다(NULL 시 전체조회). "
                        + "category는 생략 시 전체, 반복 전달 시 복수 카테고리를 조회합니다(1=식당, 2=카페, 3=쇼핑, 4=관광지, 5=자연, 6=액티비티, 7=숙박). "
-                       + "RECENT, HIGH_RATING, LOW_RATING 정렬과 커서 기반 무한스크롤을 지원합니다. 첫 요청은 cursor 생략, 이후 응답의 nextCursor 값을 사용하세요.")
+                       + "RECENT, HIGH_RATING, LOW_RATING 정렬과 커서 기반 무한스크롤을 지원합니다. 첫 요청은 cursor 생략, 이후 응답의 nextCursor 값을 사용하세요. "
+                       + "응답의 totalCount는 커서와 무관하게 현재 필터(sigunguCode, category) 조건을 만족하는 좋아요한 관광지의 전체 개수입니다.")
     ResponseEntity<MyLikedSpotListResponse> getMyLikedSpots(
             Long userId,
             String sigunguCode,
