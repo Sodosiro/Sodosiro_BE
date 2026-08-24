@@ -57,8 +57,8 @@ public class RegionIntroService {
                 .map(spotsById::get)
                 .filter(java.util.Objects::nonNull)
                 .map(spot -> new RegionIntroductionResponse.FeaturedSpot(
-                        spot.getContentId(), spot.getTitle(), spot.getOverview(),spot.getAddr1(),spot.getCategory(),
-                        spot.getFirstImage()))
+                        spot.getContentId(), spot.getTitle(), spot.getAddr1(), spot.getOverview(), spot.getCategory()
+                        ,spot.getFirstImage()))
                 .toList();
     }
 
