@@ -16,6 +16,7 @@ public enum UserErrorCode implements BaseCode {
     _DUPLICATE_NICKNAME(HttpStatus.CONFLICT,"USER409-CONFLICT","닉네임이 중복되었습니다."),
     _PROFILE_IMAGE_NOT_EXIST(HttpStatus.NOT_FOUND,"USER404-PROFILE_NOT_FOUND","프로필 이미지가 존재하지 않습니다."),
     _NICKNAME_BAD_REQUEST(HttpStatus.BAD_REQUEST,"USER400-BAD_REQUEST","닉네임 형식이 올바르지 않습니다."),
+    _NICKNAME_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR,"USER500-NICKNAME_GENERATION_FAILED","기본 닉네임 생성에 실패했습니다."),
 
     _INVALID_AUTHORIZATION_HEADER(HttpStatus.BAD_REQUEST, "AUTH400-BAD_REQUEST", "유효하지 않은 인증 헤더 형식입니다."),
 
