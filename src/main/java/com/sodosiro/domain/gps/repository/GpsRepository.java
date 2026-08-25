@@ -15,6 +15,8 @@ public interface GpsRepository extends JpaRepository<Gps, Long> {
 
     List<Gps> findByUserId(Long userId);
 
+    List<Gps> findByUserIdAndContentIdIn(Long userId, List<Long> contentIds);
+
     boolean existsByUserIdAndContentId(Long userId, Long contentId);
 
     boolean existsByCourseIdAndContentId(Long courseId, Long contentId);
