@@ -79,11 +79,6 @@ public class User {
     @Comment("FCM 푸시 토큰")
     private String fcmToken;
 
-    @Builder.Default
-    @Column(name = "push_enabled", nullable = false)
-    @Comment("푸시 알림 수신 여부")
-    private Boolean pushEnabled = true;
-
     @Column(name = "introduction", length = 100)
     @Comment("한줄소개")
     private String introduction;
@@ -137,10 +132,6 @@ public class User {
 
     public void clearFcmToken() {
         this.fcmToken = null;
-    }
-
-    public void updatePushEnabled(boolean pushEnabled) {
-        this.pushEnabled = pushEnabled;
     }
 
     public String getDisplayName() {
