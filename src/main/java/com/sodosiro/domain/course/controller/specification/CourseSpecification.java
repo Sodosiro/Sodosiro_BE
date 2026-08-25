@@ -78,6 +78,7 @@ public interface CourseSpecification {
 
     @Operation(summary = "draft 임시저장 UPDATE",
             description = "AI 추천 결과(draft)를 확정하기 전, 사용자가 스팟 순서를 바꾸거나 뺀 최종 상태를 draft에 반영합니다. "
+                    + "title을 함께 보내면 코스 제목도 함께 수정되며, 생략하거나 빈 값이면 기존 제목이 유지됩니다. "
                     + "이미 확정된 코스는 수정할 수 없습니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "draft 수정 성공"),
@@ -89,7 +90,7 @@ public interface CourseSpecification {
             @Parameter(hidden = true) @LoginUser Long userId,
             @Parameter(description = "수정할 draft 코스 ID") Long courseId,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "일자별 최종 관광지 순서",
+                    description = "수정할 코스 제목(선택, 최대 10자)과 일자별 최종 관광지 순서",
                     required = true
             )
             @RequestBody @Valid CourseDayUpdateRequest request);
