@@ -1,5 +1,7 @@
 package com.sodosiro.domain.gps.service;
 
+import com.sodosiro.domain.bingo.controller.dto.BingoCellCheckResponse;
+import com.sodosiro.domain.bingo.service.BingoQueryService;
 import com.sodosiro.domain.course.entity.Course;
 import com.sodosiro.domain.course.repository.CourseRepository;
 import com.sodosiro.domain.gps.controller.dto.request.GpsRequest;
@@ -23,6 +25,7 @@ public class GpsService {
     private final GpsRepository gpsRepository;
     private final CourseRepository courseRepository;
     private final TouristSpotRepository touristSpotRepository;
+    private final BingoQueryService bingoQueryService;
 
     public GpsResponse verify(Long userId, GpsRequest request) {
 
@@ -31,15 +34,18 @@ public class GpsService {
 
         validateSpotInItinerary(course, request.contentId(), request.day());
 
-        // 같은 스팟을 여러 번 인증 시도해도 항상 같은 결과를 반환한다 (버튼 연타 대응).
-        Gps existing = gpsRepository.findByCourseIdAndContentIdAndDay(request.courseId(), request.contentId(), request.day()).orElse(null);
-
-        if (existing != null) {
-            return GpsResponse.from(existing);
-        }
-
         TouristSpot spot = touristSpotRepository.findById(request.contentId())
                 .orElseThrow(() -> new GeneralException(GpsErrorCode._SPOT_NOT_FOUND));
+
+        // 같은 스팟을 여러 번 인증 시도해도 항상 같은 결과를 반환한다 (버튼 연타 대응).
+        Gps gps = gpsRepository.findByCourseIdAndContentIdAndDay(request.courseId(), request.contentId(), request.day())
+                .orElseGet(() -> createVerification(request, userId, spot));
+
+        BingoCellCheckResponse bingoCheck = bingoQueryService.getActiveCellCheckOrNull(userId, spot.getContentId(), spot.getLdongSignguCode());
+        return GpsResponse.from(gps, bingoCheck);
+    }
+
+    private Gps createVerification(GpsRequest request, Long userId, TouristSpot spot) {
         if (spot.getMapY() == null || spot.getMapX() == null) {
             throw new GeneralException(GpsErrorCode._SPOT_LOCATION_UNAVAILABLE);
         }
@@ -47,10 +53,7 @@ public class GpsService {
                 spot.getMapY(), spot.getMapX(), request.latitude(), request.longitude())) {
             throw new GeneralException(GpsErrorCode._OUT_OF_VERIFICATION_RANGE);
         }
-
-        Gps gps = gpsRepository.save(
-                Gps.create(request.courseId(), userId, request.contentId(), request.day()));
-        return GpsResponse.from(gps);
+        return gpsRepository.save(Gps.create(request.courseId(), userId, request.contentId(), request.day()));
     }
 
     private void validateSpotInItinerary(Course course, Long contentId, Integer day) {
