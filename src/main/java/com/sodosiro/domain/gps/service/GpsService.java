@@ -1,5 +1,7 @@
 package com.sodosiro.domain.gps.service;
 
+import com.sodosiro.domain.bingo.controller.dto.BingoCellCheckResponse;
+import com.sodosiro.domain.bingo.service.BingoQueryService;
 import com.sodosiro.domain.course.entity.Course;
 import com.sodosiro.domain.course.repository.CourseRepository;
 import com.sodosiro.domain.gps.controller.dto.request.GpsRequest;
@@ -23,6 +25,7 @@ public class GpsService {
     private final GpsRepository gpsRepository;
     private final CourseRepository courseRepository;
     private final TouristSpotRepository touristSpotRepository;
+    private final BingoQueryService bingoQueryService;
 
     public GpsResponse verify(Long userId, GpsRequest request) {
 
@@ -31,26 +34,33 @@ public class GpsService {
 
         validateSpotInItinerary(course, request.contentId(), request.day());
 
-        // 같은 스팟을 여러 번 인증 시도해도 항상 같은 결과를 반환한다 (버튼 연타 대응).
-        Gps existing = gpsRepository.findByCourseIdAndContentIdAndDay(request.courseId(), request.contentId(), request.day()).orElse(null);
-
-        if (existing != null) {
-            return GpsResponse.from(existing);
-        }
-
         TouristSpot spot = touristSpotRepository.findById(request.contentId())
                 .orElseThrow(() -> new GeneralException(GpsErrorCode._SPOT_NOT_FOUND));
-        if (spot.getMapY() == null || spot.getMapX() == null) {
-            throw new GeneralException(GpsErrorCode._SPOT_LOCATION_UNAVAILABLE);
-        }
-        if (!GpsVerifier.isWithinVerificationRadius(
-                spot.getMapY(), spot.getMapX(), request.latitude(), request.longitude())) {
-            throw new GeneralException(GpsErrorCode._OUT_OF_VERIFICATION_RANGE);
-        }
 
-        Gps gps = gpsRepository.save(
-                Gps.create(request.courseId(), userId, request.contentId(), request.day()));
-        return GpsResponse.from(gps);
+        // 같은 스팟을 여러 번 인증 시도해도 항상 같은 결과를 반환한다 (버튼 연타 대응).
+        Gps gps = gpsRepository.findByCourseIdAndContentIdAndDay(request.courseId(), request.contentId(), request.day())
+                .orElseGet(() -> createVerification(request, userId, spot));
+
+        BingoCellCheckResponse bingoCheck = bingoQueryService.getActiveCellCheckOrNull(userId, spot.getContentId(), spot.getLdongSignguCode());
+        return GpsResponse.from(gps, bingoCheck);
+    }
+
+    /**
+     * 이 유저가 이 스팟을 (다른 코스에서든) 이미 한 번이라도 인증한 적 있으면 실제 방문이 증명된 것으로 보고
+     * 거리 체크 없이 이 코스·날짜용 레코드만 새로 만든다. 처음 인증하는 경우에만 반경 300m를 확인한다.
+     */
+    private Gps createVerification(GpsRequest request, Long userId, TouristSpot spot) {
+        boolean alreadyVerifiedElsewhere = !gpsRepository.findByUserIdAndContentId(userId, request.contentId()).isEmpty();
+        if (!alreadyVerifiedElsewhere) {
+            if (spot.getMapY() == null || spot.getMapX() == null) {
+                throw new GeneralException(GpsErrorCode._SPOT_LOCATION_UNAVAILABLE);
+            }
+            if (!GpsVerifier.isWithinVerificationRadius(
+                    spot.getMapY(), spot.getMapX(), request.latitude(), request.longitude())) {
+                throw new GeneralException(GpsErrorCode._OUT_OF_VERIFICATION_RANGE);
+            }
+        }
+        return gpsRepository.save(Gps.create(request.courseId(), userId, request.contentId(), request.day()));
     }
 
     private void validateSpotInItinerary(Course course, Long contentId, Integer day) {
