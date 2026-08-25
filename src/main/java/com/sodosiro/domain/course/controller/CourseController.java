@@ -42,8 +42,7 @@ public class CourseController implements CourseSpecification {
     }
 
     @GetMapping("/{courseId}")
-    public ResponseEntity<CourseDetailResponse> getCourseDetail(
-            @LoginUser Long userId, @PathVariable Long courseId) {
+    public ResponseEntity<CourseDetailResponse> getCourseDetail(@LoginUser Long userId, @PathVariable Long courseId) {
         return ResponseEntity.ok(courseQueryService.getCourseDetail(userId, courseId));
     }
 
@@ -64,7 +63,7 @@ public class CourseController implements CourseSpecification {
                                                 @PathVariable Long courseId,
                                                 @RequestBody @Valid CourseDayUpdateRequest request) {
 
-        courseConfirmationService.updateDraftDays(userId, courseId, request.days());
+        courseConfirmationService.updateDraftDays(userId, courseId, request.title(), request.days());
         return ResponseEntity.noContent().build();
     }
 
