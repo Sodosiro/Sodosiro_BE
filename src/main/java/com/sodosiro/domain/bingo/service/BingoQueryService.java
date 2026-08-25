@@ -87,7 +87,7 @@ public class BingoQueryService {
         Set<Integer> completedPositions = completedPositions(board, userId, activeSeason);
         int completedLineCount = BingoLineCalculator.countCompletedLines(completedPositions);
 
-        return new BingoCellCheckResponse(board.getId(), cell.position(), completedLineCount, completedLineCount > 0);
+        return new BingoCellCheckResponse(board.getId(), cell.position(), completedLineCount);
     }
 
     private BingoSeason findActiveSeason() {
@@ -117,7 +117,7 @@ public class BingoQueryService {
 
         return new BingoBoardResponse(
                 board.getId(), season.getId(), season.getYear(), season.getSeasonType(), board.getSigunguId(),
-                cells, completedLineCount, completedLineCount > 0);
+                cells, completedLineCount);
     }
 
     /** 시즌 기간(startDate~endDate) 안에 인증된 기록만 그 시즌의 빙고 완료로 인정한다. 그 밖의 인증은 GPS 인증 자체는 성립하되 빙고 체크에는 반영되지 않는다. */

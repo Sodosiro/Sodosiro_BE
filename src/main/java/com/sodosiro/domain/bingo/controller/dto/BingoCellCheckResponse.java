@@ -6,7 +6,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public record BingoCellCheckResponse(
         @Schema(description = "빙고판 ID") Long boardId,
         @Schema(description = "이번에 인증한 관광지의 칸 위치 1~9") int position,
-        @Schema(description = "완성된 라인 수 (가로3+세로3+대각2 중)") int completedLineCount,
-        @Schema(description = "라인 1개 이상 완성 여부") boolean bingoAchieved
+        @Schema(description = "완성된 라인 수 (가로3+세로3+대각2 중)") int completedLineCount
 ) {
 }

@@ -12,8 +12,7 @@ public record BingoBoardResponse(
         @Schema(description = "계절 구분") SeasonType seasonType,
         @Schema(description = "지역 ID (region_intro sigunguId)") Long sigunguId,
         @Schema(description = "9칸 (position 1~9)") List<Cell> cells,
-        @Schema(description = "완성된 라인 수 (가로3+세로3+대각2 중)") int completedLineCount,
-        @Schema(description = "라인 1개 이상 완성 여부") boolean bingoAchieved
+        @Schema(description = "완성된 라인 수 (가로3+세로3+대각2 중)") int completedLineCount
 ) {
     public record Cell(
             @Schema(description = "칸 위치 1~9 (1행 1-3, 2행 4-6, 3행 7-9)") int position,
