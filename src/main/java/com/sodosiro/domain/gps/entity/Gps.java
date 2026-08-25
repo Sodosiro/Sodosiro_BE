@@ -25,9 +25,10 @@ import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 
 /**
- * 확정된 코스(단일 여행)에 속한 스팟별 GPS 방문 인증 기록.
+ * 스팟별 GPS 방문 인증 기록. 코스 일정 인증(courseId+day 있음)과 빙고 전용 인증(courseId·day 없음)이 같은 테이블을 공유한다.
  * 사용자의 현재 좌표가 스팟 좌표 기준 반경 300m 이내로 들어온 경우에만 생성된다 (원본 좌표는 저장하지 않음).
  * row가 존재한다는 것 자체가 인증 성공을 의미하므로 별도의 verified 플래그는 두지 않는다.
+ * 코스에서 인증한 스팟은 빙고판 조회 시에도(userId+contentId 기준) 그대로 인증된 것으로 동기화된다.
  */
 @Entity
 @Getter
@@ -54,8 +55,8 @@ public class Gps {
     @Comment("GPS 인증 PK")
     private Long id;
 
-    @Column(name = "course_id", nullable = false)
-    @Comment("소속 코스(단일 여행) course_id")
+    @Column(name = "course_id")
+    @Comment("소속 코스(단일 여행) course_id. 빙고 전용 인증은 코스가 없어 null")
     private Long courseId;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -84,8 +85,8 @@ public class Gps {
     @NotFound(action = NotFoundAction.IGNORE)
     private TouristSpot touristSpot;
 
-    @Column(name = "day", nullable = false)
-    @Comment("코스 내 방문 예정 일자 (Course.DaySnapshot.day)")
+    @Column(name = "day")
+    @Comment("코스 내 방문 예정 일자 (Course.DaySnapshot.day). 빙고 전용 인증은 일정이 없어 null")
     private Integer day;
 
     @Column(name = "verified_at", nullable = false)
@@ -108,6 +109,15 @@ public class Gps {
         gps.userId = userId;
         gps.contentId = contentId;
         gps.day = day;
+        gps.verifiedAt = LocalDateTime.now();
+        return gps;
+    }
+
+    /** 빙고 전용 GPS 인증. 코스/일정에 속하지 않으므로 courseId·day 없이 기록한다. */
+    public static Gps createForBingo(Long userId, Long contentId) {
+        Gps gps = new Gps();
+        gps.userId = userId;
+        gps.contentId = contentId;
         gps.verifiedAt = LocalDateTime.now();
         return gps;
     }
