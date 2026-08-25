@@ -29,8 +29,10 @@ public class BingoGpsService {
         TouristSpot spot = touristSpotRepository.findById(request.contentId())
                 .orElseThrow(() -> new GeneralException(GpsErrorCode._SPOT_NOT_FOUND));
 
-        // 코스 인증에서 만들어진 기록도 여기서 그대로 조회된다 (userId+contentId 기준으로 courseId 상관없이 동일 테이블 공유).
-        Gps gps = gpsRepository.findByUserIdAndContentId(userId, request.contentId())
+        // 코스 인증에서 만들어진 기록도 여기서 그대로 재사용된다 (userId+contentId 기준, courseId 상관없이 동일 테이블 공유).
+        // 한 유저가 같은 스팟을 여러 코스에 걸쳐 인증하면 로우가 여러 개일 수 있으므로 리스트로 받는다.
+        Gps gps = gpsRepository.findByUserIdAndContentId(userId, request.contentId()).stream()
+                .findFirst()
                 .orElseGet(() -> createVerification(request, userId, spot));
 
         BingoCellCheckResponse bingoCheck = bingoQueryService.getActiveCellCheckOrNull(userId, spot.getContentId(), spot.getLdongSignguCode());

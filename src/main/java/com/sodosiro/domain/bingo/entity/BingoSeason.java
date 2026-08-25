@@ -74,4 +74,13 @@ public class BingoSeason {
     public void end() {
         this.status = BingoSeasonStatus.ENDED;
     }
+
+    /**
+     * verifiedAt이 이 시즌의 완료로 인정되는지: 시즌 종료일 이전(당일 포함)에 인증했으면 인정한다.
+     * 시즌 시작 전에 해둔 인증도 인정해 재방문 없이 바로 완료로 잡히지만, 이미 끝난 시즌을 나중 인증으로
+     * 소급 완료시키는 것만은 막는다.
+     */
+    public boolean coversVerification(LocalDateTime verifiedAt) {
+        return !verifiedAt.toLocalDate().isAfter(endDate);
+    }
 }

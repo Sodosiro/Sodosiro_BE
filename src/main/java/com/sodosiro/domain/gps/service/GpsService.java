@@ -45,13 +45,20 @@ public class GpsService {
         return GpsResponse.from(gps, bingoCheck);
     }
 
+    /**
+     * 이 유저가 이 스팟을 (다른 코스에서든) 이미 한 번이라도 인증한 적 있으면 실제 방문이 증명된 것으로 보고
+     * 거리 체크 없이 이 코스·날짜용 레코드만 새로 만든다. 처음 인증하는 경우에만 반경 300m를 확인한다.
+     */
     private Gps createVerification(GpsRequest request, Long userId, TouristSpot spot) {
-        if (spot.getMapY() == null || spot.getMapX() == null) {
-            throw new GeneralException(GpsErrorCode._SPOT_LOCATION_UNAVAILABLE);
-        }
-        if (!GpsVerifier.isWithinVerificationRadius(
-                spot.getMapY(), spot.getMapX(), request.latitude(), request.longitude())) {
-            throw new GeneralException(GpsErrorCode._OUT_OF_VERIFICATION_RANGE);
+        boolean alreadyVerifiedElsewhere = !gpsRepository.findByUserIdAndContentId(userId, request.contentId()).isEmpty();
+        if (!alreadyVerifiedElsewhere) {
+            if (spot.getMapY() == null || spot.getMapX() == null) {
+                throw new GeneralException(GpsErrorCode._SPOT_LOCATION_UNAVAILABLE);
+            }
+            if (!GpsVerifier.isWithinVerificationRadius(
+                    spot.getMapY(), spot.getMapX(), request.latitude(), request.longitude())) {
+                throw new GeneralException(GpsErrorCode._OUT_OF_VERIFICATION_RANGE);
+            }
         }
         return gpsRepository.save(Gps.create(request.courseId(), userId, request.contentId(), request.day()));
     }

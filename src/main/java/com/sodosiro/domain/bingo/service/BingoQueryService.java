@@ -84,7 +84,7 @@ public class BingoQueryService {
             return null;
         }
 
-        Set<Integer> completedPositions = completedPositions(board, userId);
+        Set<Integer> completedPositions = completedPositions(board, userId, activeSeason);
         int completedLineCount = BingoLineCalculator.countCompletedLines(completedPositions);
 
         return new BingoCellCheckResponse(board.getId(), cell.position(), completedLineCount, completedLineCount > 0);
@@ -101,7 +101,7 @@ public class BingoQueryService {
     }
 
     private BingoBoardResponse buildResponse(BingoSeason season, BingoBoard board, Long userId) {
-        Map<Long, LocalDateTime> verifiedAtByContentId = verifiedAtByContentId(board, userId);
+        Map<Long, LocalDateTime> verifiedAtByContentId = verifiedAtByContentId(board, userId, season);
 
         List<BingoBoardResponse.Cell> cells = board.getCells().stream()
                 .map(cell -> new BingoBoardResponse.Cell(
@@ -120,14 +120,16 @@ public class BingoQueryService {
                 cells, completedLineCount, completedLineCount > 0);
     }
 
-    private Map<Long, LocalDateTime> verifiedAtByContentId(BingoBoard board, Long userId) {
+    /** 시즌 기간(startDate~endDate) 안에 인증된 기록만 그 시즌의 빙고 완료로 인정한다. 그 밖의 인증은 GPS 인증 자체는 성립하되 빙고 체크에는 반영되지 않는다. */
+    private Map<Long, LocalDateTime> verifiedAtByContentId(BingoBoard board, Long userId, BingoSeason season) {
         List<Long> contentIds = board.getCells().stream().map(BingoBoard.BingoCellSnapshot::contentId).toList();
         return gpsRepository.findByUserIdAndContentIdIn(userId, contentIds).stream()
+                .filter(gps -> season.coversVerification(gps.getVerifiedAt()))
                 .collect(Collectors.toMap(Gps::getContentId, Gps::getVerifiedAt, (first, duplicate) -> first));
     }
 
-    private Set<Integer> completedPositions(BingoBoard board, Long userId) {
-        Map<Long, LocalDateTime> verifiedAtByContentId = verifiedAtByContentId(board, userId);
+    private Set<Integer> completedPositions(BingoBoard board, Long userId, BingoSeason season) {
+        Map<Long, LocalDateTime> verifiedAtByContentId = verifiedAtByContentId(board, userId, season);
         return board.getCells().stream()
                 .filter(cell -> verifiedAtByContentId.containsKey(cell.contentId()))
                 .map(BingoBoard.BingoCellSnapshot::position)
