@@ -156,6 +156,12 @@ public class Course {
         return course;
     }
 
+    /** 확정 전 draft의 제목을 수정한다. 호출부에서 이미 확정된 코스가 아닌지 확인해야 한다. */
+    public void updateTitle(String title) {
+        this.title = title;
+        this.updatedAt = LocalDateTime.now();
+    }
+
     /** 확정 전 draft의 일자별 관광지 순서를 수정한다. 호출부에서 이미 확정된 코스가 아닌지 확인해야 한다. */
     public void updateDays(List<DaySnapshot> days) {
         this.days = days;

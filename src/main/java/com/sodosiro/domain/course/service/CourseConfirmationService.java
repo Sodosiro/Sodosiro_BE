@@ -47,13 +47,18 @@ public class CourseConfirmationService {
     private final RedisService redisService;
     private final ObjectMapper objectMapper;
 
-    /** 확정 전 draft의 일자별 관광지 순서를 수정한다. */
-    public void updateDraftDays(Long userId, Long courseId, List<DayConfirm> days) {
+    /** 확정 전 draft의 제목과 일자별 관광지 순서를 수정한다. title이 없으면 기존 제목을 유지한다. */
+    public void updateDraftDays(Long userId, Long courseId, String title, List<DayConfirm> days) {
+
         Course course = courseRepository.findByIdAndUserId(courseId, userId)
                 .orElseThrow(() -> new GeneralException(CourseErrorCode._COURSE_NOT_FOUND));
 
         if (course.getIsConfirmed()) {
             throw new GeneralException(CourseErrorCode._COURSE_ALREADY_CONFIRMED);
+        }
+
+        if (title != null && !title.isBlank()) {
+            course.updateTitle(title);
         }
 
         Map<Long, TouristSpot> spotsById = findSpotsByContentId(days);
