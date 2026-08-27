@@ -126,3 +126,8 @@ notification:
 
 firebase:
   service-account-path: ${FIREBASE_SERVICE_ACCOUNT_PATH:}
+
+course:
+  recommend:
+    # 사용자당 하루(KST 자정 기준) 추천 생성 가능 횟수
+    daily-limit: ${COURSE_RECOMMEND_DAILY_LIMIT:5}

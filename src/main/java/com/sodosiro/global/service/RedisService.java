@@ -174,4 +174,24 @@ public class RedisService {
         REJECTED
     }
 
+    /**
+     * key 의 카운트가 limit 미만이면 원자적으로 증가시키고 true, limit 이상이면 증가시키지 않고 false 를 반환한다.
+     * 첫 증가(count == 1) 시점에만 TTL 을 걸어 자정 등 기준 시점에 자동 만료되게 한다.
+     */
+    public boolean tryConsumeDailyQuota(String key, int limit, long ttlSeconds) {
+        DefaultRedisScript<Long> script = new DefaultRedisScript<>();
+        script.setResultType(Long.class);
+        script.setScriptText("""
+                local count = tonumber(redis.call('GET', KEYS[1]) or '0')
+                if count >= tonumber(ARGV[1]) then return 0 end
+                local newCount = redis.call('INCR', KEYS[1])
+                if newCount == 1 then
+                    redis.call('EXPIRE', KEYS[1], ARGV[2])
+                end
+                return 1
+                """);
+        Long result = redisTemplate.execute(script, List.of(key), String.valueOf(limit), String.valueOf(ttlSeconds));
+        return result != null && result == 1L;
+    }
+
 }

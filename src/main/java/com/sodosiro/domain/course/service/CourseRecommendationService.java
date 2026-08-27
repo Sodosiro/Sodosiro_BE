@@ -3,19 +3,25 @@ package com.sodosiro.domain.course.service;
 import com.sodosiro.domain.course.constants.CourseStatus;
 import com.sodosiro.domain.course.controller.dto.CourseRecommendRequest;
 import com.sodosiro.domain.course.controller.dto.CourseRecommendResponse;
+import com.sodosiro.domain.course.controller.dto.CourseRecommendQuotaResponse;
 import com.sodosiro.domain.course.entity.Course;
 import com.sodosiro.domain.course.repository.CourseRepository;
 import com.sodosiro.domain.travel.entity.TouristSpot;
 import com.sodosiro.domain.travel.repository.TouristSpotRepository;
 import com.sodosiro.global.payload.code.error.CourseErrorCode;
 import com.sodosiro.global.payload.exception.GeneralException;
+import com.sodosiro.global.service.RedisService;
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.LongStream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.embedding.EmbeddingModel;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,11 +38,18 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class CourseRecommendationService {
 
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
+
     private final TouristSpotRepository touristSpotRepository;
     private final EmbeddingModel embeddingModel;
     private final CourseRepository courseRepository;
     private final CourseAiPlanner courseAiPlanner;
     private final CourseRuleBasedPlanner courseRuleBasedPlanner;
+    private final CourseAccommodationPlanner courseAccommodationPlanner;
+    private final RedisService redisService;
+
+    @Value("${course.recommend.daily-limit:5}")
+    private int dailyRecommendLimit;
 
     public CourseRecommendResponse recommend(Long userId, CourseRecommendRequest request) {
 
@@ -51,12 +64,18 @@ public class CourseRecommendationService {
 
         int mustVisitDayIndex = mustVisitSpot == null ? -1 : resolveMustVisitDayIndex(mustVisitSpot, dates);
 
+        // 사전 검증을 모두 통과한 요청에 대해서만 쿼터를 소모한다.
+        consumeDailyRecommendationQuota(userId);
+
         // 비용발생: 사전 검증을 통과한 요청만 AI 임베딩 수행. AI 경로/규칙기반 경로가 같은 임베딩을 재사용하므로 한 번만 호출한다.
         float[] queryEmbedding = embedSafely(request.aiMessage());
 
         List<Course.DaySnapshot> days = courseAiPlanner
                 .tryGenerate(request, dates, mustVisitSpot, mustVisitDayIndex, queryEmbedding)
                 .orElseGet(() -> courseRuleBasedPlanner.generate(request, dates, mustVisitSpot, mustVisitDayIndex, queryEmbedding));
+
+        // 1박 이상인 경우에만, 복귀일을 제외한 날짜 마지막에 숙박을 붙인다 (AI 미사용, 같은 시군구 평점순).
+        days = courseAccommodationPlanner.attach(days, request.sigunguCode());
 
         Long courseId = saveDraft(userId, request, days);
         return new CourseRecommendResponse(courseId);
@@ -94,6 +113,29 @@ public class CourseRecommendationService {
         if (overlaps) {
             throw new GeneralException(CourseErrorCode._TRAVEL_DATE_OVERLAP);
         }
+    }
+
+    /** 사용자당 하루(KST 자정 기준) 추천 생성 횟수를 제한한다. AI 호출(비용 발생) 이전에 원자적으로 소모한다. */
+    private void consumeDailyRecommendationQuota(Long userId) {
+        LocalDate today = LocalDate.now(KST);
+        String key = dailyQuotaKey(userId, today);
+        long ttlSeconds = Duration.between(LocalDateTime.now(KST), today.plusDays(1).atStartOfDay()).getSeconds();
+        if (!redisService.tryConsumeDailyQuota(key, dailyRecommendLimit, ttlSeconds)) {
+            throw new GeneralException(CourseErrorCode._DAILY_RECOMMEND_LIMIT_EXCEEDED);
+        }
+    }
+
+    /** 프론트가 버튼을 누르기 전에 남은 횟수를 보여줄 수 있도록, 현재 사용량을 소모 없이 조회만 한다. */
+    public CourseRecommendQuotaResponse getDailyRecommendQuota(Long userId) {
+        LocalDate today = LocalDate.now(KST);
+        String value = redisService.getValue(dailyQuotaKey(userId, today));
+        int used = value == null ? 0 : Integer.parseInt(value);
+        int remaining = Math.max(0, dailyRecommendLimit - used);
+        return new CourseRecommendQuotaResponse(dailyRecommendLimit, used, remaining);
+    }
+
+    private String dailyQuotaKey(Long userId, LocalDate date) {
+        return "course:recommend:daily-count:%d:%s".formatted(userId, date);
     }
 
     private List<LocalDate> buildDateRange(LocalDate startDate, LocalDate endDate) {

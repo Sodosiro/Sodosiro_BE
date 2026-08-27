@@ -14,6 +14,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+
 /**
  * KST 자정에 확정된 코스의 여행 상태를 오늘 날짜 기준으로 자동 전환한다 (UPCOMING→IN_PROGRESS, IN_PROGRESS→FINISHED).
  * 승격 시 근처 찜 알림이 참조하는 활성 코스 캐시를 기록하고, 종료 시 제거한다.
@@ -28,6 +29,7 @@ public class CourseStatusScheduler {
 
     private final CourseRepository courseRepository;
     private final ActiveCourseCacheWriter activeCourseCacheWriter;
+
 
     @EventListener(ApplicationReadyEvent.class)
     @Scheduled(cron = "0 0 0 * * *", zone = "Asia/Seoul")
