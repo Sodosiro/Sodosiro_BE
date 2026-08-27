@@ -1,12 +1,10 @@
 package com.sodosiro.domain.course.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sodosiro.domain.course.constants.CourseStatus;
 import com.sodosiro.domain.course.controller.dto.CourseConfirmRequest;
 import com.sodosiro.domain.course.controller.dto.DayConfirm;
 import com.sodosiro.domain.course.entity.Course;
 import com.sodosiro.domain.course.repository.CourseRepository;
-import com.sodosiro.domain.course.service.dto.ActiveCourseCache;
 import com.sodosiro.domain.route.dto.RouteWaypoint;
 import com.sodosiro.domain.route.constants.TransportMode;
 import com.sodosiro.domain.route.service.AdjacentRouteResult;
@@ -15,17 +13,12 @@ import com.sodosiro.domain.travel.entity.TouristSpot;
 import com.sodosiro.domain.travel.repository.TouristSpotRepository;
 import com.sodosiro.global.payload.code.error.CourseErrorCode;
 import com.sodosiro.global.payload.exception.GeneralException;
-import com.sodosiro.global.service.RedisService;
-import java.time.Duration;
 import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,16 +29,12 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional
-@Slf4j
 public class CourseConfirmationService {
-
-    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
     private final TouristSpotRepository touristSpotRepository;
     private final RouteCalculationService routeCalculationService;
     private final CourseRepository courseRepository;
-    private final RedisService redisService;
-    private final ObjectMapper objectMapper;
+    private final ActiveCourseCacheWriter activeCourseCacheWriter;
 
     /** 확정 전 draft의 제목과 일자별 관광지 순서를 수정한다. title이 없으면 기존 제목을 유지한다. */
     public void updateDraftDays(Long userId, Long courseId, String title, List<DayConfirm> days) {
@@ -100,30 +89,15 @@ public class CourseConfirmationService {
             course.updateTransitRoutes(days);
         }
         course.confirmDraft();
-        cacheActiveCourse(userId, course);
+        if (course.getStatus() == CourseStatus.IN_PROGRESS) {
+            activeCourseCacheWriter.write(userId, course);
+        }
     }
 
     private List<RouteWaypoint> toWaypointsFromSnapshot(List<Course.SpotSnapshot> spots) {
         return spots.stream()
                 .map(spot -> new RouteWaypoint(spot.contentId(), spot.mapX(), spot.mapY()))
                 .toList();
-    }
-
-    private void cacheActiveCourse(Long userId, Course course) {
-        List<Long> scheduledContentIds = course.allSpots().stream()
-                .map(Course.SpotSnapshot::contentId)
-                .toList();
-        ActiveCourseCache cache = new ActiveCourseCache(
-                course.getId(), course.getStartDate(), course.getEndDate(), scheduledContentIds);
-
-        try {
-            String json = objectMapper.writeValueAsString(cache);
-            ZonedDateTime expiresAt = course.getEndDate().plusDays(1).atStartOfDay(KST);
-            long ttlMillis = Duration.between(ZonedDateTime.now(KST), expiresAt).toMillis();
-            redisService.save(ActiveCourseCache.redisKey(userId), json, Math.max(1, ttlMillis));
-        } catch (JsonProcessingException exception) {
-            log.warn("활성 코스 캐시 저장에 실패했습니다. userId={}, courseId={}", userId, course.getId(), exception);
-        }
     }
 
     private Course.DaySnapshot toSnapshot(DayConfirm dayConfirm, Map<Long, TouristSpot> spotsById, Long mustVisitContentId, Map<Integer, LocalDate> datesByDay) {

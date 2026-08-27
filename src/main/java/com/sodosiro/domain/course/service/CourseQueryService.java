@@ -31,6 +31,7 @@ public class CourseQueryService {
     private final GpsRepository gpsRepository;
     private final ReviewRepository reviewRepository;
     private final TouristSpotRepository touristSpotRepository;
+    private final ActiveCourseCacheWriter activeCourseCacheWriter;
 
     /** draft(미확정)도 status가 항상 UPCOMING이라 자연스럽게 UPCOMING 필터/전체 조회에 포함된다. */
     @Transactional(readOnly = true)
@@ -88,5 +89,6 @@ public class CourseQueryService {
         Course course = courseRepository.findByIdAndUserId(courseId, userId)
                 .orElseThrow(() -> new GeneralException(CourseErrorCode._COURSE_NOT_FOUND));
         courseRepository.delete(course);
+        activeCourseCacheWriter.evict(userId);
     }
 }

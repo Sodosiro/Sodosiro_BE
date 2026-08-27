@@ -8,11 +8,11 @@ import com.sodosiro.domain.travel.repository.TouristSpotRepository;
 import com.sodosiro.global.payload.code.error.LocationErrorCode;
 import com.sodosiro.global.payload.exception.GeneralException;
 import com.sodosiro.global.service.RedisService;
+import com.sodosiro.global.utils.TimeZones;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.HashSet;
 import java.util.List;
@@ -36,7 +36,6 @@ public class LocationUpdateService {
     private static final double SEARCH_RADIUS_KILOMETERS = 0.2; // 알림 범위 현재는 200m
     private static final double MAX_ACCURACY_METERS = 100.0;    // 알림 정확도
     private static final Duration MAX_EVENT_AGE = Duration.ofMinutes(5);
-    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
     private final ObjectMapper objectMapper;
     private final RedisService redisService;
@@ -167,7 +166,7 @@ public class LocationUpdateService {
             return null;
         }
 
-        LocalDate today = LocalDate.now(KST);
+        LocalDate today = LocalDate.now(TimeZones.KST);
         return today.isBefore(course.startDate()) || today.isAfter(course.endDate()) ? null : course;
     }
 
@@ -181,9 +180,9 @@ public class LocationUpdateService {
 
     private RedisService.NearbyNotificationPermit reserveNotificationPermit(
             Long userId, Long courseId, Long contentId, LocalDate courseEndDate) {
-        ZonedDateTime now = ZonedDateTime.now(KST);
-        ZonedDateTime nextMidnight = now.toLocalDate().plusDays(1).atStartOfDay(KST);
-        ZonedDateTime courseExpiresAt = courseEndDate.plusDays(1).atStartOfDay(KST);
+        ZonedDateTime now = ZonedDateTime.now(TimeZones.KST);
+        ZonedDateTime nextMidnight = now.toLocalDate().plusDays(1).atStartOfDay(TimeZones.KST);
+        ZonedDateTime courseExpiresAt = courseEndDate.plusDays(1).atStartOfDay(TimeZones.KST);
         return redisService.reserveNearbyNotification(
                 "user:%d:course:%d:nearby-notification:spot:%d".formatted(userId, courseId, contentId),
                 "user:%d:nearby-notification:daily:%s".formatted(userId, now.toLocalDate()),
