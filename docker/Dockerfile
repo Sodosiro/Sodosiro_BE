@@ -13,6 +13,8 @@ RUN ./gradlew clean bootJar --no-daemon -x test
 FROM eclipse-temurin:21-jre
 WORKDIR /app
 
+ENV TZ=Asia/Seoul
+
 RUN groupadd --system spring && useradd --system --gid spring spring
 
 COPY --from=build /app/build/libs/*.jar app.jar
