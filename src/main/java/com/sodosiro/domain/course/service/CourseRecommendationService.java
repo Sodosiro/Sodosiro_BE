@@ -9,13 +9,18 @@ import com.sodosiro.domain.travel.entity.TouristSpot;
 import com.sodosiro.domain.travel.repository.TouristSpotRepository;
 import com.sodosiro.global.payload.code.error.CourseErrorCode;
 import com.sodosiro.global.payload.exception.GeneralException;
+import com.sodosiro.global.service.RedisService;
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.LongStream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.embedding.EmbeddingModel;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,17 +37,24 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class CourseRecommendationService {
 
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
+
     private final TouristSpotRepository touristSpotRepository;
     private final EmbeddingModel embeddingModel;
     private final CourseRepository courseRepository;
     private final CourseAiPlanner courseAiPlanner;
     private final CourseRuleBasedPlanner courseRuleBasedPlanner;
+    private final RedisService redisService;
+
+    @Value("${course.recommend.daily-limit:5}")
+    private int dailyRecommendLimit;
 
     public CourseRecommendResponse recommend(Long userId, CourseRecommendRequest request) {
 
         validateDateRange(request.startDate(), request.endDate());
         validateSigunguCode(request.sigunguCode());
         validateNoOverlappingConfirmedTrip(userId, request.startDate(), request.endDate());
+        consumeDailyRecommendationQuota(userId);
         List<LocalDate> dates = buildDateRange(request.startDate(), request.endDate());
 
         TouristSpot mustVisitSpot = request.mustVisitContentId() == null
@@ -93,6 +105,16 @@ public class CourseRecommendationService {
                         userId, CourseStatus.FINISHED, endDate, startDate);
         if (overlaps) {
             throw new GeneralException(CourseErrorCode._TRAVEL_DATE_OVERLAP);
+        }
+    }
+
+    /** 사용자당 하루(KST 자정 기준) 추천 생성 횟수를 제한한다. AI 호출(비용 발생) 이전에 원자적으로 소모한다. */
+    private void consumeDailyRecommendationQuota(Long userId) {
+        LocalDate today = LocalDate.now(KST);
+        String key = "course:recommend:daily-count:%d:%s".formatted(userId, today);
+        long ttlSeconds = Duration.between(LocalDateTime.now(KST), today.plusDays(1).atStartOfDay()).getSeconds();
+        if (!redisService.tryConsumeDailyQuota(key, dailyRecommendLimit, ttlSeconds)) {
+            throw new GeneralException(CourseErrorCode._DAILY_RECOMMEND_LIMIT_EXCEEDED);
         }
     }
 

@@ -60,12 +60,14 @@ public interface CourseSpecification {
             description = "사용자의 입력 조건을 바탕으로 맞춤형 여행 코스를 추천합니다. "
                     + "여행 기간, 선호 카테고리, 특정 여행지 포함 여부 등을 반영하여 최적의 코스를 구성하며, "
                     + "로그인한 사용자의 고유 식별자(userId)를 기반으로 코스를 생성해 draft로 저장합니다. "
-                    + "응답은 courseId만 반환하며, 코스 내용은 GET /api/v1/courses/{courseId}로 조회합니다."
+                    + "응답은 courseId만 반환하며, 코스 내용은 GET /api/v1/courses/{courseId}로 조회합니다. "
+                    + "사용자당 하루(KST 자정 기준) 생성 가능 횟수는 5회로 제한됩니다."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "코스 추천 성공"),
             @ApiResponse(responseCode = "400", description = "요청 파라미터 유효성 검증 실패 (예: 필수값 누락, 일자 범위 오류, 이미 확정된 다른 여행 기간과 겹침 등)"),
-            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자")
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자"),
+            @ApiResponse(responseCode = "429", description = "하루 추천 생성 횟수(5회) 초과")
     })
     public ResponseEntity<CourseRecommendResponse> recommend(
             @Parameter(hidden = true) @LoginUser Long userId,
