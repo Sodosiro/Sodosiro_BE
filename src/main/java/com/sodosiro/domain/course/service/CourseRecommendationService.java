@@ -44,6 +44,7 @@ public class CourseRecommendationService {
     private final CourseRepository courseRepository;
     private final CourseAiPlanner courseAiPlanner;
     private final CourseRuleBasedPlanner courseRuleBasedPlanner;
+    private final CourseAccommodationPlanner courseAccommodationPlanner;
     private final RedisService redisService;
 
     @Value("${course.recommend.daily-limit:5}")
@@ -69,6 +70,9 @@ public class CourseRecommendationService {
         List<Course.DaySnapshot> days = courseAiPlanner
                 .tryGenerate(request, dates, mustVisitSpot, mustVisitDayIndex, queryEmbedding)
                 .orElseGet(() -> courseRuleBasedPlanner.generate(request, dates, mustVisitSpot, mustVisitDayIndex, queryEmbedding));
+
+        // 1박 이상인 경우에만, 복귀일을 제외한 날짜 마지막에 숙박을 붙인다 (AI 미사용, 같은 시군구 평점순).
+        days = courseAccommodationPlanner.attach(days, request.sigunguCode());
 
         Long courseId = saveDraft(userId, request, days);
         return new CourseRecommendResponse(courseId);
