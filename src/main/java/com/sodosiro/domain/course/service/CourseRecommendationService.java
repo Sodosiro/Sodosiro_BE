@@ -56,7 +56,6 @@ public class CourseRecommendationService {
         validateDateRange(request.startDate(), request.endDate());
         validateSigunguCode(request.sigunguCode());
         validateNoOverlappingConfirmedTrip(userId, request.startDate(), request.endDate());
-        consumeDailyRecommendationQuota(userId);
         List<LocalDate> dates = buildDateRange(request.startDate(), request.endDate());
 
         TouristSpot mustVisitSpot = request.mustVisitContentId() == null
@@ -64,6 +63,9 @@ public class CourseRecommendationService {
                 : findTouristSpot(request.mustVisitContentId());
 
         int mustVisitDayIndex = mustVisitSpot == null ? -1 : resolveMustVisitDayIndex(mustVisitSpot, dates);
+
+        // 사전 검증을 모두 통과한 요청에 대해서만 쿼터를 소모한다.
+        consumeDailyRecommendationQuota(userId);
 
         // 비용발생: 사전 검증을 통과한 요청만 AI 임베딩 수행. AI 경로/규칙기반 경로가 같은 임베딩을 재사용하므로 한 번만 호출한다.
         float[] queryEmbedding = embedSafely(request.aiMessage());
