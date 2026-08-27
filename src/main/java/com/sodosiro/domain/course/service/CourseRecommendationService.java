@@ -3,6 +3,7 @@ package com.sodosiro.domain.course.service;
 import com.sodosiro.domain.course.constants.CourseStatus;
 import com.sodosiro.domain.course.controller.dto.CourseRecommendRequest;
 import com.sodosiro.domain.course.controller.dto.CourseRecommendResponse;
+import com.sodosiro.domain.course.controller.dto.CourseRecommendQuotaResponse;
 import com.sodosiro.domain.course.entity.Course;
 import com.sodosiro.domain.course.repository.CourseRepository;
 import com.sodosiro.domain.travel.entity.TouristSpot;
@@ -115,11 +116,24 @@ public class CourseRecommendationService {
     /** 사용자당 하루(KST 자정 기준) 추천 생성 횟수를 제한한다. AI 호출(비용 발생) 이전에 원자적으로 소모한다. */
     private void consumeDailyRecommendationQuota(Long userId) {
         LocalDate today = LocalDate.now(KST);
-        String key = "course:recommend:daily-count:%d:%s".formatted(userId, today);
+        String key = dailyQuotaKey(userId, today);
         long ttlSeconds = Duration.between(LocalDateTime.now(KST), today.plusDays(1).atStartOfDay()).getSeconds();
         if (!redisService.tryConsumeDailyQuota(key, dailyRecommendLimit, ttlSeconds)) {
             throw new GeneralException(CourseErrorCode._DAILY_RECOMMEND_LIMIT_EXCEEDED);
         }
+    }
+
+    /** 프론트가 버튼을 누르기 전에 남은 횟수를 보여줄 수 있도록, 현재 사용량을 소모 없이 조회만 한다. */
+    public CourseRecommendQuotaResponse getDailyRecommendQuota(Long userId) {
+        LocalDate today = LocalDate.now(KST);
+        String value = redisService.getValue(dailyQuotaKey(userId, today));
+        int used = value == null ? 0 : Integer.parseInt(value);
+        int remaining = Math.max(0, dailyRecommendLimit - used);
+        return new CourseRecommendQuotaResponse(dailyRecommendLimit, used, remaining);
+    }
+
+    private String dailyQuotaKey(Long userId, LocalDate date) {
+        return "course:recommend:daily-count:%d:%s".formatted(userId, date);
     }
 
     private List<LocalDate> buildDateRange(LocalDate startDate, LocalDate endDate) {
