@@ -29,8 +29,6 @@ import org.hibernate.type.SqlTypes;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -47,8 +45,6 @@ import java.util.stream.Collectors;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Comment("AI 코스 추천 결과 (draft/확정 공용)")
 public class Course {
-
-    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -240,15 +236,6 @@ public class Course {
         return days.stream()
                 .flatMap(day -> day.spots().stream())
                 .anyMatch(SpotSnapshot::mustVisit);
-    }
-
-    public List<TravelStyle> travelStylesOrEmpty() {
-        if (travelStyles == null || travelStyles.isBlank()) {
-            return List.of();
-        }
-        return Arrays.stream(travelStyles.split(","))
-                .map(TravelStyle::valueOf)
-                .toList();
     }
 
     private static String joinTravelStyles(List<TravelStyle> travelStyles) {

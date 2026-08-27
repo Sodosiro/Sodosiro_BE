@@ -5,7 +5,6 @@ import com.sodosiro.domain.course.entity.Course;
 import com.sodosiro.domain.course.repository.CourseRepository;
 import com.sodosiro.global.utils.TimeZones;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +27,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class CourseStatusScheduler {
 
-    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
     private final CourseRepository courseRepository;
     private final ActiveCourseCacheWriter activeCourseCacheWriter;
 
