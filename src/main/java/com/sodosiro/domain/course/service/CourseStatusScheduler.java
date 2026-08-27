@@ -4,6 +4,7 @@ import com.sodosiro.domain.course.constants.CourseStatus;
 import com.sodosiro.domain.course.entity.Course;
 import com.sodosiro.domain.course.repository.CourseRepository;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,18 +12,19 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** 매일 00시, 확정된 코스의 여행 상태를 오늘 날짜 기준으로 자동 전환한다 (UPCOMING→IN_PROGRESS, IN_PROGRESS→FINISHED). */
+/** 매일 KST 00시, 확정된 코스의 여행 상태를 오늘 날짜 기준으로 자동 전환한다 (UPCOMING→IN_PROGRESS, IN_PROGRESS→FINISHED). */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class CourseStatusScheduler {
 
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
     private final CourseRepository courseRepository;
 
-    @Scheduled(cron = "0 0 0 * * *")
+    @Scheduled(cron = "0 0 0 * * *", zone = "Asia/Seoul")
     @Transactional
     public void updateStatuses() {
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(KST);
 
         List<Course> toStart = courseRepository.findByIsConfirmedTrueAndStatusAndStartDateLessThanEqual(CourseStatus.UPCOMING, today);
         toStart.forEach(Course::start);

@@ -28,6 +28,7 @@ import org.hibernate.type.SqlTypes;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -45,6 +46,8 @@ import java.util.stream.Collectors;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Comment("AI 코스 추천 결과 (draft/확정 공용)")
 public class Course {
+
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -186,9 +189,9 @@ public class Course {
         this.transitRoutes = transitRoutes;
     }
 
-    /** 확정 시점의 오늘 날짜를 기준으로 UPCOMING/IN_PROGRESS/FINISHED를 계산해 반영한다. */
+    /** 확정 시점의 오늘 날짜(KST 기준)를 기준으로 UPCOMING/IN_PROGRESS/FINISHED를 계산해 반영한다. */
     private void applyResolvedStatus() {
-        CourseStatus resolved = CourseStatus.resolve(startDate, endDate, LocalDate.now());
+        CourseStatus resolved = CourseStatus.resolve(startDate, endDate, LocalDate.now(KST));
         this.status = resolved;
         if (resolved == CourseStatus.FINISHED) {
             this.finishedAt = LocalDateTime.now();
