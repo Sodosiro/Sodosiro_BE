@@ -6,6 +6,7 @@ import com.sodosiro.domain.route.dto.RouteLeg;
 import com.sodosiro.domain.route.constants.TransportMode;
 import com.sodosiro.domain.route.kakao.dto.KakaoTransitRouteResult;
 import com.sodosiro.domain.user.entity.User;
+import com.sodosiro.global.utils.TimeZones;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -186,9 +187,9 @@ public class Course {
         this.transitRoutes = transitRoutes;
     }
 
-    /** 확정 시점의 오늘 날짜를 기준으로 UPCOMING/IN_PROGRESS/FINISHED를 계산해 반영한다. */
+    /** 확정 시점의 오늘 날짜(KST)를 기준으로 UPCOMING/IN_PROGRESS/FINISHED를 계산해 반영한다. */
     private void applyResolvedStatus() {
-        CourseStatus resolved = CourseStatus.resolve(startDate, endDate, LocalDate.now());
+        CourseStatus resolved = CourseStatus.resolve(startDate, endDate, LocalDate.now(TimeZones.KST));
         this.status = resolved;
         if (resolved == CourseStatus.FINISHED) {
             this.finishedAt = LocalDateTime.now();

@@ -7,9 +7,9 @@ import com.sodosiro.domain.festival.entity.Festival;
 import com.sodosiro.domain.festival.repository.FestivalQueryRepository;
 import com.sodosiro.domain.festival.repository.FestivalRepository;
 import com.sodosiro.domain.travel.controller.dto.CursorPageResponse;
+import com.sodosiro.global.utils.TimeZones;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.Base64;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -23,8 +23,7 @@ import org.springframework.web.server.ResponseStatusException;
 @Transactional(readOnly = true)
 public class FestivalService {
 
-    /** status 판정 및 "오늘" 기준은 항상 한국 시간대(KST, UTC+9)로 고정한다. */
-    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
+    // status 판정 및 "오늘" 기준은 항상 KST(TimeZones.KST)로 고정한다.
     private static final int DEFAULT_PAGE_SIZE = 20;
     private static final int MAX_PAGE_SIZE = 100;
 
@@ -34,14 +33,14 @@ public class FestivalService {
     public FestivalDetailResponse getFestival(Long festivalId) {
         Festival festival = festivalRepository.findById(festivalId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 축제입니다."));
-        return FestivalDetailResponse.from(festival, LocalDate.now(KST));
+        return FestivalDetailResponse.from(festival, LocalDate.now(TimeZones.KST));
     }
 
     public CursorPageResponse<FestivalSummaryResponse> getFestivals(
             String areaCode, FestivalStatus status, Integer year, String cursor, Integer size) {
         int pageSize = normalizePageSize(size);
         FestivalStatus effectiveStatus = status == null ? FestivalStatus.ALL : status;
-        LocalDate today = LocalDate.now(KST);
+        LocalDate today = LocalDate.now(TimeZones.KST);
         FestivalCursor parsedCursor = parseCursor(cursor);
 
         List<Festival> rows = festivalQueryRepository.findFestivals(
