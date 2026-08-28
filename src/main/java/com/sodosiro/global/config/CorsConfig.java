@@ -21,8 +21,10 @@ public class CorsConfig {
         // TODO: 실제 프론트엔드 도메인으로 교체
         config.setAllowedOrigins(List.of(
                 "https://sodosiro.store",
+                "https://sodosiro.vercel.app",
                 "http://localhost:3000",
-                "http://localhost:8081"
+                "http://localhost:8081",
+                "http://localhost:5173"
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
