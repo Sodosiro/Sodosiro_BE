@@ -18,13 +18,16 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.security.interfaces.RSAPublicKey;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -42,7 +45,14 @@ public class KakaoTokenVerifier implements SocialVerifier{
     @Value("${spring.security.oauth2.client.registration.kakao.admin-key}")
     private String adminKey;
 
+    @Value("${spring.security.oauth2.client.registration.kakao.client-secret}")
+    private String kakaoClientSecret;
+
+    @Value("${spring.security.oauth2.client.registration.kakao.web-redirect-uri}")
+    private String webRedirectUri;
+
     private static final String KAKAO_ISSUER = "https://kauth.kakao.com";
+    private static final String KAKAO_TOKEN_URI = "https://kauth.kakao.com/oauth/token";
     private final RestTemplate restTemplate;
 
 
@@ -100,6 +110,42 @@ public class KakaoTokenVerifier implements SocialVerifier{
         } catch (Exception e) {
             throw new GeneralException(UserErrorCode._SOCIAL_VERIFICATION_FAILED);
         }
+    }
+
+    @Override
+    public Map<String, String> exchangeCodeForTokens(String authorizationCode) {
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("grant_type", "authorization_code");
+        params.add("client_id", kakaoClientId);
+        params.add("client_secret", kakaoClientSecret);
+        params.add("redirect_uri", webRedirectUri);
+        params.add("code", authorizationCode);
+
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
+
+        Map<String, Object> body;
+        try {
+            ResponseEntity<Map> response = restTemplate.postForEntity(KAKAO_TOKEN_URI, request, Map.class);
+            body = response.getBody();
+        } catch (RestClientException e) {
+            log.error("Kakao 인가코드 교환 실패", e);
+            throw new GeneralException(UserErrorCode._SOCIAL_CODE_EXCHANGE_FAILED);
+        }
+
+        if (body == null || body.get("id_token") == null) {
+            throw new GeneralException(UserErrorCode._SOCIAL_CODE_EXCHANGE_FAILED);
+        }
+
+        Object refreshToken = body.get("refresh_token");
+
+        return Map.of(
+                "id_token", String.valueOf(body.get("id_token")),
+                "refresh_token", refreshToken == null ? "" : String.valueOf(refreshToken)
+        );
     }
 
     @Override
