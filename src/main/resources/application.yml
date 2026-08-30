@@ -23,7 +23,7 @@ spring:
             client-name: Kakao
             admin-key: ${KAKAO_ADMIN_KEY}
             redirect-uri: http://localhost:8080/login/oauth2/code/kakao
-            web-redirect-uri: ${KAKAO_WEB_REDIRECT_URI:http://localhost:5173/login}
+            web-redirect-uri: ${KAKAO_WEB_REDIRECT_URI:https://sodosiro.vercel.app/login}
 
 
         provider:
