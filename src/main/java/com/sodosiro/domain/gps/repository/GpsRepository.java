@@ -22,4 +22,6 @@ public interface GpsRepository extends JpaRepository<Gps, Long> {
     boolean existsByUserIdAndContentId(Long userId, Long contentId);
 
     boolean existsByCourseIdAndContentId(Long courseId, Long contentId);
+
+    void deleteAllByUserId(Long userId);
 }

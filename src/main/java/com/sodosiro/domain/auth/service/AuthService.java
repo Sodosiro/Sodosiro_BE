@@ -171,7 +171,7 @@ public class AuthService {
                 .map(s -> new WithdrawEvent.SocialInfo(s.getProvider(), s.getProviderId(), s.getRefreshToken()))
                 .toList();
 
-        userService.deleteUserData(userId);
+        userService.withdraw(userId);
         eventPublisher.publishEvent(new WithdrawEvent(userId, accessToken, refreshToken, socialInfos));
     }
 

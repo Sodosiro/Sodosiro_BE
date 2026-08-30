@@ -14,4 +14,6 @@ public interface UserDeviceRepository extends JpaRepository<UserDevice, Long> {
     Optional<UserDevice> findByUserIdAndDeviceIdAndInvalidatedAtIsNull(Long userId, String deviceId);
 
     List<UserDevice> findByUserIdAndPushEnabledTrueAndInvalidatedAtIsNullAndFcmTokenIsNotNull(Long userId);
+
+    void deleteAllByUserId(Long userId);
 }

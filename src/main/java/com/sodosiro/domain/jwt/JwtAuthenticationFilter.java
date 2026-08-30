@@ -37,6 +37,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     throw new JwtAuthenticationException(UserErrorCode._JWT_BLACKLISTED_TOKEN);
                 }
                 Authentication authentication = jwtProvider.getAuthentication(token);
+                if (redisService.hasKey(TokenKeys.withdrawnKey(authentication.getName()))) {
+                    throw new JwtAuthenticationException(UserErrorCode._USER_WITHDRAWN);
+                }
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             } catch (JwtAuthenticationException e) {
                 SecurityContextHolder.clearContext();

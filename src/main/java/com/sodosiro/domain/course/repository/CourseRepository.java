@@ -24,4 +24,6 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
 
     /** FINISHED가 아닌(예정/진행 중) 확정 코스 중, [startDate, endDate]와 기간이 겹치는 게 있는지 확인한다. */
     boolean existsByUserIdAndIsConfirmedTrueAndStatusNotAndStartDateLessThanEqualAndEndDateGreaterThanEqual(Long userId, CourseStatus status, LocalDate startDate, LocalDate endDate);
+
+    long deleteAllByUserId(Long userId);
 }

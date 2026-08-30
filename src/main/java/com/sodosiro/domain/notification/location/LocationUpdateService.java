@@ -3,6 +3,7 @@ package com.sodosiro.domain.notification.location;
 import com.sodosiro.domain.course.service.dto.ActiveCourseCache;
 import com.sodosiro.domain.gps.entity.Gps;
 import com.sodosiro.domain.gps.repository.GpsRepository;
+import com.sodosiro.domain.like.service.dto.LikedSpotsGeoCache;
 import com.sodosiro.domain.travel.entity.TouristSpot;
 import com.sodosiro.domain.travel.repository.TouristSpotRepository;
 import com.sodosiro.global.payload.code.error.LocationErrorCode;
@@ -62,7 +63,7 @@ public class LocationUpdateService {
 
         Set<Long> excludedContentIds = excludedContentIds(course);
         List<GeoResult<RedisGeoCommands.GeoLocation<String>>> nearbySpots = redisService.searchGeo(
-                "user:%d:liked-spots:geo".formatted(userId),
+                LikedSpotsGeoCache.redisKey(userId),
                 longitude,
                 latitude,
                 SEARCH_RADIUS_KILOMETERS
