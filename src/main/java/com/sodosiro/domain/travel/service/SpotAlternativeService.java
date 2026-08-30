@@ -24,7 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 코스 내 특정 장소를 대체할 후보를 추천한다.
- * 대상 장소와 같은 카테고리 안에서 반경(3km -> 5km -> 10km)을 넓혀가며 후보가 3개 모일 때까지 검색하고,
+ * 대상 장소와 같은 카테고리 안에서 반경(5km -> 10km -> 15km)을 넓혀가며 후보가 3개 모일 때까지 검색하고,
  * 임베딩 코사인 유사도가 가장 높은 상위 3개를 반환한다.
  */
 @Service
@@ -32,7 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class SpotAlternativeService {
 
-    private static final List<Double> RADIUS_STEPS_KM = List.of(3D, 5D, 10D);
+    private static final List<Double> RADIUS_STEPS_KM = List.of(5D, 10D, 15D);
     private static final int ALTERNATIVE_SIZE = 3;
 
     private final TouristSpotRepository touristSpotRepository;

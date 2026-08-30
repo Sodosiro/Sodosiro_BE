@@ -75,9 +75,9 @@ public interface TravelSpotSpecification {
 
     @Operation(
             summary = "장소 대체 후보 조회",
-            description = "대상 장소(contentId)와 같은 카테고리 안에서 반경(3km -> 5km -> 10km)을 넓혀가며 후보가 3개 모일 때까지 "
+            description = "대상 장소(contentId)와 같은 카테고리 안에서 반경(5km -> 10km -> 15km)을 넓혀가며 후보가 3개 모일 때까지 "
                     + "검색하고, 임베딩 코사인 유사도가 가장 높은 상위 3건을 반환합니다. "
-                    + "반경 10km 안에서도 후보가 3개 미만이면 그보다 적은 수가 반환될 수 있습니다."
+                    + "반경 15km 안에서도 후보가 3개 미만이면 그보다 적은 수가 반환될 수 있습니다."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공 (최대 3건, 유사도순)"),
