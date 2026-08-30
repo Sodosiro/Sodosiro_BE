@@ -9,7 +9,7 @@ public record ProfileRequest(
         @Size(min = 2, max = 10, message = "2~10자 사이여야 합니다.")
         String nickName,
 
-        @Size(min = 2, max = 20, message = "2~20자 사이여야 합니다.")
+        @Size(max = 20, message = "2~20자 사이여야 합니다.")
         String introduction,
 
         boolean removeImage

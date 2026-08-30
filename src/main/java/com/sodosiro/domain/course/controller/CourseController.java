@@ -4,6 +4,7 @@ import com.sodosiro.domain.course.controller.dto.CourseConfirmRequest;
 import com.sodosiro.domain.course.controller.dto.CourseDayUpdateRequest;
 import com.sodosiro.domain.course.constants.CourseStatus;
 import com.sodosiro.domain.course.controller.dto.CourseDetailResponse;
+import com.sodosiro.domain.course.controller.dto.CourseRecommendQuotaResponse;
 import com.sodosiro.domain.course.controller.dto.CourseRecommendRequest;
 import com.sodosiro.domain.course.controller.dto.CourseRecommendResponse;
 import com.sodosiro.domain.course.controller.dto.MyCourseListResponse;
@@ -56,6 +57,11 @@ public class CourseController implements CourseSpecification {
     public ResponseEntity<CourseRecommendResponse> recommend(@LoginUser Long userId, @RequestBody @Valid CourseRecommendRequest request) {
 
         return ResponseEntity.ok(courseRecommendationService.recommend(userId, request));
+    }
+
+    @GetMapping("/recommendations/quota")
+    public ResponseEntity<CourseRecommendQuotaResponse> getRecommendationQuota(@LoginUser Long userId) {
+        return ResponseEntity.ok(courseRecommendationService.getDailyRecommendQuota(userId));
     }
 
     @PatchMapping("/{courseId}/days")

@@ -29,7 +29,6 @@ import org.hibernate.type.SqlTypes;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -187,6 +186,7 @@ public class Course {
         this.transitRoutes = transitRoutes;
     }
 
+
     /** 확정 시점의 오늘 날짜(KST)를 기준으로 UPCOMING/IN_PROGRESS/FINISHED를 계산해 반영한다. */
     private void applyResolvedStatus() {
         CourseStatus resolved = CourseStatus.resolve(startDate, endDate, LocalDate.now(TimeZones.KST));
@@ -236,15 +236,6 @@ public class Course {
         return days.stream()
                 .flatMap(day -> day.spots().stream())
                 .anyMatch(SpotSnapshot::mustVisit);
-    }
-
-    public List<TravelStyle> travelStylesOrEmpty() {
-        if (travelStyles == null || travelStyles.isBlank()) {
-            return List.of();
-        }
-        return Arrays.stream(travelStyles.split(","))
-                .map(TravelStyle::valueOf)
-                .toList();
     }
 
     private static String joinTravelStyles(List<TravelStyle> travelStyles) {

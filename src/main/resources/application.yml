@@ -79,7 +79,7 @@ spring:
       api-key: ${OPENAI_API_KEY}
       chat:
         options:
-          model: ${OPENAI_CHAT_MODEL:gpt-5-nano}
+          model: ${OPENAI_CHAT_MODEL:gpt-4o-mini}
       embedding:
         model: text-embedding-3-small
 
@@ -127,8 +127,11 @@ notification:
 firebase:
   service-account-path: ${FIREBASE_SERVICE_ACCOUNT_PATH:}
 
-# 회원 탈퇴는 즉시 개인정보만 익명화하고, 남은 데이터는 유예기간이 지난 뒤 ETL이 호출하는
-# /internal/etl/users/purge-withdrawn 배치가 완전 삭제한다.
+course:
+  recommend:
+    # 사용자당 하루(KST 자정 기준) 추천 생성 가능 횟수
+    daily-limit: ${COURSE_RECOMMEND_DAILY_LIMIT:5}
+
 user:
   withdrawal:
     retention-days: ${USER_WITHDRAWAL_RETENTION_DAYS:7}
