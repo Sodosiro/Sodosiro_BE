@@ -1,8 +1,11 @@
 package com.sodosiro.domain.user.service;
 
 import com.sodosiro.domain.course.service.ActiveCourseCacheWriter;
+import com.sodosiro.domain.auth.oauth.validator.SocialVerifier;
 import com.sodosiro.domain.like.service.dto.LikedSpotsGeoCache;
+import com.sodosiro.domain.user.entity.SocialAccounts;
 import com.sodosiro.domain.user.entity.User;
+import com.sodosiro.domain.user.repository.SocialRepository;
 import com.sodosiro.domain.user.repository.UserRepository;
 import com.sodosiro.domain.user.service.dto.PurgedUserFootprint;
 import com.sodosiro.domain.user.service.dto.UserPurgeResult;
@@ -28,6 +31,8 @@ public class UserPurgeService {
     private final ActiveCourseCacheWriter activeCourseCacheWriter;
     private final S3Service s3Service;
     private final RedisService redisService;
+    private final SocialRepository socialRepository;
+    private final List<SocialVerifier> socialVerifiers;
 
     /** 탈퇴 접수 후 데이터를 실제로 지우기까지 남겨두는 기간(일). */
     @Value("${user.withdrawal.retention-days:7}")
@@ -52,6 +57,7 @@ public class UserPurgeService {
         for (User target : targets) {
             Long userId = target.getUserId();
             try {
+                unlinkSocialAccounts(target);
                 PurgedUserFootprint footprint = userPurgeExecutor.purge(userId);
                 purged++;
                 reviews += footprint.deletedReviews();
@@ -69,6 +75,23 @@ public class UserPurgeService {
                 targets.size(), purged, failed, reviews, diggings, spotLikes, courses);
         log.info("탈퇴 회원 데이터 삭제 배치 완료: retentionDays={}, {}", retentionDays, result);
         return result;
+    }
+
+    /** 복구 유예기간이 끝난 후에만 소셜 연결을 해제한다. 외부 API 실패가 개인정보 삭제를 막지는 않는다. */
+    private void unlinkSocialAccounts(User user) {
+        for (SocialAccounts social : socialRepository.findAllByUser(user)) {
+            socialVerifiers.stream()
+                    .filter(verifier -> verifier.getProvider() == social.getProvider())
+                    .findFirst()
+                    .ifPresent(verifier -> {
+                        try {
+                            verifier.unlink(social.getProviderId(), social.getRefreshToken());
+                        } catch (Exception exception) {
+                            log.warn("소셜 연결 해제 실패, DB 삭제는 계속합니다. userId={}, provider={}",
+                                    user.getUserId(), social.getProvider(), exception);
+                        }
+                    });
+        }
     }
 
     /**

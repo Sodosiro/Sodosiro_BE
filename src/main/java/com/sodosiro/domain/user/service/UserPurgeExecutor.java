@@ -20,6 +20,7 @@ import com.sodosiro.domain.review.repository.ReviewImageRepository;
 import com.sodosiro.domain.review.repository.ReviewRepository;
 import com.sodosiro.domain.review.service.SpotRatingStatsUpdater;
 import com.sodosiro.domain.travel.repository.TouristSpotRepository;
+import com.sodosiro.domain.user.entity.User;
 import com.sodosiro.domain.user.repository.UserRepository;
 import com.sodosiro.domain.user.service.dto.PurgedUserFootprint;
 import java.util.ArrayList;
@@ -53,6 +54,10 @@ public class UserPurgeExecutor {
     @Transactional
     public PurgedUserFootprint purge(Long userId) {
         List<String> imageUrls = new ArrayList<>();
+        userRepository.findById(userId)
+                .map(User::getProfileImageUrl)
+                .filter(url -> !url.isBlank())
+                .ifPresent(imageUrls::add);
 
         int deletedReviews = purgeReviews(userId, imageUrls);
         int deletedDiggings = purgeDiggings(userId, imageUrls);

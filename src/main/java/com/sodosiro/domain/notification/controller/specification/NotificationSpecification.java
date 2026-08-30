@@ -66,6 +66,27 @@ public interface NotificationSpecification {
                               "unreadCount": 0
                             }
                             """),
+                    @ExampleObject(name = "COURSE_CONFIRM_REMINDER", summary = "여행 시작 D-1 일정 미확정", value = """
+                            {
+                              "items": [
+                                {
+                                  "id": 105,
+                                  "type": "COURSE_CONFIRM_REMINDER",
+                                  "title": "아직 확정하지 않은 일정이 있어요",
+                                  "body": "내일까지 확정하지 않으면 일정이 삭제돼요.",
+                                  "payload": {
+                                    "courseId": 12,
+                                    "startDate": "2026-08-31"
+                                  },
+                                  "isRead": false,
+                                  "createdAt": "2026-08-30T10:00:00"
+                                }
+                              ],
+                              "nextCursor": null,
+                              "hasNext": false,
+                              "unreadCount": 1
+                            }
+                            """),
                     @ExampleObject(name = "DIGGING_POST_LIKE", summary = "내 디깅에 좋아요", value = """
                             {
                               "items": [
@@ -120,7 +141,8 @@ public interface NotificationSpecification {
     @Operation(summary = "알림 수신 설정 토글",
             description = "type 하나에 대해 알림 수신 여부를 켜거나 끕니다. "
                     + "type은 ALL(전체 알림), NEARBY_LIKED_SPOTS(여행 알림 · 찜한 장소 근처 진입), "
-                    + "REVIEW_REQUEST(여행 리뷰 리마인드), DIGGING_POST_LIKE(디깅 좋아요 알림) 중 하나입니다. "
+                    + "REVIEW_REQUEST(여행 리뷰 리마인드), DIGGING_POST_LIKE(디깅 좋아요 알림), "
+                    + "COURSE_CONFIRM_REMINDER(여행 일정 확정 리마인드 · 시작 D-1 미확정) 중 하나입니다. "
                     + "꺼도 앱 내 알림 목록 적재는 계속되고, 이후 발생하는 해당 타입 알림의 FCM 푸시 전송만 건너뜁니다. "
                     + "응답은 토글 이후의 전체 설정 상태입니다.")
     ResponseEntity<NotificationPreferenceResponse> togglePreference(Long userId, NotificationPreferenceToggleRequest request);

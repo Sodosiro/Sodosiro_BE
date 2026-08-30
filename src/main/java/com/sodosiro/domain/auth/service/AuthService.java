@@ -15,11 +15,13 @@ import com.sodosiro.domain.user.repository.UserRepository;
 import com.sodosiro.domain.user.service.NicknameGenerator;
 import com.sodosiro.domain.user.service.UserService;
 import com.sodosiro.domain.user.service.event.WithdrawEvent;
+import com.sodosiro.domain.user.service.event.WithdrawalCancelledEvent;
 import com.sodosiro.global.payload.code.error.AuthErrorCode;
 import com.sodosiro.global.payload.code.error.UserErrorCode;
 import com.sodosiro.global.payload.exception.GeneralException;
 import com.sodosiro.global.service.RedisService;
 import com.sodosiro.global.utils.TokenKeys;
+import com.sodosiro.global.utils.TimeZones;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
@@ -28,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
@@ -50,6 +53,9 @@ public class AuthService {
 
     @Value("${spring.jwt.access-token-expiration-millis}")
     private int accessTokenExpirationMillis;
+
+    @Value("${user.withdrawal.retention-days:7}")
+    private int withdrawalRetentionDays;
 
     @Transactional
     public SocialLoginResponse loginWithSocial(String providerName, String idToken, String authorizationCode) {
@@ -76,18 +82,23 @@ public class AuthService {
 
         SocialUserInfo socialUser = verifier.verify(actualIdToken);
 
-        String email = socialUser.getEmail();
-        if (email == null) {
-            throw new GeneralException(AuthErrorCode._SOCIAL_EMAIL_NOT_PROVIDED);
-        }
-        Optional<User> userOptional = userRepository.findByEmail(email);
-
-        User user = userOptional.orElseGet(() ->
-                userRepository.save(User.createUser(socialUser, nicknameGenerator.generateUnique())));
-
         SocialAccounts socialAccount = socialRepository
                 .findByProviderAndProviderId(provider, socialUser.getProviderId())
                 .orElse(null);
+
+        User user;
+        if (socialAccount != null) {
+            user = socialAccount.getUser();
+            restoreWithdrawnUser(user);
+        } else {
+            String email = socialUser.getEmail();
+            if (email == null) {
+                throw new GeneralException(AuthErrorCode._SOCIAL_EMAIL_NOT_PROVIDED);
+            }
+            Optional<User> userOptional = userRepository.findByEmail(email);
+            user = userOptional.orElseGet(() ->
+                    userRepository.save(User.createUser(socialUser, nicknameGenerator.generateUnique())));
+        }
 
         if (socialAccount == null) {
             socialAccount = SocialAccounts.create(user, socialUser, refreshToken);
@@ -104,6 +115,21 @@ public class AuthService {
                 refreshTokenExpirationMillis);
 
         return SocialLoginResponse.of(jwt.getAccessToken(), jwt.getRefreshToken());
+    }
+
+    private void restoreWithdrawnUser(User user) {
+        if (!user.isWithdrawn()) {
+            return;
+        }
+
+        LocalDateTime now = LocalDateTime.now(TimeZones.KST);
+        LocalDateTime restoreDeadline = user.getWithdrawnAt().plusDays(withdrawalRetentionDays);
+        if (!now.isBefore(restoreDeadline)) {
+            throw new GeneralException(UserErrorCode._WITHDRAWAL_GRACE_PERIOD_EXPIRED);
+        }
+
+        user.cancelWithdrawal(now);
+        eventPublisher.publishEvent(new WithdrawalCancelledEvent(user.getUserId()));
     }
 
     @Transactional
@@ -167,12 +193,8 @@ public class AuthService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new GeneralException(UserErrorCode._USER_NOT_FOUND));
 
-        List<WithdrawEvent.SocialInfo> socialInfos = socialRepository.findAllByUser(user).stream()
-                .map(s -> new WithdrawEvent.SocialInfo(s.getProvider(), s.getProviderId(), s.getRefreshToken()))
-                .toList();
-
         userService.withdraw(userId);
-        eventPublisher.publishEvent(new WithdrawEvent(userId, accessToken, refreshToken, socialInfos));
+        eventPublisher.publishEvent(new WithdrawEvent(userId, accessToken, refreshToken));
     }
 
 

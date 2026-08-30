@@ -1,6 +1,5 @@
 package com.sodosiro.domain.user.service.event;
 
-import com.sodosiro.domain.auth.oauth.validator.SocialVerifier;
 import com.sodosiro.domain.course.service.ActiveCourseCacheWriter;
 import com.sodosiro.domain.jwt.JwtProvider;
 import com.sodosiro.domain.like.service.dto.LikedSpotsGeoCache;
@@ -15,7 +14,6 @@ import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.time.Duration;
-import java.util.List;
 
 @Slf4j
 @Component
@@ -24,7 +22,6 @@ public class WithdrawEventListener {
 
     private static final Duration WITHDRAWN_MARKER_MARGIN = Duration.ofDays(1);
 
-    private final List<SocialVerifier> socialVerifiers;
     private final RedisService redisService;
     private final ActiveCourseCacheWriter activeCourseCacheWriter;
     private final JwtProvider jwtProvider;
@@ -43,17 +40,11 @@ public class WithdrawEventListener {
             log.error("세션 초기화 실패 userId={}", event.userId(), e);
         }
 
-        for (WithdrawEvent.SocialInfo social : event.socials()) {
-            socialVerifiers.stream()
-                    .filter(v -> v.getProvider() == social.provider())
-                    .findFirst()
-                    .ifPresent(verifier -> {
-                        try {
-                            verifier.unlink(social.providerId(), social.refreshToken());
-                        } catch (Exception e) {
-                            log.error("unlink 실패 userId={}, provider={}", event.userId(), social.provider(), e);                        }
-                    });
-        }
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void handle(WithdrawalCancelledEvent event) {
+        redisService.deleteKey(TokenKeys.withdrawnKey(event.userId()));
     }
 
     private void clearSession(String accessToken, String refreshToken) {

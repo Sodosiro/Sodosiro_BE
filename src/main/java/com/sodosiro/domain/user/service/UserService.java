@@ -45,14 +45,8 @@ public class UserService {
             throw new GeneralException(UserErrorCode._USER_ALREADY_WITHDRAWN);
         }
 
-        String profileImageUrl = user.getProfileImageUrl();
-
         userDeviceRepository.deleteAllByUserId(userId);
         user.withdraw(LocalDateTime.now());
-
-        if (profileImageUrl != null && !profileImageUrl.isBlank()) {
-            eventPublisher.publishEvent(ProfileImageChangedEvent.removed(profileImageUrl));
-        }
     }
 
     @Transactional(readOnly = true)

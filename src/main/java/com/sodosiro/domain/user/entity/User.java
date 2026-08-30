@@ -141,27 +141,23 @@ public class User {
     }
 
     public String getDisplayName() {
+        if (isWithdrawn()) {
+            return WITHDRAWN_DISPLAY_NAME;
+        }
         return nickName != null ? nickName : name;
     }
 
-    /**
-     * 탈퇴를 표시하고 개인정보를 즉시 익명화한다. 소유 데이터(리뷰·디깅 등)는 유예기간이 지난 뒤
-     * 배치가 완전 삭제하지만, 개인정보는 그때까지 남겨둘 이유가 없으므로 이 시점에 지운다.
-     *
-     * <p>{@code nickName}과 {@code email}을 null로 비우는 것은 표시명을 "탈퇴한 사용자"로 만드는 동시에
-     * unique 제약({@code uk_users_nick_name}, {@code uk_users_email})을 비워, 같은 소셜 계정으로 곧바로
-     * 재가입할 수 있게 하려는 목적도 있다.
-     */
+    /** 탈퇴 예정 상태로 전환한다. 유예기간 내 복구를 위해 계정 정보는 완전 삭제 시점까지 보존한다. */
     public void withdraw(LocalDateTime withdrawnAt) {
         this.withdrawnAt = withdrawnAt;
-        this.name = WITHDRAWN_DISPLAY_NAME;
-        this.nickName = null;
-        this.email = null;
-        this.profileImageUrl = null;
         this.fcmToken = null;
-        this.introduction = null;
-        this.socialAccounts.clear();
         this.updatedAt = withdrawnAt;
+    }
+
+    /** 유예기간 내 소셜 재인증이 완료된 회원의 탈퇴 요청을 철회한다. */
+    public void cancelWithdrawal(LocalDateTime cancelledAt) {
+        this.withdrawnAt = null;
+        this.updatedAt = cancelledAt;
     }
 
     public boolean isWithdrawn() {
