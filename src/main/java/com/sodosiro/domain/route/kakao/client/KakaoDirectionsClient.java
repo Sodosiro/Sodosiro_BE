@@ -30,11 +30,13 @@ public class KakaoDirectionsClient {
     private static final int SUCCESS_RESULT_CODE = 0;
 
     private final RestClient kakaoMobilityRestClient;
+    private final KakaoApiThrottler kakaoMobilityApiThrottler;
     private final CarFuelCostEstimator carFuelCostEstimator;
 
     public RouteLeg findRoute(RouteWaypoint origin, RouteWaypoint destination) {
         try {
-            KakaoDirectionsResponse response = kakaoMobilityRestClient.get()
+            String context = "directions from=%d to=%d".formatted(origin.id(), destination.id());
+            KakaoDirectionsResponse response = kakaoMobilityApiThrottler.execute(() -> kakaoMobilityRestClient.get()
                     .uri(uriBuilder -> uriBuilder
                             .path("/v1/directions")
                             .queryParam("origin", toCoordinateParam(origin))
@@ -42,7 +44,7 @@ public class KakaoDirectionsClient {
                             .queryParam("road_details", true)
                             .build())
                     .retrieve()
-                    .body(KakaoDirectionsResponse.class);
+                    .body(KakaoDirectionsResponse.class), context);
 
             return toRouteLeg(origin, destination, toResult(response));
         } catch (RestClientException exception) {

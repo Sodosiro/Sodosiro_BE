@@ -23,7 +23,7 @@ spring:
             client-name: Kakao
             admin-key: ${KAKAO_ADMIN_KEY}
             redirect-uri: http://localhost:8080/login/oauth2/code/kakao
-
+            web-redirect-uri: ${KAKAO_WEB_REDIRECT_URI:https://sodosiro.vercel.app/login}
 
         provider:
           kakao:
@@ -83,11 +83,19 @@ spring:
       embedding:
         model: text-embedding-3-small
 
+# 카카오 API는 초당·동시 호출 제한을 콘솔에도 공개하지 않는다. 동시 호출 수를 보수적으로 캡해
+# 제한에 부딪히는 빈도를 줄이고, 그래도 제한 초과 응답이 오면 재시도한다(KakaoApiThrottler).
 kakao:
   mobility:
     rest-api-key: ${KAKAO_CLIENT_ID}
+    max-concurrent-calls: ${KAKAO_MOBILITY_MAX_CONCURRENT_CALLS:5}
+    max-retries: ${KAKAO_MOBILITY_MAX_RETRIES:2}
+    retry-backoff-ms: ${KAKAO_MOBILITY_RETRY_BACKOFF_MS:200}
   map:
     rest-api-key: ${KAKAO_CLIENT_ID}
+    max-concurrent-calls: ${KAKAO_MAP_MAX_CONCURRENT_CALLS:2}
+    max-retries: ${KAKAO_MAP_MAX_RETRIES:2}
+    retry-backoff-ms: ${KAKAO_MAP_RETRY_BACKOFF_MS:200}
 
 # 자차 예상 주유비 추정용 상수. 실시간 유가 연동 전까지 임의값으로 운영하며,
 # 유가가 바뀌면 재배포 없이 이 값만 갱신한다.

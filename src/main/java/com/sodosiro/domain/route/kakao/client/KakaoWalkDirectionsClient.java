@@ -24,11 +24,13 @@ public class KakaoWalkDirectionsClient {
     private static final String SUCCESS_STATUS = "OK";
 
     private final RestClient kakaoMapRestClient;
+    private final KakaoApiThrottler kakaoMapApiThrottler;
 
     public List<KakaoTransitStepResult> findWalkSteps(
             BigDecimal startX, BigDecimal startY, BigDecimal endX, BigDecimal endY) {
         try {
-            KakaoWalkResponse response = kakaoMapRestClient.get()
+            String context = "walk start=(%s,%s) end=(%s,%s)".formatted(startX, startY, endX, endY);
+            KakaoWalkResponse response = kakaoMapApiThrottler.execute(() -> kakaoMapRestClient.get()
                     .uri(uriBuilder -> uriBuilder
                             .path("/v2/routing/walk")
                             .queryParam("start_x", startX.toPlainString())
@@ -37,7 +39,7 @@ public class KakaoWalkDirectionsClient {
                             .queryParam("end_y", endY.toPlainString())
                             .build())
                     .retrieve()
-                    .body(KakaoWalkResponse.class);
+                    .body(KakaoWalkResponse.class), context);
 
             return toSteps(response);
         } catch (RestClientException exception) {

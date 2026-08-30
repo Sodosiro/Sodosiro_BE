@@ -30,11 +30,13 @@ public class KakaoTransitDirectionsClient {
     private static final String SUCCESS_STATUS = "OK";
 
     private final RestClient kakaoMapRestClient;
+    private final KakaoApiThrottler kakaoMapApiThrottler;
 
     /** 대중교통은 항상 도보/버스/지하철 구간별 상세 정보와 좌표까지 보여준다 */
     public KakaoTransitRouteResult findRouteDetail(RouteWaypoint origin, RouteWaypoint destination) {
         try {
-            KakaoTransitResponse response = kakaoMapRestClient.get()
+            String context = "transit from=%d to=%d".formatted(origin.id(), destination.id());
+            KakaoTransitResponse response = kakaoMapApiThrottler.execute(() -> kakaoMapRestClient.get()
                     .uri(uriBuilder -> uriBuilder
                             .path("/v2/routing/publictraffic")
                             .queryParam("start_x", origin.x().toPlainString())
@@ -43,7 +45,7 @@ public class KakaoTransitDirectionsClient {
                             .queryParam("end_y", destination.y().toPlainString())
                             .build())
                     .retrieve()
-                    .body(KakaoTransitResponse.class);
+                    .body(KakaoTransitResponse.class), context);
 
             return toRouteResult(response, origin.id(), destination.id());
         } catch (RestClientException exception) {
