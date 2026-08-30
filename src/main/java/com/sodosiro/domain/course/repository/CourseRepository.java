@@ -26,4 +26,6 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
     boolean existsByUserIdAndIsConfirmedTrueAndStatusNotAndStartDateLessThanEqualAndEndDateGreaterThanEqual(Long userId, CourseStatus status, LocalDate startDate, LocalDate endDate);
 
     long deleteAllByUserId(Long userId);
+
+    long deleteAllByIsConfirmedFalseAndStartDateBefore(LocalDate date);
 }
