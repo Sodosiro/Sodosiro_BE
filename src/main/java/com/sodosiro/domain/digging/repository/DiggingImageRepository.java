@@ -11,4 +11,5 @@ public interface DiggingImageRepository extends JpaRepository<DiggingImage, Long
 
     List<DiggingImage> findAllByDiggingIdInOrderByDiggingIdAscDisplayOrderAsc(Collection<Long> diggingIds);
 
+    void deleteAllByDiggingIdIn(Collection<Long> diggingIds);
 }

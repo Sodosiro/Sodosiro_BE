@@ -11,4 +11,8 @@ public interface NotificationDeliveryGuardRepository extends JpaRepository<Notif
     @Modifying
     @Query(value = "insert into notification_delivery_guard (user_id, type, dedupe_key, last_sent_at, cooldown_until) values (:userId, cast(:type as varchar), :dedupeKey, :now, :cooldownUntil) on conflict (user_id, type, dedupe_key) do update set last_sent_at = excluded.last_sent_at, cooldown_until = excluded.cooldown_until where notification_delivery_guard.cooldown_until <= :now", nativeQuery = true)
     int acquire(@Param("userId") Long userId, @Param("type") String type, @Param("dedupeKey") String dedupeKey, @Param("now") LocalDateTime now, @Param("cooldownUntil") LocalDateTime cooldownUntil);
+
+    @Modifying
+    @Query("delete from NotificationDeliveryGuard guard where guard.id.userId = :userId")
+    void deleteAllByUserId(@Param("userId") Long userId);
 }

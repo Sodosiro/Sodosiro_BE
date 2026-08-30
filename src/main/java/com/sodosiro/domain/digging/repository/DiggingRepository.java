@@ -12,4 +12,8 @@ public interface DiggingRepository extends JpaRepository<Digging, Long>, Digging
     boolean existsByCourseIdAndContentIdAndIsDeletedFalse(Long courseId, Long contentId);
 
     List<Digging> findByCourseIdAndIsDeletedFalse(Long courseId);
+
+    List<Digging> findAllByUserId(Long userId);
+
+    void deleteAllByUserId(Long userId);
 }

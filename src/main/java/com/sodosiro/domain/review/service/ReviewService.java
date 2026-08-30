@@ -51,6 +51,7 @@ public class ReviewService {
     private final UserRepository userRepository;
     private final GpsRepository gpsRepository;
     private final S3Service s3Service;
+    private final SpotRatingStatsUpdater spotRatingStatsUpdater;
     private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
@@ -260,12 +261,7 @@ public class ReviewService {
     }
 
     private void refreshRatingStats(Long contentId) {
-        Double avg   = reviewRepository.avgRatingByContentId(contentId);
-        long count   = reviewRepository.countActiveByContentId(contentId);
-        BigDecimal rounded = avg == null
-                ? BigDecimal.ZERO
-                : BigDecimal.valueOf(avg).setScale(1, RoundingMode.HALF_UP);
-        touristSpotRepository.updateRatingStats(contentId, rounded, (int) count);
+        spotRatingStatsUpdater.refresh(contentId);
     }
 
     private void validateImageCount(List<MultipartFile> images) {

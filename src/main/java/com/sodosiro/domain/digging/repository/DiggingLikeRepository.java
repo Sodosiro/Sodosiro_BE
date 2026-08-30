@@ -13,4 +13,10 @@ public interface DiggingLikeRepository extends JpaRepository<DiggingLike, Long> 
     List<DiggingLike> findByUserIdAndDiggingIdIn(Long userId, Collection<Long> diggingIds);
 
     void deleteAllByDiggingId(Long diggingId);
+
+    List<DiggingLike> findAllByUserId(Long userId);
+
+    void deleteAllByUserId(Long userId);
+
+    void deleteAllByDiggingIdIn(Collection<Long> diggingIds);
 }

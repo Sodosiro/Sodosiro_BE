@@ -2,6 +2,7 @@ package com.sodosiro.domain.user.service;
 
 import com.sodosiro.domain.user.controller.dto.request.ProfileRequest;
 import com.sodosiro.domain.user.controller.dto.response.ProfileResponse;
+import com.sodosiro.domain.notification.repository.UserDeviceRepository;
 import com.sodosiro.domain.user.entity.User;
 import com.sodosiro.domain.user.service.event.ProfileImageChangedEvent;
 import com.sodosiro.domain.user.repository.UserRepository;
@@ -9,6 +10,7 @@ import com.sodosiro.global.payload.code.error.UserErrorCode;
 import com.sodosiro.global.payload.exception.GeneralException;
 import com.sodosiro.global.s3.constants.FileFolder;
 import com.sodosiro.global.s3.service.S3Service;
+import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -20,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final UserDeviceRepository userDeviceRepository;
     private final S3Service s3Service;
     private final ApplicationEventPublisher eventPublisher;
 
@@ -36,15 +39,20 @@ public class UserService {
     }
 
     @Transactional
-    public void deleteUserData(Long userId) {
+    public void withdraw(Long userId) {
         User user = findUserOrThrow(userId);
+        if (user.isWithdrawn()) {
+            throw new GeneralException(UserErrorCode._USER_ALREADY_WITHDRAWN);
+        }
 
-        // 추가예정
-        // 알림
-        // 리뷰
-        // 여행지 목록
-        // 빙고 등등
-        userRepository.delete(user);
+        String profileImageUrl = user.getProfileImageUrl();
+
+        userDeviceRepository.deleteAllByUserId(userId);
+        user.withdraw(LocalDateTime.now());
+
+        if (profileImageUrl != null && !profileImageUrl.isBlank()) {
+            eventPublisher.publishEvent(ProfileImageChangedEvent.removed(profileImageUrl));
+        }
     }
 
     @Transactional(readOnly = true)

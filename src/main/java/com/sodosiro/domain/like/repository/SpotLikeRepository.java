@@ -27,4 +27,8 @@ public interface SpotLikeRepository extends JpaRepository<SpotLike, Long>, SpotL
     Set<Long> findLikedContentIdsByUserIdAndContentIds(
             @Param("userId") Long userId,
             @Param("contentIds") Collection<Long> contentIds);
+
+    List<SpotLike> findAllByUserId(Long userId);
+
+    void deleteAllByUserId(Long userId);
 }
