@@ -77,7 +77,7 @@ public class TravelSpotController implements TravelSpotSpecification {
     }
 
     /**
-     * 대상 장소와 같은 카테고리 안에서 반경(3km -> 5km -> 10km)을 넓혀가며 후보가 3개 모일 때까지 검색하고,
+     * 대상 장소와 같은 카테고리 안에서 반경(5km -> 10km -> 15km)을 넓혀가며 후보가 3개 모일 때까지 검색하고,
      * 임베딩 코사인 유사도가 가장 높은 상위 3개를 반환한다.
      */
     @GetMapping("/spots/alternatives")
