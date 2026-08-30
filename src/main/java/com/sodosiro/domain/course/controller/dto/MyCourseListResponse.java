@@ -3,6 +3,7 @@ package com.sodosiro.domain.course.controller.dto;
 import com.sodosiro.domain.course.constants.CourseStatus;
 import com.sodosiro.domain.course.entity.Course;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -17,7 +18,8 @@ public record MyCourseListResponse(List<MyCourse> courses) {
             CourseStatus status,
             boolean isConfirmed,
             String sigunguCode,
-            String thumbnail
+            String thumbnail,
+            LocalDateTime createdAt
     ) {
         /** sigunguCodeByContentId는 코스 첫 스팟의 contentId로 조회한 TouristSpot.ldongSignguCode 맵이다. */
         public static MyCourse from(Course course, Map<Long, String> sigunguCodeByContentId) {
@@ -30,7 +32,8 @@ public record MyCourseListResponse(List<MyCourse> courses) {
                     course.getStatus(),
                     course.getIsConfirmed(),
                     sigunguCodeByContentId.get(firstContentId(course)),
-                    thumbnail(course)
+                    thumbnail(course),
+                    course.getCreatedAt()
             );
         }
 
