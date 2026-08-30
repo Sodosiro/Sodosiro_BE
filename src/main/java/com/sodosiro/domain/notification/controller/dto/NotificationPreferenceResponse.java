@@ -6,13 +6,15 @@ public record NotificationPreferenceResponse(
         boolean allEnabled,
         boolean nearbyLikedSpotsEnabled,
         boolean reviewRequestEnabled,
-        boolean diggingPostLikeEnabled
+        boolean diggingPostLikeEnabled,
+        boolean courseConfirmReminderEnabled
 ) {
     public static NotificationPreferenceResponse from(NotificationPreference preference) {
         return new NotificationPreferenceResponse(
                 preference.isAllEnabled(),
                 preference.isNearbyLikedSpotsEnabled(),
                 preference.isReviewRequestEnabled(),
-                preference.isDiggingPostLikeEnabled());
+                preference.isDiggingPostLikeEnabled(),
+                preference.isCourseConfirmReminderEnabled());
     }
 }

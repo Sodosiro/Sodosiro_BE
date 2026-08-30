@@ -22,7 +22,7 @@ spring:
             scope: profile_nickname, account_email
             client-name: Kakao
             admin-key: ${KAKAO_ADMIN_KEY}
-            redirect-uri: http://localhost:8080/login/oauth2/code/kakao
+            web-redirect-uri: ${KAKAO_WEB_REDIRECT_URI}
 
 
         provider:
@@ -123,6 +123,9 @@ notification:
     after-days: ${NOTIFICATION_REVIEW_AFTER_DAYS:0}
     grace-days: ${NOTIFICATION_REVIEW_GRACE_DAYS:10}           # 이보다 오래된 코스는 제외
     cooldown-days: ${NOTIFICATION_REVIEW_COOLDOWN_DAYS:30}     # 같은 코스 재알림 방지
+  course-confirm-reminder:
+    before-days: ${NOTIFICATION_CONFIRM_REMIND_BEFORE_DAYS:1}    # 여행 시작 D-N 미확정 코스가 대상
+    cooldown-days: ${NOTIFICATION_CONFIRM_REMIND_COOLDOWN_DAYS:7}  # 같은 코스 재알림 방지 (DAG 재시도 대비)
 
 firebase:
   service-account-path: ${FIREBASE_SERVICE_ACCOUNT_PATH:}

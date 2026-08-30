@@ -8,10 +8,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
         NEARBY_LIKED_SPOTS: 여행 알림 (찜한 장소 근처 진입)
         REVIEW_REQUEST: 여행 리뷰 리마인드
         DIGGING_POST_LIKE: 디깅 좋아요 알림
+        COURSE_CONFIRM_REMINDER: 여행 일정 확정 리마인드 (시작 D-1 미확정)
         """)
 public enum NotificationPreferenceType {
     ALL,
     NEARBY_LIKED_SPOTS,
     REVIEW_REQUEST,
-    DIGGING_POST_LIKE
+    DIGGING_POST_LIKE,
+    COURSE_CONFIRM_REMINDER
 }

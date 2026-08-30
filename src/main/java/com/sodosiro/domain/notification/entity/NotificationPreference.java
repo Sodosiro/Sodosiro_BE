@@ -32,6 +32,10 @@ public class NotificationPreference {
     @Column(name = "digging_post_like_enabled", nullable = false)
     private boolean diggingPostLikeEnabled;
 
+    @Column(name = "course_confirm_reminder_enabled", nullable = false,
+            columnDefinition = "boolean not null default true")
+    private boolean courseConfirmReminderEnabled;
+
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
@@ -41,6 +45,7 @@ public class NotificationPreference {
         this.nearbyLikedSpotsEnabled = true;
         this.reviewRequestEnabled = true;
         this.diggingPostLikeEnabled = true;
+        this.courseConfirmReminderEnabled = true;
         this.updatedAt = LocalDateTime.now();
     }
 
@@ -54,6 +59,7 @@ public class NotificationPreference {
             case NEARBY_LIKED_SPOTS -> this.nearbyLikedSpotsEnabled = enabled;
             case REVIEW_REQUEST -> this.reviewRequestEnabled = enabled;
             case DIGGING_POST_LIKE -> this.diggingPostLikeEnabled = enabled;
+            case COURSE_CONFIRM_REMINDER -> this.courseConfirmReminderEnabled = enabled;
         }
         this.updatedAt = LocalDateTime.now();
     }
@@ -67,6 +73,7 @@ public class NotificationPreference {
             case NEARBY_LIKED_SPOTS -> nearbyLikedSpotsEnabled;
             case REVIEW_REQUEST -> reviewRequestEnabled;
             case DIGGING_POST_LIKE -> diggingPostLikeEnabled;
+            case COURSE_CONFIRM_REMINDER -> courseConfirmReminderEnabled;
         };
     }
 }
