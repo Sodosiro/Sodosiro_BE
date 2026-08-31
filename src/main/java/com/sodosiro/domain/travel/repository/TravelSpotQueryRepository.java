@@ -2,6 +2,7 @@ package com.sodosiro.domain.travel.repository;
 
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.sodosiro.domain.travel.controller.dto.RegionType;
 import com.sodosiro.domain.travel.controller.dto.TravelSpotSort;
 import com.sodosiro.domain.travel.entity.QSpotEmbedding;
 import com.sodosiro.domain.travel.entity.QSpotImage;
@@ -32,7 +33,8 @@ public class TravelSpotQueryRepository {
             int size,
             List<Integer> categories,
             String keyword,
-            String sigunguCode ) {
+            String sigunguCode,
+            RegionType regionType) {
         BooleanBuilder conditions = new BooleanBuilder();
         if (categories != null && !categories.isEmpty()) {
             conditions.and(touristSpot.category.in(categories));
@@ -42,6 +44,11 @@ public class TravelSpotQueryRepository {
         }
         if (sigunguCode != null && !sigunguCode.isBlank()) {
             conditions.and(touristSpot.ldongSignguCode.eq(sigunguCode));
+        }
+        // 지역 타입 필터. sigunguCode 를 함께 주면 AND 로 걸려 교집합만 남는다.
+        if (regionType != null && regionType != RegionType.ALL) {
+            conditions.and(touristSpot.ldongRegnCode.eq(RegionType.GANGWON_LDONG_REGN_CODE))
+                    .and(touristSpot.ldongSignguCode.in(regionType.signguCodes()));
         }
 
         if (sort == TravelSpotSort.POPULAR) {

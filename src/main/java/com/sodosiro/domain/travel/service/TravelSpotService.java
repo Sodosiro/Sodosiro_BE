@@ -3,6 +3,7 @@ package com.sodosiro.domain.travel.service;
 import com.sodosiro.domain.travel.controller.dto.CursorPageResponse;
 import com.sodosiro.domain.travel.controller.dto.TouristSpotDetailResponse;
 import com.sodosiro.domain.travel.controller.dto.TouristSpotSummaryResponse;
+import com.sodosiro.domain.travel.controller.dto.RegionType;
 import com.sodosiro.domain.travel.controller.dto.TravelSpotSort;
 import com.sodosiro.domain.like.repository.SpotLikeRepository;
 import com.sodosiro.domain.region.service.RegionNameResolver;
@@ -50,12 +51,14 @@ public class TravelSpotService {
     private final RegionNameResolver regionNameResolver;
 
     public CursorPageResponse<TouristSpotSummaryResponse> getTouristSpots(
-            String cursor, Integer size, List<Integer> categories, String keyword,String sigunguCode,
-            TravelSpotSort sort, Long userId) {
+            String cursor, Integer size, List<Integer> categories, String keyword, String sigunguCode,
+            RegionType regionType, TravelSpotSort sort, Long userId) {
         int pageSize = normalizePageSize(size);
+        RegionType effectiveRegionType = regionType == null ? RegionType.ALL : regionType;
         TouristSpotCursor parsedCursor = parseTouristSpotCursor(cursor, sort);
         List<TravelSpotQueryRepository.TouristSpotWithPopularity> rows = queryRepository.findTouristSpots(
-                sort, parsedCursor.contentId(), parsedCursor.popularityScore(), pageSize, categories, keyword,sigunguCode);
+                sort, parsedCursor.contentId(), parsedCursor.popularityScore(), pageSize, categories, keyword,
+                sigunguCode, effectiveRegionType);
         boolean hasNext = rows.size() > pageSize;
         Set<Long> likedContentIds = findLikedContentIds(userId, rows, pageSize);
         List<TravelSpotQueryRepository.TouristSpotWithPopularity> pageRows = rows.stream().limit(pageSize).toList();

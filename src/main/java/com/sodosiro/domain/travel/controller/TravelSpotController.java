@@ -1,10 +1,6 @@
 package com.sodosiro.domain.travel.controller;
 
-import com.sodosiro.domain.travel.controller.dto.CursorPageResponse;
-import com.sodosiro.domain.travel.controller.dto.TouristSpotDetailResponse;
-import com.sodosiro.domain.travel.controller.dto.TouristSpotSummaryResponse;
-import com.sodosiro.domain.travel.controller.dto.TrendingKeywordResponse;
-import com.sodosiro.domain.travel.controller.dto.TravelSpotSort;
+import com.sodosiro.domain.travel.controller.dto.*;
 import com.sodosiro.domain.travel.controller.specification.TravelSpotSpecification;
 import com.sodosiro.domain.travel.service.SearchTrendingService;
 import com.sodosiro.domain.travel.service.SpotAlternativeService;
@@ -50,6 +46,7 @@ public class TravelSpotController implements TravelSpotSpecification {
             @RequestParam(name = "category", required = false) List<Integer> categories,
             @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "DEFAULT") TravelSpotSort sort,
+            @RequestParam(required = false) RegionType regionType,
             @RequestParam(required = false) String sigunguCode,
             @LoginUser Long userId,
             @Parameter(hidden = true)
@@ -58,7 +55,7 @@ public class TravelSpotController implements TravelSpotSpecification {
             boolean bot = botToken != null && !botToken.isBlank() && botToken.equals(requestBotToken);
             eventPublisher.publishEvent(new SearchKeywordSearchedEvent(keyword, userId, bot));
         }
-        return ResponseEntity.ok(travelSpotService.getTouristSpots(cursor, size, categories, keyword,sigunguCode, sort, userId));
+        return ResponseEntity.ok(travelSpotService.getTouristSpots(cursor, size, categories, keyword, sigunguCode, regionType, sort, userId));
     }
 
     /** 상세 조회에서만 이미지 목록을 fetch join한다. */
