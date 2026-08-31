@@ -22,6 +22,7 @@ public class FestivalQueryRepository {
     public List<Festival> findFestivals(
             String areaCode,
             FestivalStatus status,
+            String regionName,
             Integer year,
             LocalDate today,
             LocalDate startDateCursor,
@@ -30,6 +31,10 @@ public class FestivalQueryRepository {
         BooleanBuilder conditions = new BooleanBuilder();
         if (areaCode != null && !areaCode.isBlank()) {
             conditions.and(festival.areaCode.eq(areaCode));
+        }
+
+        if (regionName != null && !regionName.isBlank()) {
+            conditions.and(festival.regionName.containsIgnoreCase(regionName.strip()));
         }
         applyYear(conditions, year);
         applyStatus(conditions, status, today);
