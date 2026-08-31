@@ -31,6 +31,7 @@ import java.util.Map;
         indexes = {
                 @Index(name = "idx_spot_sigungu", columnList = "sigungu_code"),
                 @Index(name = "idx_spot_ldong_region", columnList = "ldong_regn_code, ldong_signgu_code"),
+                @Index(name = "idx_spot_small_town", columnList = "is_small_town"),
                 @Index(name = "idx_spot_category", columnList = "category")
         }
 )
@@ -89,6 +90,10 @@ public class TouristSpot {
     @Column(name = "category", nullable = false)
     @Comment("서비스 카테고리 (1=식당, 2=카페, 3=쇼핑, 4=관광지, 5=자연, 6=액티비티, 7=숙박)")
     private Integer category;
+
+    @Column(name = "is_small_town", nullable = false, columnDefinition = "boolean not null default false")
+    @Comment("소도시 여부")
+    private boolean smallTown;
 
     @Column(name = "first_image", columnDefinition = "text")
     @Comment("firstimage 대표(원본)")

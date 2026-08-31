@@ -45,10 +45,9 @@ public class TravelSpotQueryRepository {
         if (sigunguCode != null && !sigunguCode.isBlank()) {
             conditions.and(touristSpot.ldongSignguCode.eq(sigunguCode));
         }
-        // 지역 타입 필터. sigunguCode 를 함께 주면 AND 로 걸려 교집합만 남는다.
-        if (regionType != null && regionType != RegionType.ALL) {
-            conditions.and(touristSpot.ldongRegnCode.eq(RegionType.GANGWON_LDONG_REGN_CODE))
-                    .and(touristSpot.ldongSignguCode.in(regionType.signguCodes()));
+
+        if (regionType != null && regionType.smallTownOnly()) {
+            conditions.and(touristSpot.smallTown.isTrue());
         }
 
         if (sort == TravelSpotSort.POPULAR) {

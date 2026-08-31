@@ -28,7 +28,8 @@ public interface TravelSpotSpecification {
                     + "category를 생략하면 전체, 반복 전달하면 여러 카테고리를 조회하며, "
                     + "keyword는 여행지 제목 LIKE 검색에 함께 적용됩니다. sigunguCode를 지정하면 해당 시군구의 여행지만 조회하며, "
                     + "생략하면 전체 지역을 조회합니다. 유효한 코드는 GET /api/v1/regions?areaCode=로 조회할 수 있습니다. "
-                    + "regionType은 생략하면 ALL(지역 제한 없음)이며, GANGWON_SMALL_TOWN을 주면 강원 소도시 12곳만 조회합니다. "
+                    + "regionType은 생략하면 ALL(지역 제한 없음)이며, SMALL_TOWN을 주면 소도시만 조회합니다. "
+                    + "응답의 smallTown 필드로 각 여행지의 소도시 여부를 함께 내려줍니다. "
                     + "목록의 overview는 최대 30자 미리보기이며, "
                     + "restdate와 인기 여부(isPopular), 인기 태그(popularity.rankTag)를 함께 반환합니다."
     )
@@ -45,10 +46,10 @@ public interface TravelSpotSpecification {
                     schema = @Schema(type = "string", allowableValues = {"ALL", "DEFAULT", "POPULAR"})) TravelSpotSort sort,
             @Parameter(in = ParameterIn.QUERY,
                     description = "지역 타입. 생략하면 ALL(지역 제한 없음). "
-                            + "GANGWON_SMALL_TOWN은 강원 소도시 12곳(고성군·삼척시·양구군·양양군·영월군·정선군·"
-                            + "철원군·태백시·평창군·홍천군·화천군·횡성군)으로 결과를 제한함",
-                    example = "GANGWON_SMALL_TOWN",
-                    schema = @Schema(type = "string", allowableValues = {"ALL", "GANGWON_SMALL_TOWN"})) RegionType regionType,
+                            + "SMALL_TOWN은 소도시만 조회하며, 현재 대상은 강원 12곳"
+                            + "(고성군·삼척시·양구군·양양군·영월군·정선군·철원군·태백시·평창군·홍천군·화천군·횡성군)임. ",
+                    example = "SMALL_TOWN",
+                    schema = @Schema(type = "string", allowableValues = {"ALL", "SMALL_TOWN", "GANGWON_SMALL_TOWN"})) RegionType regionType,
             @Parameter(in = ParameterIn.QUERY, description = "시군구 코드. 지정하면 해당 시군구로 결과를 제한하고, 생략하면 전체 지역을 조회함. regionType과 함께 주면 두 조건의 교집합", example = "1") String sigunguCode,
             @Parameter(hidden = true) @LoginUser Long userId,
             @Parameter(hidden = true) @RequestHeader(value = "X-Internal-Bot", required = false) String requestBotToken
