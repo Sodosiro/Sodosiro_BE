@@ -6,7 +6,9 @@ import com.sodosiro.domain.festival.controller.dto.FestivalSummaryResponse;
 import com.sodosiro.domain.festival.entity.Festival;
 import com.sodosiro.domain.festival.repository.FestivalQueryRepository;
 import com.sodosiro.domain.festival.repository.FestivalRepository;
+import com.sodosiro.domain.region.repository.SigunguCodeRepository;
 import com.sodosiro.domain.travel.controller.dto.CursorPageResponse;
+import com.sodosiro.domain.travel.entity.SigunguCode;
 import com.sodosiro.global.utils.TimeZones;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
@@ -29,6 +31,7 @@ public class FestivalService {
 
     private final FestivalQueryRepository festivalQueryRepository;
     private final FestivalRepository festivalRepository;
+    private final SigunguCodeRepository sigunguCodeRepository;
 
     public FestivalDetailResponse getFestival(Long festivalId) {
         Festival festival = festivalRepository.findById(festivalId)
@@ -37,14 +40,15 @@ public class FestivalService {
     }
 
     public CursorPageResponse<FestivalSummaryResponse> getFestivals(
-            String areaCode, FestivalStatus status, String reginName, Integer year, String cursor, Integer size) {
+            String areaCode, FestivalStatus status, Long sigunguId, Integer year, String cursor, Integer size) {
         int pageSize = normalizePageSize(size);
         FestivalStatus effectiveStatus = status == null ? FestivalStatus.ALL : status;
         LocalDate today = LocalDate.now(TimeZones.KST);
         FestivalCursor parsedCursor = parseCursor(cursor);
+        FestivalRegionFilter regionFilter = resolveRegionFilter(areaCode, sigunguId);
 
         List<Festival> rows = festivalQueryRepository.findFestivals(
-                areaCode, effectiveStatus, reginName, year, today,
+                regionFilter.areaCode(), effectiveStatus, regionFilter.regionName(), year, today,
                 parsedCursor.startDate(), parsedCursor.festivalId(), pageSize);
         boolean hasNext = rows.size() > pageSize;
 
@@ -54,6 +58,19 @@ public class FestivalService {
                 .toList();
         String nextCursor = hasNext ? encodeCursor(rows.get(pageSize - 1)) : null;
         return new CursorPageResponse<>(items, nextCursor, hasNext);
+    }
+
+    private FestivalRegionFilter resolveRegionFilter(String areaCode, Long sigunguId) {
+        if (sigunguId == null) {
+            return new FestivalRegionFilter(areaCode, null);
+        }
+
+        SigunguCode sigungu = sigunguCodeRepository.findById(sigunguId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "시군구 코드를 찾을 수 없습니다."));
+        if (areaCode != null && !areaCode.isBlank() && !areaCode.strip().equals(sigungu.getAreaCode())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "areaCode와 sigunguId의 지역이 일치하지 않습니다.");
+        }
+        return new FestivalRegionFilter(sigungu.getAreaCode(), sigungu.getName());
     }
 
     private int normalizePageSize(Integer size) {
@@ -88,5 +105,8 @@ public class FestivalService {
     }
 
     private record FestivalCursor(LocalDate startDate, Long festivalId) {
+    }
+
+    private record FestivalRegionFilter(String areaCode, String regionName) {
     }
 }

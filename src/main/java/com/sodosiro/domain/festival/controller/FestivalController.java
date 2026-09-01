@@ -26,11 +26,11 @@ public class FestivalController implements FestivalSpecification {
     public ResponseEntity<CursorPageResponse<FestivalSummaryResponse>> getFestivals(
             @RequestParam(required = false) String areaCode,
             @RequestParam(defaultValue = "ALL") FestivalStatus status,
-            @RequestParam(required = false) String reginName,
+            @RequestParam(required = false) Long sigunguId,
             @RequestParam(required = false) Integer year,
             @RequestParam(required = false) String cursor,
             @RequestParam(required = false) Integer size) {
-        return ResponseEntity.ok(festivalService.getFestivals(areaCode, status, reginName, year, cursor, size));
+        return ResponseEntity.ok(festivalService.getFestivals(areaCode, status, sigunguId, year, cursor, size));
     }
 
     @Deprecated
