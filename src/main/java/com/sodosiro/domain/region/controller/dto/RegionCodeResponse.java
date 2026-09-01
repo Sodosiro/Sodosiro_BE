@@ -6,11 +6,12 @@ public record RegionCodeResponse(
         Long sigunguId,
         String areaCode,
         String sigunguCode,
+        String thumbnailUrl,
         String name
 ) {
     public static RegionCodeResponse from(SigunguCode sigungu) {
         return new RegionCodeResponse(
                 sigungu.getId(), sigungu.getAreaCode(), sigungu.getSigunguCode(),
-                sigungu.getName());
+                sigungu.getThumbnailUrl(), sigungu.getName());
     }
 }
