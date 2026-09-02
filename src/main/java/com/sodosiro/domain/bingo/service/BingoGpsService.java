@@ -1,5 +1,6 @@
 package com.sodosiro.domain.bingo.service;
 
+import com.sodosiro.domain.badge.service.BadgeService;
 import com.sodosiro.domain.bingo.controller.dto.BingoCellCheckResponse;
 import com.sodosiro.domain.bingo.controller.dto.BingoGpsRequest;
 import com.sodosiro.domain.bingo.controller.dto.BingoGpsVerifyResponse;
@@ -23,6 +24,7 @@ public class BingoGpsService {
     private final GpsRepository gpsRepository;
     private final TouristSpotRepository touristSpotRepository;
     private final BingoQueryService bingoQueryService;
+    private final BadgeService badgeService;
 
     public BingoGpsVerifyResponse verify(Long userId, BingoGpsRequest request) {
 
@@ -47,6 +49,8 @@ public class BingoGpsService {
                 spot.getMapY(), spot.getMapX(), request.latitude(), request.longitude())) {
             throw new GeneralException(GpsErrorCode._OUT_OF_VERIFICATION_RANGE);
         }
-        return gpsRepository.save(Gps.createForBingo(userId, request.contentId()));
+        Gps gps = gpsRepository.save(Gps.createForBingo(userId, request.contentId()));
+        badgeService.awardIfFirstVisit(userId, spot.getLdongSignguCode());
+        return gps;
     }
 }
