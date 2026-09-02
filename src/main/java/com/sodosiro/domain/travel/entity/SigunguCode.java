@@ -47,7 +47,7 @@ public class SigunguCode {
             foreignKey = @jakarta.persistence.ForeignKey(jakarta.persistence.ConstraintMode.NO_CONSTRAINT))
     private AreaCode area;
 
-    @Column(name = "thumbnail_url", nullable = false, columnDefinition = "text")
+    @Column(name = "thumbnail_url", columnDefinition = "text")
     private String thumbnailUrl;
 
     @Column(name = "sigungu_code", length = 5, nullable = false)
