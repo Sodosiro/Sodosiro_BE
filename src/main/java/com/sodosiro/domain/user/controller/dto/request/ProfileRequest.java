@@ -14,4 +14,7 @@ public record ProfileRequest(
 
         boolean removeImage
 ) {
+    public ProfileRequest {
+        nickName = nickName == null ? null : nickName.trim();
+    }
 }
