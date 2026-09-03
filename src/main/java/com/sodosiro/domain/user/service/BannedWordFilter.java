@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class BannedWordFilter {
 
+    private static final Pattern NON_ALLOWED_CHARS = Pattern.compile("[^a-z0-9가-힣]");
     private static final Set<String> BANNED_WORDS = loadBannedWords();
 
     public void validate(String content) {
@@ -43,6 +45,6 @@ public class BannedWordFilter {
     }
 
     private static String normalize(String text) {
-        return text.toLowerCase().replaceAll("[^a-z0-9가-힣]", "");
+        return NON_ALLOWED_CHARS.matcher(text.toLowerCase()).replaceAll("");
     }
 }
