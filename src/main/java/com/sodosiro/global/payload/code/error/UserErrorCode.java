@@ -19,6 +19,7 @@ public enum UserErrorCode implements BaseCode {
     _WITHDRAWAL_GRACE_PERIOD_EXPIRED(HttpStatus.CONFLICT,"USER409-WITHDRAWAL_EXPIRED","탈퇴 철회 가능 기간이 지났습니다."),
     _PROFILE_IMAGE_NOT_EXIST(HttpStatus.NOT_FOUND,"USER404-PROFILE_NOT_FOUND","프로필 이미지가 존재하지 않습니다."),
     _NICKNAME_BAD_REQUEST(HttpStatus.BAD_REQUEST,"USER400-BAD_REQUEST","닉네임 형식이 올바르지 않습니다."),
+    _NICKNAME_CONTAINS_BANNED_WORD(HttpStatus.BAD_REQUEST,"USER400-BANNED_WORD","닉네임에 사용할 수 없는 단어가 포함되어 있습니다."),
     _NICKNAME_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR,"USER500-NICKNAME_GENERATION_FAILED","기본 닉네임 생성에 실패했습니다."),
 
     _INVALID_AUTHORIZATION_HEADER(HttpStatus.BAD_REQUEST, "AUTH400-BAD_REQUEST", "유효하지 않은 인증 헤더 형식입니다."),

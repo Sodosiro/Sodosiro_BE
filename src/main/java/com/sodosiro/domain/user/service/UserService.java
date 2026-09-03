@@ -25,6 +25,7 @@ public class UserService {
     private final UserDeviceRepository userDeviceRepository;
     private final S3Service s3Service;
     private final ApplicationEventPublisher eventPublisher;
+    private final BannedWordFilter bannedWordFilter;
 
 
     @Transactional
@@ -85,7 +86,13 @@ public class UserService {
     }
 
     private void validateNicknameAvailable(Long userId, String nickName) {
-        if (nickName != null && userRepository.existsByNickNameAndUserIdNot(nickName, userId)) {
+        if (nickName == null) {
+            return;
+        }
+
+        bannedWordFilter.validate(nickName);
+
+        if (userRepository.existsByNickNameAndUserIdNot(nickName, userId)) {
             throw new GeneralException(UserErrorCode._DUPLICATE_NICKNAME);
         }
     }
