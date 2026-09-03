@@ -13,6 +13,8 @@ import com.sodosiro.domain.gps.entity.Gps;
 import com.sodosiro.domain.gps.repository.GpsRepository;
 import com.sodosiro.domain.region.repository.SigunguCodeRepository;
 import com.sodosiro.domain.travel.entity.SigunguCode;
+import com.sodosiro.domain.travel.entity.TouristSpot;
+import com.sodosiro.domain.travel.repository.TouristSpotRepository;
 import com.sodosiro.global.payload.code.error.BingoErrorCode;
 import com.sodosiro.global.payload.exception.GeneralException;
 import java.time.LocalDateTime;
@@ -34,6 +36,7 @@ public class BingoQueryService {
     private final BingoBoardRepository bingoBoardRepository;
     private final SigunguCodeRepository sigunguCodeRepository;
     private final GpsRepository gpsRepository;
+    private final TouristSpotRepository touristSpotRepository;
 
     /** 지금까지 쌓인 빙고 시즌 전체를 최신순으로 나열한다 (예: 2026 봄, 2025 겨울, 2025 가을 ...). */
     public List<BingoSeasonResponse> listSeasons() {
@@ -102,11 +105,16 @@ public class BingoQueryService {
 
     private BingoBoardResponse buildResponse(BingoSeason season, BingoBoard board, Long userId) {
         Map<Long, LocalDateTime> verifiedAtByContentId = verifiedAtByContentId(board, userId, season);
+        Map<Long, TouristSpot> spotsByContentId = spotsByContentId(board);
 
         List<BingoBoardResponse.Cell> cells = board.getCells().stream()
-                .map(cell -> new BingoBoardResponse.Cell(
-                        cell.position(), cell.contentId(), cell.title(), cell.firstImage(), cell.category(),
-                        verifiedAtByContentId.containsKey(cell.contentId()), verifiedAtByContentId.get(cell.contentId())))
+                .map(cell -> {
+                    TouristSpot spot = spotsByContentId.get(cell.contentId());
+                    return new BingoBoardResponse.Cell(
+                            cell.position(), cell.contentId(), cell.title(), cell.firstImage(), cell.category(),
+                            spot != null ? spot.getMapY() : null, spot != null ? spot.getMapX() : null,
+                            verifiedAtByContentId.containsKey(cell.contentId()), verifiedAtByContentId.get(cell.contentId()));
+                })
                 .toList();
 
         Set<Integer> completedPositions = cells.stream()
@@ -118,6 +126,12 @@ public class BingoQueryService {
         return new BingoBoardResponse(
                 board.getId(), season.getId(), season.getYear(), season.getSeasonType(), board.getSigunguId(),
                 cells, completedLineCount);
+    }
+
+    private Map<Long, TouristSpot> spotsByContentId(BingoBoard board) {
+        List<Long> contentIds = board.getCells().stream().map(BingoBoard.BingoCellSnapshot::contentId).toList();
+        return touristSpotRepository.findAllById(contentIds).stream()
+                .collect(Collectors.toMap(TouristSpot::getContentId, spot -> spot));
     }
 
     /** 시즌 기간(startDate~endDate) 안에 인증된 기록만 그 시즌의 빙고 완료로 인정한다. 그 밖의 인증은 GPS 인증 자체는 성립하되 빙고 체크에는 반영되지 않는다. */

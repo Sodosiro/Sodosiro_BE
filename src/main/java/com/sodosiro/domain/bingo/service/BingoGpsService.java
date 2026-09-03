@@ -9,7 +9,6 @@ import com.sodosiro.domain.bingo.entity.BingoSeason;
 import com.sodosiro.domain.bingo.repository.BingoSeasonRepository;
 import com.sodosiro.domain.gps.entity.Gps;
 import com.sodosiro.domain.gps.repository.GpsRepository;
-import com.sodosiro.domain.gps.service.GpsVerifier;
 import com.sodosiro.domain.travel.entity.TouristSpot;
 import com.sodosiro.domain.travel.repository.TouristSpotRepository;
 import com.sodosiro.global.payload.code.error.GpsErrorCode;
@@ -20,7 +19,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** 빙고판 전용 GPS 방문 인증. 코스/일정과 무관하게 관광지 좌표 기준 300m 이내이면 인증 레코드를 새로 만든다. */
+/** 빙고판 전용 GPS 방문 인증. 코스/일정과 무관하게, 위치 인증은 프론트에서 완료 후 호출하므로 서버는 별도 검증 없이 인증 레코드를 만든다. */
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -66,13 +65,6 @@ public class BingoGpsService {
     }
 
     private Gps createVerification(BingoGpsRequest request, Long userId, TouristSpot spot) {
-        if (spot.getMapY() == null || spot.getMapX() == null) {
-            throw new GeneralException(GpsErrorCode._SPOT_LOCATION_UNAVAILABLE);
-        }
-        if (!GpsVerifier.isWithinVerificationRadius(
-                spot.getMapY(), spot.getMapX(), request.latitude(), request.longitude())) {
-            throw new GeneralException(GpsErrorCode._OUT_OF_VERIFICATION_RANGE);
-        }
         Gps gps = gpsRepository.save(Gps.createForBingo(userId, request.contentId()));
         badgeService.awardIfFirstVisit(userId, spot.getLdongSignguCode());
         return gps;
