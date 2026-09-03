@@ -64,7 +64,7 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new GeneralException(UserErrorCode._USER_NOT_FOUND));
 
-        validateNicknameAvailable(userId, request.nickName());
+        validateNicknameAvailable(userId, user.getNickName(), request.nickName());
         user.updateProfile(request.nickName(), request.introduction());
 
         if (image != null && !image.isEmpty()) {
@@ -85,14 +85,15 @@ public class UserService {
         return ProfileResponse.from(user);
     }
 
-    private void validateNicknameAvailable(Long userId, String nickName) {
-        if (nickName == null) {
+    private void validateNicknameAvailable(Long userId, String currentNickName, String newNickName) {
+        if (newNickName == null || newNickName.equals(currentNickName)) {
             return;
         }
 
-        bannedWordFilter.validate(nickName);
+        NicknameUtils.validateFormat(newNickName);
+        bannedWordFilter.validate(newNickName);
 
-        if (userRepository.existsByNickNameAndUserIdNot(nickName, userId)) {
+        if (userRepository.existsByNickNameAndUserIdNot(newNickName, userId)) {
             throw new GeneralException(UserErrorCode._DUPLICATE_NICKNAME);
         }
     }
