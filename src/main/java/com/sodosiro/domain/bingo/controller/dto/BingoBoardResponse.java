@@ -2,6 +2,7 @@ package com.sodosiro.domain.bingo.controller.dto;
 
 import com.sodosiro.domain.bingo.constants.SeasonType;
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -20,6 +21,8 @@ public record BingoBoardResponse(
             @Schema(description = "관광지명") String title,
             @Schema(description = "대표 이미지") String firstImage,
             @Schema(description = "카테고리") Integer category,
+            @Schema(description = "관광지 위도") BigDecimal latitude,
+            @Schema(description = "관광지 경도") BigDecimal longitude,
             @Schema(description = "GPS 인증으로 달성했는지 여부") boolean completed,
             @Schema(description = "GPS 인증 시각 (미인증이면 null)") LocalDateTime verifiedAt
     ) {

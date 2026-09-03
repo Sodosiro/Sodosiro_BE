@@ -24,7 +24,8 @@ public interface BingoSpecification {
     ResponseEntity<List<BingoSeasonResponse>> listSeasons();
 
     @Operation(summary = "지역 빙고판 조회",
-            description = "해당 지역의 빙고판 9칸과, 로그인한 사용자의 칸별 GPS 인증 달성 여부·인증 시각·완성 라인 수를 반환합니다. "
+            description = "해당 지역의 빙고판 9칸과, 각 칸 관광지의 위경도, 로그인한 사용자의 칸별 GPS 인증 달성 여부·인증 시각·완성 라인 수를 반환합니다. "
+                    + "프론트는 이 위경도로 위치 인증을 수행한 뒤 GPS 인증 API를 호출합니다. "
                     + "빙고판 내용은 시즌 동안 모든 사용자에게 동일합니다. "
                     + "year/seasonType을 둘 다 생략하면 진행 중인 시즌을, 둘 다 주면 그 시즌(지난 시즌 포함)을 조회합니다.")
     @ApiResponses({
@@ -40,15 +41,13 @@ public interface BingoSpecification {
             @Parameter(description = "조회할 계절 구분 (year와 함께 지정, 생략 시 활성 시즌)") SeasonType seasonType);
 
     @Operation(summary = "빙고 전용 GPS 방문 인증",
-            description = "코스/일정과 무관하게 관광지 하나를 지정해 현재 GPS 좌표와의 거리가 300m 이내이면 인증 레코드를 새로 생성합니다. "
-                    + "300m 밖이면 레코드를 만들지 않고 오류를 반환하며, 이미 인증된 스팟이면 기존 인증 결과를 그대로 반환합니다. "
-                    + "여기서 만든 인증은 코스 GPS 인증(/api/v1/gps)과 동일한 기록을 공유하므로 어느 쪽에서 인증하든 빙고판에 동일하게 반영됩니다. "
-                    + "원본 GPS 좌표는 저장하지 않습니다.")
+            description = "위치 인증은 프론트에서 완료한 뒤 호출합니다. 코스/일정과 무관하게 관광지 하나를 지정해 인증 레코드를 새로 생성하며, "
+                    + "이미 인증된 스팟이면 기존 인증 결과를 그대로 반환합니다. "
+                    + "여기서 만든 인증은 코스 GPS 인증(/api/v1/gps)과 동일한 기록을 공유하므로 어느 쪽에서 인증하든 빙고판에 동일하게 반영됩니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "인증 성공 (신규 생성 또는 기존 인증 반환)"),
             @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자"),
-            @ApiResponse(responseCode = "404", description = "존재하지 않는 관광지"),
-            @ApiResponse(responseCode = "409", description = "관광지 위치 정보 없음 또는 반경 300m 밖")
+            @ApiResponse(responseCode = "404", description = "존재하지 않는 관광지")
     })
     ResponseEntity<BingoGpsVerifyResponse> verifyGps(
             @Parameter(hidden = true) Long userId,

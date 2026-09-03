@@ -17,7 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** 코스 스팟 GPS 방문 인증. 사용자 좌표가 스팟 반경 300m 이내인 경우에만 인증 레코드를 새로 만든다. */
+/** 코스 스팟 GPS 방문 인증. 위치 인증은 프론트에서 완료 후 호출하므로 서버는 별도 검증 없이 인증 레코드를 만든다. */
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -47,21 +47,7 @@ public class GpsService {
         return GpsResponse.from(gps, bingoCheck);
     }
 
-    /**
-     * 이 유저가 이 스팟을 (다른 코스에서든) 이미 한 번이라도 인증한 적 있으면 실제 방문이 증명된 것으로 보고
-     * 거리 체크 없이 이 코스·날짜용 레코드만 새로 만든다. 처음 인증하는 경우에만 반경 300m를 확인한다.
-     */
     private Gps createVerification(GpsRequest request, Long userId, TouristSpot spot) {
-        boolean alreadyVerifiedElsewhere = !gpsRepository.findByUserIdAndContentId(userId, request.contentId()).isEmpty();
-        if (!alreadyVerifiedElsewhere) {
-            if (spot.getMapY() == null || spot.getMapX() == null) {
-                throw new GeneralException(GpsErrorCode._SPOT_LOCATION_UNAVAILABLE);
-            }
-            if (!GpsVerifier.isWithinVerificationRadius(
-                    spot.getMapY(), spot.getMapX(), request.latitude(), request.longitude())) {
-                throw new GeneralException(GpsErrorCode._OUT_OF_VERIFICATION_RANGE);
-            }
-        }
         Gps gps = gpsRepository.save(Gps.create(request.courseId(), userId, request.contentId(), request.day()));
         badgeService.awardIfFirstVisit(userId, spot.getLdongSignguCode());
         return gps;
