@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,7 +26,7 @@ public class BadgeService {
     private final SigunguCodeRepository sigunguCodeRepository;
 
     public BadgeListResponse getBadges(Long userId) {
-        List<Badge> allBadges = badgeRepository.findAll();
+        List<Badge> allBadges = badgeRepository.findAll(Sort.by("name"));
 
         Map<Long, java.time.LocalDateTime> earnedAtByBadgeId = userBadgeRepository.findAllByUserId(userId).stream()
                 .collect(Collectors.toMap(UserBadge::getBadgeId, UserBadge::getEarnedAt));

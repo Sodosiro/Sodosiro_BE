@@ -49,9 +49,7 @@ public class CourseQueryService {
     /** draft(미확정)도 status가 항상 UPCOMING이라 자연스럽게 UPCOMING 필터/전체 조회에 포함된다. */
     @Transactional(readOnly = true)
     public MyCourseListResponse getMyCourses(Long userId, CourseStatus status) {
-        List<Course> courses = (status == null
-                        ? courseRepository.findByUserId(userId)
-                        : courseRepository.findByUserIdAndStatus(userId, status))
+        List<Course> courses = (status == null ? courseRepository.findByUserId(userId) : courseRepository.findByUserIdAndStatus(userId, status))
                 .stream()
                 .sorted(MY_COURSE_ORDER)
                 .toList();
