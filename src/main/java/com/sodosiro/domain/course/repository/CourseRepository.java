@@ -14,9 +14,9 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
 
     Optional<Course> findByIdAndUserId(Long id, Long userId);
 
-    List<Course> findByUserIdOrderByIdDesc(Long userId);
+    List<Course> findByUserId(Long userId);
 
-    List<Course> findByUserIdAndStatusOrderByIdDesc(Long userId, CourseStatus status);
+    List<Course> findByUserIdAndStatus(Long userId, CourseStatus status);
 
     List<Course> findByIsConfirmedTrueAndStatusAndStartDateLessThanEqual(CourseStatus status, LocalDate date);
 
