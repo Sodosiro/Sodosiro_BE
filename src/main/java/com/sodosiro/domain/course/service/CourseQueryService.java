@@ -13,6 +13,7 @@ import com.sodosiro.domain.travel.entity.TouristSpot;
 import com.sodosiro.domain.travel.repository.TouristSpotRepository;
 import com.sodosiro.global.payload.code.error.CourseErrorCode;
 import com.sodosiro.global.payload.exception.GeneralException;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -33,12 +34,27 @@ public class CourseQueryService {
     private final TouristSpotRepository touristSpotRepository;
     private final ActiveCourseCacheWriter activeCourseCacheWriter;
 
+    /** 미종료(UPCOMING/IN_PROGRESS)는 여행일이 임박한 순, 종료(FINISHED)는 최근에 끝난 순으로 정렬한다. */
+    private static final Comparator<Course> MY_COURSE_ORDER = (a, b) -> {
+        boolean aFinished = a.getStatus() == CourseStatus.FINISHED;
+        boolean bFinished = b.getStatus() == CourseStatus.FINISHED;
+        if (aFinished != bFinished) {
+            return aFinished ? 1 : -1;
+        }
+        return aFinished
+                ? b.getStartDate().compareTo(a.getStartDate())
+                : a.getStartDate().compareTo(b.getStartDate());
+    };
+
     /** draft(미확정)도 status가 항상 UPCOMING이라 자연스럽게 UPCOMING 필터/전체 조회에 포함된다. */
     @Transactional(readOnly = true)
     public MyCourseListResponse getMyCourses(Long userId, CourseStatus status) {
-        List<Course> courses = status == null
-                ? courseRepository.findByUserIdOrderByIdDesc(userId)
-                : courseRepository.findByUserIdAndStatusOrderByIdDesc(userId, status);
+        List<Course> courses = (status == null
+                        ? courseRepository.findByUserId(userId)
+                        : courseRepository.findByUserIdAndStatus(userId, status))
+                .stream()
+                .sorted(MY_COURSE_ORDER)
+                .toList();
 
         Map<Long, String> sigunguCodeByContentId = resolveSigunguCodes(courses);
 
