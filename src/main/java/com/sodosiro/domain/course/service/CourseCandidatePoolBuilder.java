@@ -12,6 +12,8 @@ import com.sodosiro.domain.travel.repository.TouristSpotRepository;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -31,6 +33,11 @@ import org.springframework.stereotype.Component;
  * 그날 필요한 개수보다 조금 넉넉하게(여유분 {@value #CANDIDATE_WINDOW_EXTRA}) 뽑아 즉시 잠그기 때문에,
  * 이후 날짜의 풀에는 애초에 등장하지 않는다. 휴무일도 그날의 풀을 만드는 시점에 걸러낸다.
  * mustVisit이 배정될 날짜는 호출자(CourseRecommendationService)가 사전에 확정해 넘겨준다.
+ * <p>
+ * 동선을 위해 날짜마다 기준점(anchor)을 하나 정한다: mustVisit이 있는 날은 mustVisit, 없는 날은 아직 안 쓰인
+ * 순위 1위 스팟(취향 풀 우선, 없으면 랜덤 풀). 각 버킷은 순위 상위 {@value #SCAN_MULTIPLIER}배 범위를 훑은 뒤
+ * 기준점과 가까운 순으로 window개만 잠그므로, 관련성은 순위 범위로 지키면서 그날 후보들이 지리적으로 모인다.
+ * 이때 넘겨지는 후보 리스트도 기준점과 가까운 순서로 정렬되어 있다.
  */
 @Component
 class CourseCandidatePoolBuilder {
@@ -40,6 +47,8 @@ class CourseCandidatePoolBuilder {
     private static final int CANDIDATE_BUFFER = 3;
     private static final int CANDIDATE_LIMIT_CAP = 200;
     private static final int CANDIDATE_WINDOW_EXTRA = 2;
+    /** 거리순으로 자르기 전에 순위순으로 훑는 범위(window의 배수). 클수록 거리 우선, 작을수록 관련성 우선. */
+    private static final int SCAN_MULTIPLIER = 3;
 
     private final TouristSpotRepository touristSpotRepository;
     private final SpotEmbeddingRepository spotEmbeddingRepository;
@@ -96,9 +105,14 @@ class CourseCandidatePoolBuilder {
             boolean mustVisitIsRestaurant = mustVisitHere && Objects.equals(mustVisitCategory, TravelStyle.RESTAURANT.categoryCode());
             boolean mustVisitMatchesStyle = mustVisitHere && styleCodes.contains(mustVisitCategory);
 
+            //0단계: 그날 동선의 기준점. 모든 버킷이 이 기준점과 가까운 후보부터 잠근다.
+            TouristSpot anchor = mustVisitHere
+                    ? mustVisitSpot
+                    : resolveAnchor(styleMaster.values(), randomMaster, globalUsedIds, weekday);
+
             //1단계: 그 요일에 영업하고 아직 안 쓰인 식당을 필요 수만큼(+여유분) 뽑아 즉시 잠근다.
             int restaurantNeeded = RESTAURANT_SLOTS_PER_DAY - (mustVisitIsRestaurant ? 1 : 0);
-            List<TouristSpot> restaurantsForDay = takeForDay(restaurantMaster, globalUsedIds, weekday, windowSize(restaurantNeeded));
+            List<TouristSpot> restaurantsForDay = takeForDay(restaurantMaster, globalUsedIds, weekday, windowSize(restaurantNeeded), anchor);
             byId.putAll(toMap(restaurantsForDay));
 
             //2단계: 취향별 스팟을 1개씩(mustVisit이 그 취향을 이미 채웠다면 생략) 뽑아 잠근다.
@@ -106,7 +120,7 @@ class CourseCandidatePoolBuilder {
             Map<Integer, Integer> styleNeededForDay = new LinkedHashMap<>();
             for (Integer code : styleCodes) {
                 int needed = (mustVisitHere && code.equals(mustVisitCategory)) ? 0 : 1;
-                List<TouristSpot> picked = takeForDay(styleMaster.get(code), globalUsedIds, weekday, windowSize(needed));
+                List<TouristSpot> picked = takeForDay(styleMaster.get(code), globalUsedIds, weekday, windowSize(needed), anchor);
                 byId.putAll(toMap(picked));
                 styleForDay.put(code, picked.stream().map(CandidateSpot::from).toList());
                 styleNeededForDay.put(code, needed);
@@ -114,7 +128,7 @@ class CourseCandidatePoolBuilder {
 
             //3단계: 남은 슬롯만큼 식당 외 전체 카테고리에서 랜덤 풀을 채운다.
             int randomNeeded = Math.max(0, DAILY_SLOT_COUNT - RESTAURANT_SLOTS_PER_DAY - styleCodes.size() - (mustVisitHere && !mustVisitIsRestaurant && !mustVisitMatchesStyle ? 1 : 0));
-            List<TouristSpot> randomForDay = takeForDay(randomMaster, globalUsedIds, weekday, windowSize(randomNeeded));
+            List<TouristSpot> randomForDay = takeForDay(randomMaster, globalUsedIds, weekday, windowSize(randomNeeded), anchor);
             byId.putAll(toMap(randomForDay));
 
             dayPools.add(new DayCandidatePool(
@@ -129,23 +143,57 @@ class CourseCandidatePoolBuilder {
         return new CandidatePoolResult(dayPools, slotNeeds, byId);
     }
 
-    /** 마스터 풀에서 그 요일에 영업하고 아직 잠기지 않은 것부터 순서대로 window개를 뽑고, 뽑힌 전부(미선택분 포함)를 즉시 잠근다. */
-    private List<TouristSpot> takeForDay(List<TouristSpot> master, Set<Long> globalUsedIds, String weekday, int window) {
+    /**
+     * 마스터 풀에서 그 요일에 영업하고 아직 잠기지 않은 것을 순위순으로 window×{@value #SCAN_MULTIPLIER}개 훑고,
+     * 기준점과 가까운 순으로 window개만 뽑아 즉시 잠근다(뽑힌 전부, 미선택분 포함). 훑기만 하고 뽑히지 않은 스팟은
+     * 잠그지 않으므로 다음 날짜의 후보로 남는다. 기준점이 없으면 거리 정렬 없이 순위순 그대로 자른다.
+     */
+    private List<TouristSpot> takeForDay(List<TouristSpot> master, Set<Long> globalUsedIds, String weekday, int window, TouristSpot anchor) {
         if (window <= 0 || master == null) {
             return List.of();
         }
-        List<TouristSpot> taken = new ArrayList<>(window);
+        int scanSize = window * SCAN_MULTIPLIER;
+        List<TouristSpot> scanned = new ArrayList<>(scanSize);
         for (TouristSpot spot : master) {
-            if (taken.size() >= window) {
+            if (scanned.size() >= scanSize) {
                 break;
             }
-            if (globalUsedIds.contains(spot.getContentId()) || !WeekdayLabels.isOpenOn(spot, weekday)) {
-                continue;
+            if (isAvailable(spot, globalUsedIds, weekday)) {
+                scanned.add(spot);
             }
-            taken.add(spot);
         }
+        if (anchor != null) {
+            // 안정 정렬이라 거리가 같으면(좌표 없는 스팟끼리 등) 원래 순위가 유지된다.
+            scanned.sort(Comparator.comparingDouble(spot -> GeoDistance.km(anchor, spot)));
+        }
+        List<TouristSpot> taken = List.copyOf(scanned.subList(0, Math.min(window, scanned.size())));
         globalUsedIds.addAll(taken.stream().map(TouristSpot::getContentId).toList());
         return taken;
+    }
+
+    /** mustVisit이 없는 날의 기준점: 아직 안 쓰였고 그 요일 영업하며 좌표가 있는 순위 1위 스팟(취향 풀 우선, 없으면 랜덤 풀). */
+    private TouristSpot resolveAnchor(Collection<List<TouristSpot>> styleMasters, List<TouristSpot> randomMaster, Set<Long> globalUsedIds, String weekday) {
+        for (List<TouristSpot> master : styleMasters) {
+            TouristSpot anchor = firstAnchorCandidate(master, globalUsedIds, weekday);
+            if (anchor != null) {
+                return anchor;
+            }
+        }
+        return firstAnchorCandidate(randomMaster, globalUsedIds, weekday);
+    }
+
+    private TouristSpot firstAnchorCandidate(List<TouristSpot> master, Set<Long> globalUsedIds, String weekday) {
+        if (master == null) {
+            return null;
+        }
+        return master.stream()
+                .filter(spot -> isAvailable(spot, globalUsedIds, weekday) && GeoDistance.hasCoordinates(spot))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private boolean isAvailable(TouristSpot spot, Set<Long> globalUsedIds, String weekday) {
+        return !globalUsedIds.contains(spot.getContentId()) && WeekdayLabels.isOpenOn(spot, weekday);
     }
 
     /** 선택권을 주기 위해 실제 필요 수보다 여유분만큼 더 뽑아 후보로 제시한다(미선택분도 다른 날짜에서는 잠긴 상태). */

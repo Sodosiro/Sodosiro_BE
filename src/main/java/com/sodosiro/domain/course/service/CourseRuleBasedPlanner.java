@@ -130,22 +130,13 @@ class CourseRuleBasedPlanner {
         while (!remaining.isEmpty()) {
             TouristSpot from = current;
             TouristSpot nearest = remaining.stream()
-                    .min(Comparator.comparingDouble(spot -> squaredDistance(from, spot)))
+                    .min(Comparator.comparingDouble(spot -> GeoDistance.km(from, spot)))
                     .orElseThrow();
             remaining.remove(nearest);
             ordered.add(nearest);
             current = nearest;
         }
         return ordered;
-    }
-
-    private double squaredDistance(TouristSpot a, TouristSpot b) {
-        if (a.getMapX() == null || a.getMapY() == null || b.getMapX() == null || b.getMapY() == null) {
-            return Double.MAX_VALUE;
-        }
-        double dx = a.getMapX().doubleValue() - b.getMapX().doubleValue();
-        double dy = a.getMapY().doubleValue() - b.getMapY().doubleValue();
-        return dx * dx + dy * dy;
     }
 
     private Course.SpotSnapshot toSpotSnapshot(TouristSpot spot, boolean mustVisit) {
